@@ -86,14 +86,15 @@
   <div class="h1">Aprovar as copies</div>
   <div class="sub" id="resumo">carregando…</div>
   <div class="trilha">
-    <div class="passo"><b>D+0</b>apresentação</div>
-    <div class="passo"><b>D+3</b>o produto</div>
-    <div class="passo"><b>D+7</b>fecho</div>
+    <div class="passo"><b>D+1</b>gancho</div>
+    <div class="passo"><b>D+4</b>autoridade</div>
+    <div class="passo"><b>D+6</b>WhatsApp</div>
+    <div class="passo"><b>D+9</b>fecho</div>
   </div>
 </header>
 
 <div class="intro">
-  Cada e-mail só entra no disparo depois que você marcar <b>Aprovar</b>.
+  Cada peça da sequência só entra no disparo depois que você marcar <b>Aprovar</b>.
   O texto está editável: <b>o que você escrever vale</b> — corrige, corta, reescreve,
   e aprova o que ficou.
 </div>
@@ -158,10 +159,10 @@ function pintar(){
         '<span class="etiq ' + stt + '">' + stt + '</span>' +
       '</div>' +
       '<div class="corpo">' +
-        (i.chave === 'rodape'
-          ? ''
-          : '<div class="campo"><label>Assunto</label>' +
-            '<input class="inAssunto" data-chave="' + esc(i.chave) + '" value="' + esc(i.assunto) + '"></div>') +
+        (i.assunto
+          ? '<div class="campo"><label>Assunto</label>' +
+            '<input class="inAssunto" data-chave="' + esc(i.chave) + '" value="' + esc(i.assunto) + '"></div>'
+          : '') +
         '<div class="campo"><label>Texto do e-mail</label>' +
           '<textarea class="inCorpo" data-chave="' + esc(i.chave) + '">' + esc(i.corpo) + '</textarea></div>' +
         '<div class="campo"><label>Seu recado (opcional)</label>' +
