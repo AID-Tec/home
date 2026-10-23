@@ -220,7 +220,7 @@ function render(d){
 
 async function carregar(){
   try {
-    const r = await sb.from('prospectos').select('id,email,empresa,nome,origem,email_marcado');
+    const r = await sb.from('prospectos').select('id,email,nome,origem,email_marcado');
     if (r.error) throw r.error;
     const rows = r.data || [];
     const total = rows.length;
