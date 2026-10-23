@@ -98,7 +98,7 @@ p{margin:0 0 var(--md)}
   backdrop-filter:blur(8px); border-bottom:1px solid var(--n200);
 }
 .topo .envolve{display:flex; align-items:center; justify-content:space-between; gap:var(--md); height:96px}
-.topo img{height:64px; width:auto}
+.topo .marca{display:flex;align-items:center;gap:12px;text-decoration:none}.topo .marca img{height:42px;width:auto}.topo .marca .logo-inverso{display:none}.topo.solido .logo-normal{display:none}.topo.solido .logo-inverso{display:block}.topo .marca .nome{display:flex;flex-direction:column;line-height:1.05;color:var(--indigo-700)}.topo .marca .nome b{font-size:20px;font-weight:900}.topo .marca .nome small{font-size:9.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;opacity:.72;margin-top:4px}
 .topo .btn{padding:12px 22px; font-size:16px}
 @media (max-width:520px){ .topo .envolve{height:78px} .topo img{height:46px} .topo .btn{padding:10px 16px; font-size:14px} }
 
@@ -254,8 +254,7 @@ p{margin:0 0 var(--md)}
 <!-- ===================== TOPO ===================== -->
 <header class="topo">
   <div class="envolve">
-    <a href="#topo" aria-label="AID — início">
-      <img src="../img/aid-logo-indigo.png" alt="AID — Tecnologia Resolutiva">
+    <a class="marca" href="../" aria-label="AID Tecnologia Resolutiva"><img class="logo-normal" src="../img/logo-simbolo-azul.png" alt=""><img class="logo-inverso" src="../img/logo-simbolo-branco.png" alt=""><span class="nome"><b>AID</b><small>Tecnologia Resolutiva</small></span>
     </a>
     <a class="btn btn-zap" href="https://wa.me/5516999986836?text=Quero%20ver%20o%20sistema%20de%20gorjetas%20funcionando">Peça uma demonstração</a>
   </div>
