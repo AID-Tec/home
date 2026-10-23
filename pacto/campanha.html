@@ -159,7 +159,7 @@ let sb = null;
 let LISTA = [];
 
 function ok(txt){ const s=document.getElementById('sync'); s.className='sync'; s.textContent=txt||'ok'; clearTimeout(window._t); window._t=setTimeout(()=>{s.textContent='tudo pronto';},2000); }
-function erro(){ const s=document.getElementById('sync'); s.className='sync erro'; s.textContent='erro ao carregar'; }
+function erro(msg){ const s=document.getElementById('sync'); s.className='sync erro'; s.textContent=msg||'erro ao carregar'; }
 
 function pintar(){
   const k = {
@@ -260,12 +260,16 @@ async function carregar(){
     ok('tudo pronto');
   } catch(e) {
     console.error(e);
-    erro();
+    erro('falha ao ler a base: ' + (e.message||e));
   }
 }
 
 AID.entrar().then(function(sess){
-  if (!sess) return;
+  if (!sess) {
+    document.getElementById('sync').className='sync erro';
+    document.getElementById('sync').textContent='Faça login no Pacto para gerar a lista';
+    return;
+  }
   sb = AID.sb;
   carregar();
 });
