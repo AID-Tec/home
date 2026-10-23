@@ -83,12 +83,16 @@ h4{font-size:clamp(18px,2vw,21px); font-weight:700; line-height:1.3; margin:0}
   border-bottom:1px solid transparent;
 }
 .topo .envolve{display:flex; align-items:center; justify-content:space-between; gap:var(--lg)}
-.topo .marca{display:flex; align-items:center; gap:10px; text-decoration:none}
-.topo .marca img{height:44px; width:auto; transition:opacity .2s}
+.topo .marca{display:flex; align-items:center; gap:12px; text-decoration:none}
+.topo .marca img{height:42px; width:auto; transition:opacity .2s}
 .topo .marca img.indigo{display:none}
 .topo.solido .marca img.branca{display:none}
 .topo.solido .marca img.indigo{display:block}
-.topo .marca span{color:#fff; font-weight:700; font-size:15px; letter-spacing:.02em; line-height:1.2}
+.topo .marca .nome{display:flex; flex-direction:column; line-height:1.05; color:#fff}
+.topo .marca .nome b{font-size:20px; font-weight:900; letter-spacing:.01em}
+.topo .marca .nome small{font-size:9.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; opacity:.72; margin-top:4px}
+.topo.solido .marca .nome{color:var(--indigo-700)}
+@media (max-width:420px){ .topo .marca .nome small{display:none} }
 .topo nav{display:flex; align-items:center; gap:26px}
 .topo nav a{
   color:rgba(255,255,255,.82); text-decoration:none; font-size:15px; font-weight:600;
@@ -104,7 +108,6 @@ h4{font-size:clamp(18px,2vw,21px); font-weight:700; line-height:1.3; margin:0}
 .topo .acoes-topo{display:flex; align-items:center; gap:12px}
 
 .topo.solido{background:rgba(255,255,255,.96); backdrop-filter:blur(10px); box-shadow:var(--sombra-sm); border-bottom-color:var(--n200)}
-.topo.solido .marca span{color:var(--indigo-700)}
 .topo.solido nav a{color:var(--texto-suave)}
 .topo.solido nav a:hover{color:var(--indigo-500)}
 .topo.solido .btn-fantasma{color:var(--indigo-500); border-color:var(--indigo-200)}
@@ -152,7 +155,8 @@ h4{font-size:clamp(18px,2vw,21px); font-weight:700; line-height:1.3; margin:0}
 }
 .hero .envolve{position:relative; z-index:2}
 
-.trilho{display:flex; width:100%; overflow:hidden; transition:transform .75s cubic-bezier(.33,.02,.16,1); will-change:transform}
+.janela{overflow:hidden; width:100%; padding:6px 0}
+.trilho{display:flex; width:100%; transition:transform .75s cubic-bezier(.33,.02,.16,1); will-change:transform}
 /* flex:0 0 100% trava a largura de cada slide na largura da tela.
    Sem isso, um texto longo estica o slide e o vizinho aparece na borda. */
 .slide{flex:0 0 100%; width:100%; min-width:0; display:grid; grid-template-columns:1.02fr .98fr; gap:var(--3xl); align-items:center}
@@ -351,7 +355,8 @@ details p{padding:0 0 22px; margin:0; color:var(--texto-suave); font-size:16px}
 .rodape .grade{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:var(--2xl)}
 @media (max-width:860px){ .rodape .grade{grid-template-columns:1fr 1fr; gap:var(--xl)} }
 @media (max-width:520px){ .rodape .grade{grid-template-columns:1fr} }
-.rodape img{height:52px; width:auto; margin-bottom:var(--md)}
+.rodape img{height:110px; width:auto; margin-bottom:var(--md)}
+@media (max-width:520px){ .rodape img{height:88px} }
 .rodape h5{
   color:#fff; font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
   margin:0 0 var(--md);
