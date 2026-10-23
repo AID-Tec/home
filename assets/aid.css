@@ -152,8 +152,12 @@ h4{font-size:clamp(18px,2vw,21px); font-weight:700; line-height:1.3; margin:0}
 }
 .hero .envolve{position:relative; z-index:2}
 
-.trilho{display:flex; transition:transform .75s cubic-bezier(.33,.02,.16,1); will-change:transform}
-.slide{min-width:100%; display:grid; grid-template-columns:1.02fr .98fr; gap:var(--3xl); align-items:center}
+.trilho{display:flex; width:100%; transition:transform .75s cubic-bezier(.33,.02,.16,1); will-change:transform}
+/* flex:0 0 100% trava a largura de cada slide na largura da tela.
+   Sem isso, um texto longo estica o slide e o vizinho aparece na borda. */
+.slide{flex:0 0 100%; width:100%; min-width:0; display:grid; grid-template-columns:1.02fr .98fr; gap:var(--3xl); align-items:center}
+.slide > *{min-width:0}
+.slide .lista-mapa div > span:last-child{min-width:0}
 @media (max-width:980px){ .slide{grid-template-columns:1fr; gap:var(--xl)} }
 
 .slide .texto .selo{
@@ -198,6 +202,7 @@ h4{font-size:clamp(18px,2vw,21px); font-weight:700; line-height:1.3; margin:0}
 .painel .barra i:first-child{background:var(--sucesso)}
 .painel .titulo{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--indigo-200); margin-bottom:16px; font-weight:700}
 .tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px}
+.tile{min-width:0}
 .tile{background:rgba(255,255,255,.10); border-radius:12px; padding:14px}
 .tile b{display:block; font-size:22px; font-weight:900; color:#fff; line-height:1.1}
 .tile span{font-size:11px; color:var(--indigo-200); text-transform:uppercase; letter-spacing:.08em}
@@ -207,7 +212,7 @@ h4{font-size:clamp(18px,2vw,21px); font-weight:700; line-height:1.3; margin:0}
 .mini-grade{display:grid; grid-template-columns:1fr 1fr; gap:12px}
 .mini{
   background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.12);
-  border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:6px;
+  border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:6px; min-width:0;
 }
 .mini strong{font-size:15px; color:#fff}
 .mini span{font-size:12px; color:var(--indigo-200); line-height:1.4}
@@ -217,6 +222,7 @@ h4{font-size:clamp(18px,2vw,21px); font-weight:700; line-height:1.3; margin:0}
 .lista-mapa div{
   display:flex; align-items:center; gap:12px; padding:12px 16px;
   background:rgba(255,255,255,.08); border-radius:10px; font-size:14px; color:var(--indigo-100);
+  min-width:0;
 }
 .lista-mapa b{color:#fff; font-weight:700}
 .lista-mapa .pino{width:8px; height:8px; border-radius:50%; background:var(--sucesso); flex:none}
