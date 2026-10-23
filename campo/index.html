@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pacto 14 dias — Gorjetas</title>
+<style>
+  :root{
+    --azul:#123a63; --azul2:#1d5c96; --fundo:#eef1f5; --card:#fff;
+    --borda:#d7dde5; --texto:#16202b; --cinza:#68758a;
+    --verde:#137a4b; --amarelo:#a86a00; --laranja:#c0400f; --roxo:#5a2fb0; --vermelho:#b3261e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--fundo); color:var(--texto); font-size:16px; line-height:1.5;
+    padding-bottom:56px;
+  }
+  a{color:var(--azul2)}
+
+  header{
+    position:sticky; top:0; z-index:50; background:var(--azul); color:#fff;
+    padding:10px 14px; box-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+  .h1{font-size:17px; font-weight:800; letter-spacing:.2px}
+  .frase{font-size:11.5px; opacity:.75; margin-top:2px; line-height:1.35}
+  .stats{display:flex; gap:6px; margin-top:9px}
+  .stat{flex:1; background:rgba(255,255,255,.12); border-radius:7px; padding:5px 4px; text-align:center}
+  .stat b{display:block; font-size:17px; line-height:1.1}
+  .stat span{font-size:9.5px; text-transform:uppercase; letter-spacing:.5px; opacity:.8}
+  .stat.meta b{color:#ffd166}
+  .stat.fechou b{color:#8ff0be}
+
+  .barra{display:flex; gap:8px; margin-top:9px; align-items:center}
+  .btn{border:0; border-radius:7px; padding:9px 12px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit}
+  .btn.amarelo{background:#ffd166; color:#4a3000; flex:1}
+  .btn.transp{background:rgba(255,255,255,.15); color:#fff}
+  .navsec{display:flex; gap:7px; margin-top:8px; flex-wrap:wrap}
+  .navsec a{
+    flex:1; text-align:center; text-decoration:none; font-size:11.5px; font-weight:700;
+    padding:7px 6px; border-radius:6px; background:rgba(255,255,255,.13); color:#cfe4f7;
+    white-space:nowrap; min-width:96px;
+  }
+  .navsec a:active{background:rgba(255,255,255,.28)}
+
+  .caixa{background:var(--card); border:1px solid var(--borda); border-radius:10px; margin:12px; overflow:hidden}
+  .caixa > .topo{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:13px 14px; cursor:pointer; font-weight:800; font-size:15px;
+  }
+  .caixa > .topo .seta{transition:transform .2s; font-size:13px; color:var(--cinza)}
+  .caixa.aberta > .topo .seta{transform:rotate(90deg)}
+  .corpo{display:none; padding:0 15px 16px; border-top:1px solid var(--borda)}
+  .caixa.aberta .corpo{display:block}
+  .corpo h3{
+    font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--azul2);
+    margin:18px 0 7px; padding-bottom:4px; border-bottom:2px solid #e8eef5;
+  }
+  .falado{
+    background:#f2f7fd; border-left:4px solid var(--azul2); padding:10px 12px;
+    border-radius:0 7px 7px 0; font-size:15.5px; margin:7px 0; line-height:1.5;
+  }
+  .nota{font-size:13.5px; color:var(--cinza); margin:6px 0}
+  .nota b{color:var(--texto)}
+  .obj{margin-top:14px}
+  .obj .perg{font-weight:800; font-size:14.5px; color:var(--laranja)}
+  .obj .resp{font-size:14.5px; color:var(--texto); background:#fff6f0; padding:8px 11px;
+             border-radius:7px; margin-top:4px; border-left:3px solid var(--laranja)}
+  .demo{
+    display:block; text-align:center; background:var(--verde); color:#fff;
+    text-decoration:none; font-weight:800; padding:13px; border-radius:9px; margin-top:16px;
+  }
+
+  .msgbox{border:1px solid var(--borda); border-radius:9px; margin-top:11px; overflow:hidden; background:#fff}
+  .msgrot{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; font-weight:800;
+    background:#eef4fa; color:var(--azul2); padding:8px 11px;
+  }
+  .msgtxt{padding:12px; font-size:14.5px; line-height:1.55; white-space:pre-line}
+  .copiar{
+    display:block; width:100%; border:0; border-top:1px solid var(--borda);
+    background:#f7f9fb; padding:12px; font-size:13.5px; font-weight:800; cursor:pointer;
+    font-family:inherit; color:var(--azul2);
+  }
+  .copiar:active{background:#e8eef5}
+  .copiar.ok{background:#e0f5ea; color:var(--verde)}
+
+  .ferramentas{position:sticky; top:0; z-index:40; background:var(--fundo); padding:10px 12px 8px}
+  .busca{
+    width:100%; padding:13px 14px; font-size:16px; border:1px solid var(--borda);
+    border-radius:9px; background:#fff; font-family:inherit;
+  }
+  .busca:focus{outline:2px solid var(--azul2); border-color:transparent}
+  .filtros{display:flex; gap:6px; margin-top:8px; overflow-x:auto; padding-bottom:2px}
+  .chip{
+    border:1px solid var(--borda); background:#fff; color:var(--cinza);
+    border-radius:20px; padding:7px 13px; font-size:13px; font-weight:700;
+    cursor:pointer; white-space:nowrap; font-family:inherit;
+  }
+  .chip.ativo{background:var(--azul); color:#fff; border-color:var(--azul)}
+  .contador{font-size:12.5px; color:var(--cinza); margin-top:7px; padding-left:2px}
+
+  .lista{padding:0 12px}
+  .cartao{
+    background:var(--card); border:1px solid var(--borda); border-radius:10px;
+    margin-bottom:9px; overflow:hidden;
+  }
+  .cartao .cab{display:flex; align-items:center; gap:11px; padding:12px 13px; cursor:pointer}
+  .ponto{width:11px; height:11px; border-radius:50%; background:#c9d2dd; flex-shrink:0}
+  .ponto.ligou{background:var(--azul2)} .ponto.zap{background:var(--roxo)}
+  .ponto.demo{background:var(--amarelo)} .ponto.fechou{background:var(--verde)}
+  .ponto.nao{background:var(--vermelho)}
+  .info{flex:1; min-width:0}
+  .nome{font-weight:700; font-size:15.5px; line-height:1.3;
+        overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .sub{font-size:12.5px; color:var(--cinza); margin-top:2px;
+       overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .tel{color:var(--azul2); font-weight:700}
+  .etiq{font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px;
+        padding:3px 7px; border-radius:5px; flex-shrink:0}
+  .etiq.ligou{background:#e3f0fc; color:var(--azul2)} .etiq.zap{background:#eee6fb; color:var(--roxo)}
+  .etiq.demo{background:#fdf3dd; color:var(--amarelo)} .etiq.fechou{background:#e0f5ea; color:var(--verde)}
+  .etiq.nao{background:#fbe6e5; color:var(--vermelho)}
+  .seta2{color:#aab4c2; font-size:13px; flex-shrink:0; transition:transform .2s}
+  .cartao.aberto .seta2{transform:rotate(90deg)}
+
+  .detalhe{display:none; border-top:1px solid var(--borda); padding:13px}
+  .cartao.aberto .detalhe{display:block}
+  .linha{font-size:13px; color:var(--cinza); margin-bottom:4px}
+  .linha b{color:var(--texto); font-weight:600}
+  .acoes{display:flex; gap:7px; flex-wrap:wrap; margin-top:12px}
+  .ac{
+    flex:1 1 30%; border:1px solid var(--borda); background:#f7f9fb; border-radius:8px;
+    padding:11px 6px; font-size:12.5px; font-weight:700; cursor:pointer;
+    text-align:center; font-family:inherit; color:var(--texto); min-width:88px;
+  }
+  .ac.sel{background:var(--azul); color:#fff; border-color:var(--azul)}
+  .links{display:flex; gap:8px; margin-top:11px}
+  .links a{
+    flex:1; text-align:center; text-decoration:none; font-weight:800; font-size:14.5px;
+    padding:13px; border-radius:9px; color:#fff;
+  }
+  .lcall{background:var(--azul2)} .lzap{background:var(--verde)}
+  /* busca do CANAL PUBLICO do restaurante -- ele nao garimpa dado de pessoa */
+  .busca3{display:flex; gap:6px; margin-top:11px}
+  .busca3 a{
+    flex:1; text-align:center; text-decoration:none; font-weight:700; font-size:12px;
+    padding:9px 3px; border-radius:7px; background:#f2f5f9; color:var(--azul2);
+    border:1px solid var(--borda); white-space:nowrap;
+  }
+  .busca3 a:active{background:#e2eaf3}
+  .zaplinha{margin-top:8px}
+  .zapin{
+    width:100%; padding:11px; font-size:15px; font-family:inherit;
+    border:1px solid var(--borda); border-radius:8px; background:#fff;
+  }
+  .zapin:focus{outline:2px solid var(--verde); border-color:transparent}
+  .zapin:not(:placeholder-shown){border-color:var(--verde); background:#f4fbf7}
+  /* e-mail do CNPJ -- canal escrito, declarado pela propria empresa */
+  .mailinha{margin-top:10px}
+  .lmail{
+    display:block; text-decoration:none; text-align:center; font-weight:800; font-size:13.5px;
+    padding:11px; border-radius:8px; background:#fff7e6; color:#8a5a00;
+    border:1px solid #ecd9a8; word-break:break-all;
+  }
+  .lmail:active{background:#fdeecb}
+  .tagcont{
+    display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.5px; padding:2px 6px; border-radius:4px;
+    background:#f7ddd8; color:var(--laranja); margin-left:4px;
+  }
+  .obs{
+    width:100%; margin-top:11px; padding:11px; font-size:15px; font-family:inherit;
+    border:1px solid var(--borda); border-radius:8px; background:#fff;
+  }
+  .obs:focus{outline:2px solid var(--azul2); border-color:transparent}
+
+  .sync{
+    position:fixed; bottom:0; left:0; right:0; padding:9px 14px;
+    font-size:12.5px; text-align:center; z-index:60;
+    background:#0d2a47; color:#9fd0ff;
+  }
+  .sync.erro{background:#5c1a15; color:#ffc9c4}
+  .vazio{text-align:center; padding:40px 20px; color:var(--cinza); font-size:14.5px}
+  @media(min-width:720px){
+    .lista,.caixa,.ferramentas{max-width:760px; margin-left:auto; margin-right:auto}
+  }
+</style>
+</head>
+<body>
+<div id="loginGate" style="position:fixed;inset:0;z-index:9999;background:#0f1430;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:370px;background:#fff;border-radius:18px;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)">
+    <div style="font:700 22px/1.2 Montserrat,system-ui,sans-serif;color:#182A69">Pacto de 14 dias</div>
+    <div style="font:400 13px/1.5 Montserrat,system-ui,sans-serif;color:#5b6478;margin:6px 0 20px">Acesso restrito. Entre com o e-mail e a senha.</div>
+    <form id="formLogin" autocomplete="on">
+      <input id="loginEmail" type="email" placeholder="E-mail" autocomplete="username" required
+        style="width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #d8dcea;border-radius:10px;font:400 15px Montserrat,system-ui,sans-serif;margin-bottom:10px">
+      <input id="loginSenha" type="password" placeholder="Senha" autocomplete="current-password" required
+        style="width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #d8dcea;border-radius:10px;font:400 15px Montserrat,system-ui,sans-serif;margin-bottom:14px">
+      <button id="btnEntrar" type="submit"
+        style="width:100%;padding:14px;border:0;border-radius:10px;background:#2E3699;color:#fff;font:700 15px Montserrat,system-ui,sans-serif;cursor:pointer">Entrar</button>
+      <div id="loginErro" style="font:400 13px/1.5 Montserrat,system-ui,sans-serif;color:#c0392b;margin-top:12px;min-height:18px"></div>
+    </form>
+  </div>
+</div>
+
+
+<header>
+  <div class="h1">Pacto de 14 dias — Sistema de Gorjetas</div>
+  <div class="stats">
+    <div class="stat meta"><b id="sHoje">0/2</b><span>Hoje</span></div>
+    <div class="stat"><b id="sFalou">0</b><span>Falou</span></div>
+    <div class="stat"><b id="sZap">0</b><span>Zap</span></div>
+    <div class="stat"><b id="sDemo">0</b><span>Demo</span></div>
+    <div class="stat fechou"><b id="sFechou">0</b><span>Fechou</span></div>
+  </div>
+  <div class="barra">
+    <button class="btn amarelo" id="btnSortear">Sortear 2 de hoje</button>
+    <button class="btn transp" id="btnVerHoje">Ver hoje</button>
+  </div>
+  <div class="navsec">
+    <a href="contato.html">📞 Como contatar</a>
+    <a href="site.html">✓ Passo a passo do site</a>
+    <a href="ideias.html">💡 Ideias guardadas</a>
+    <a href="../video.mp4">▶ Ver o vídeo</a>
+  </div>
+</header>
+
+<!-- ============ VIDEO ============ -->
+<div class="caixa aberta" id="boxVideo">
+  <div class="topo" onclick="this.parentNode.classList.toggle('aberta')">
+    <span>Vídeo de 1 minuto — sua voz</span><span class="seta">&#9654;</span>
+  </div>
+  <div class="corpo">
+    <video id="videoVenda" controls playsinline preload="metadata"
+           style="width:100%; border-radius:9px; margin-top:14px; background:#000; display:block">
+      <source src="/video.mp4" type="video/mp4">
+      Seu navegador não consegue tocar este vídeo.
+    </video>
+
+    <div class="nota" style="margin-top:11px">
+      <b>Mostrar na hora:</b> toque no &#9654;. Roda aqui mesmo, no celular, na frente do dono.
+      75 segundos, com a sua voz.
+    </div>
+
+    <div class="nota">
+      <b>Pra mandar no zap:</b> encaminhe o <b>arquivo do Telegram</b>. Este link da página
+      só fica de pé com o computador ligado — o arquivo do Telegram fica pra sempre.
+    </div>
+
+    <a class="demo" href="../video.mp4" download="video_gorjetas.mp4" style="background:var(--azul2)">
+      Baixar o arquivo do vídeo
+    </a>
+
+    <h3>Mensagem do zap — 1 toque pra copiar</h3>
+
+    <div class="msgbox">
+      <div class="msgrot">A) Primeiro contato — pegou o número da lista</div>
+      <div class="msgtxt" id="msgA">Oi, boa tarde. Dyeison aqui, de Franca.
+
+Faço sistema de controle de gorjeta pra restaurante. O problema é esse: a gorjeta entra no faturamento da empresa, e quando o fiscal pede pra mostrar quanto foi repartido e pra quem, quase ninguém tem onde mostrar.
+
+Montei um vídeo de 1 minuto mostrando funcionando. Se fizer sentido, me manda um "vi" aqui que eu te mostro em 2 minutos, direto no seu celular.</div>
+      <button class="copiar" type="button" onclick="copiarMsg('msgA', this)">Copiar mensagem A</button>
+    </div>
+
+    <div class="msgbox">
+      <div class="msgrot">B) Depois da ligação — vocês já falaram</div>
+      <div class="msgtxt" id="msgB">Oi, aqui é o Dyeison — do sistema de gorjeta que falei com você agora.
+
+Segue o vídeo de 1 minuto que falei: o relatório já saindo pronto, com a gorjeta separada por colaborador e por turno.
+
+Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostro ao vivo em 2 minutos.</div>
+      <button class="copiar" type="button" onclick="copiarMsg('msgB', this)">Copiar mensagem B</button>
+    </div>
+
+    <div class="nota" style="margin-top:12px">
+      <b>Como usar:</b> toque em Copiar &rarr; cole no zap &rarr; <b>anexe o arquivo do vídeo</b>
+      (o do Telegram, ou o que você baixou). Não manda link — link morre se o PC desligar.
+    </div>
+  </div>
+</div>
+
+<!-- ============ ROTEIRO ============ -->
+<div class="caixa" id="boxRoteiro">
+  <div class="topo" onclick="this.parentNode.classList.toggle('aberta')">
+    <span>Ver o roteiro de 60 segundos</span><span class="seta">&#9654;</span>
+  </div>
+  <div class="corpo">
+    <h3>Abertura — 15 segundos</h3>
+    <div class="falado">"Boa tarde, falo com o dono? Sou o Dyeison, trabalho com controle de gorjeta em restaurante aqui de Franca. Não é venda — é uma pergunta: hoje como vocês fazem pra saber quanto cada colaborador recebeu no fim do mês?"</div>
+    <div class="nota"><b>Pare. Deixe ele falar.</b> 90% vai dizer: "no papel", "a gente divide no dia" ou "meu contador resolve".</div>
+
+    <h3>O gancho — 20 segundos</h3>
+    <div class="falado">"Justamente. A maioria faz assim. O problema é que a gorjeta entra no faturamento da empresa, e se ela não aparece separada, você acaba pagando imposto em cima de dinheiro que é do seu colaborador. E quando o fiscal pede pra mostrar quanto foi repartido e pra quem, não existe lugar nenhum onde isso esteja guardado."</div>
+    <div class="nota"><b>Esse é o ponto de dor:</b> não é conforto, é risco. Dono entende dinheiro saindo do bolso e fiscal batendo na porta.</div>
+
+    <h3>A mostra — 20 segundos</h3>
+    <div class="falado">"Eu tenho um sistema que registra a gorjeta da equipe e já sai pronto o relatório de quanto cada colaborador recebeu, por turno e por dia. Posso te mostrar em 2 minutos, aqui no meu celular?"</div>
+    <div class="nota"><b>Abra direto em <u>7 &#9654; Relat&oacute;rios</u>.</b> N&atilde;o abra pelo menu "Tutorial" — ele n&atilde;o quer tutorial, quer ver n&uacute;mero.</div>
+    <a class="demo" href="https://www.appsheet.com/start/cd9af2f7-faba-bf0-97ec-77146bdf079a" target="_blank" rel="noopener">Abrir o demo do sistema</a>
+
+    <h3>Fechamento</h3>
+    <div class="nota"><b>Se ele topar mostrar:</b> "Perfeito. Só me diz: qual é o maior horário de pico aí?"</div>
+    <div class="nota"><b>Se ele enrolar:</b> "Combinado, não vou tomar seu tempo. Me manda seu WhatsApp que eu te mando um vídeo de 1 minuto mostrando. Se não servir, tudo bem."</div>
+    <div class="nota"><b>Nunca encerre sem pegar o WhatsApp.</b> Isso é a vitória do primeiro contato.</div>
+
+    <h3>Objeções</h3>
+    <div class="obj">
+      <div class="perg">"Tá caro."</div>
+      <div class="resp">"Deve estar. Mas me diz uma coisa: quanto você paga hoje em contador pra conciliar isso, e quanto você acha que já perdeu de imposto a mais por não ter separado? Se o sistema pagar isso, ele se pagou."</div>
+    </div>
+    <div class="obj">
+      <div class="perg">"Já tenho meu jeito."</div>
+      <div class="resp">"Todo mundo tem. A pergunta é se o seu jeito aguenta o dia que o fiscal pedir a comprovação. Não custa nada ver os 2 minutos."</div>
+    </div>
+    <div class="obj">
+      <div class="perg">"Manda por e-mail."</div>
+      <div class="resp">"Mando, mas e-mail de restaurante ninguém abre, você sabe disso. Me dá o WhatsApp, eu te mando um vídeo de 1 minuto."</div>
+    </div>
+    <div class="obj">
+      <div class="perg">"Quanto custa?"</div>
+      <div class="resp">"Ainda não fechei o preço, porque varia conforme quantos colaboradores você tem. Me diz quantos você tem na equipe e eu te passo certinho."</div>
+      <div class="nota">Use essa enquanto o preço não estiver fechado. É honesta e te dá tempo.</div>
+    </div>
+
+    <h3>Meta do dia</h3>
+    <div class="nota"><b>2 contatos.</b> N&atilde;o 2 vendas — 2 <b>conversas</b>. Se os 2 falarem n&atilde;o, voc&ecirc; cumpriu o pacto. Se 1 pegar o WhatsApp, j&aacute; tem pra onde mandar v&iacute;deo amanh&atilde;.</div>
+  </div>
+</div>
+
+<!-- ============ BUSCA ============ -->
+<div class="ferramentas">
+  <input class="busca" id="busca" type="search" placeholder="Buscar por nome, bairro ou telefone…" autocomplete="off">
+  <div class="filtros" id="filtros">
+    <button class="chip ativo" data-f="todos">Todos</button>
+    <button class="chip" data-f="pendentes">Pendentes</button>
+    <button class="chip" data-f="hoje">Hoje</button>
+    <button class="chip" data-f="falou">Já falou</button>
+    <button class="chip" data-f="demo">Demo marcada</button>
+    <button class="chip" data-f="fechou">Fechou</button>
+  </div>
+  <div class="contador" id="contador">—</div>
+</div>
+
+<div class="lista" id="lista"></div>
+<div class="sync" id="sync">carregando…</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SB_URL = 'https://uewqkwmzpmnpebdsldto.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVld3Frd216cG1ucGViZHNsZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NjExMDgsImV4cCI6MjEwODMzNzEwOH0.wXPqKO5hkU2FqH3wDPRimoHWprI7NAWX5odknhX6bvY';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+let ESTADO = {};
+let LISTA  = [];
+
+async function carregarDados(){
+  const r1 = await sb.from('prospectos').select('*').order('nome');
+  if (r1.error) throw r1.error;
+  LISTA = (r1.data || []).map(function(r){
+    return {
+      id: r.cnpj, cnpj: r.cnpj, nome: r.nome, telefone: r.telefone, email: r.email,
+      email_marcado: r.email_marcado, bairro: r.bairro, cnae: r.cnae,
+      segmento: r.segmento, endereco: r.endereco
+    };
+  });
+  ESTADO = {};
+  (r1.data || []).forEach(function(r){
+    ESTADO[r.cnpj] = {s: r.status, o: r.obs || '', z: r.zap || '', d: r.atualizado_em};
+  });
+
+  const r2 = await sb.from('selecao_dia').select('cnpj').eq('dia', hojeStr());
+  if (r2.error) throw r2.error;
+  hojeIds = (r2.data || []).map(function(r){ return r.cnpj; });
+  gravaHojeLocal();
+}
+
+// ---- copiar mensagem do zap em 1 toque ----
+// clipboard API exige contexto seguro (o tunel e https) e so roda em clique
+// (gesture do usuario). Se falhar, cai no textarea+execCommand, que funciona
+// em navegador velho e no iOS antigo.
+function copiarMsg(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const txt = el.innerText.replace(/\u00a0/g, ' ').trim();
+
+  function ok() {
+    if (!btn) return;
+    const antes = btn.textContent;
+    btn.textContent = 'Copiado \u2713';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = antes; btn.classList.remove('ok'); }, 1800);
+  }
+  function velho() {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:-9999px';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, txt.length);
+    let deu = false;
+    try { deu = document.execCommand('copy'); } catch (e) { deu = false; }
+    document.body.removeChild(ta);
+    if (deu) ok();
+    else alert('Não consegui copiar automático. Selecione o texto e copie na mão.');
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(txt).then(ok).catch(velho);
+  } else {
+    velho();
+  }
+}
+
+const ROTULO = {pendente:'pendente', ligou:'ligou', zap:'zap', demo:'demo', nao:'não quer', fechou:'fechou'};
+const STATUS_ACEITOS = ['pendente','ligou','zap','demo','nao','fechou'];
+
+let filtro = 'todos';
+let termo  = '';
+let fila   = [];
+let hojeIds = [];
+
+function hojeStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+const HOJE_KEY = 'pacto_hoje_' + hojeStr();
+
+/* ---------- escapa ---------- */
+function esc(s){
+  return String(s===undefined||s===null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ---------- telefones ---------- */
+function digitos(t){ return String(t||'').replace(/\D/g,''); }
+function numeroCompleto(t){
+  let d = digitos(t);
+  if (d.length === 10 || d.length === 11) return '55' + d;
+  if (d.length === 8  || d.length === 9)  return '5516' + d;
+  return d;
+}
+function linkTel(t){ return 'tel:+' + numeroCompleto(t); }
+function linkZap(t){
+  return 'https://wa.me/' + numeroCompleto(t) +
+         '?text=' + encodeURIComponent('Olá! Aqui é o Dyeison, de Franca. Conforme conversamos sobre controle de gorjetas.');
+}
+
+/* ---------- selecao de hoje ---------- */
+function limpaHojeAntigo(){
+  Object.keys(localStorage).forEach(function(k){
+    if (k.indexOf('pacto_hoje_') === 0 && k !== HOJE_KEY) localStorage.removeItem(k);
+  });
+}
+function carregaHoje(){
+  limpaHojeAntigo();
+  try { hojeIds = JSON.parse(localStorage.getItem(HOJE_KEY)) || []; }
+  catch(e){ hojeIds = []; }
+  if (!Array.isArray(hojeIds)) hojeIds = [];
+}
+function gravaHojeLocal(){ localStorage.setItem(HOJE_KEY, JSON.stringify(hojeIds)); }
+async function gravaHoje(){
+  gravaHojeLocal();
+  try {
+    const del = await sb.from('selecao_dia').delete().eq('dia', hojeStr());
+    if (del.error) throw del.error;
+    if (hojeIds.length){
+      const ins = await sb.from('selecao_dia').insert(hojeIds.map(function(id){
+        return {dia: hojeStr(), cnpj: id};
+      }));
+      if (ins.error) throw ins.error;
+    }
+  } catch(e){
+    setSync('selecao do dia nao sincronizou — tente de novo', true);
+  }
+}
+
+/* ---------- estado de cada prospecto ---------- */
+function st(id){ const x = ESTADO[id]; return (x && x.s && STATUS_ACEITOS.indexOf(x.s)>=0) ? x.s : 'pendente'; }
+function obsOf(id){ const x = ESTADO[id]; return (x && x.o) ? x.o : ''; }
+function diaOf(id){ const x = ESTADO[id]; return (x && x.d) ? x.d : ''; }
+function zapOf(id){ const x = ESTADO[id]; return (x && x.z) ? x.z : ''; }
+
+/* ---------- buscar o canal publico do restaurante ----------
+   Ele NAO precisa garimpar dado de pessoa. Tem o nome e o endereco
+   na base -- um toque ja manda a query pronta pro Google.
+   O que ele acha ali e o canal que o proprio restaurante publicou. */
+function buscaGoogle(nome){ return 'https://www.google.com/search?q=' +
+  encodeURIComponent((nome || '') + ' Franca SP whatsapp'); }
+function buscaMapa(nome){ return 'https://www.google.com/maps/search/' +
+  encodeURIComponent((nome || '') + ' Franca SP'); }
+function buscaInsta(nome){ return 'https://www.google.com/search?q=' +
+  encodeURIComponent('site:instagram.com ' + (nome || '') + ' Franca'); }
+
+/* ---------- e-mail cadastrado no CNPJ ----------
+   Isso vem do registro publico da Receita: a propria empresa declarou
+   esse endereco como canal de correspondencia. Diferente de garimpo,
+   aqui a origem e comprovavel e o contato e da empresa.
+
+   O texto abaixo e a MENSAGEM A do painel (a dele), com uma frase
+   a mais: a parte financeira que ja esta no roteiro de ligacao mas
+   que faltava no texto escrito.
+   NAO dizer que o colaborador lanca nada: o cadastro e trabalho
+   administrativo da empresa, nao do colaborador. */
+function textoEmail(nome){
+  return 'Oi, boa tarde. Dyeison aqui, de Franca.\n\n' +
+    'Faço controle de gorjeta pra restaurante. O problema é esse: a gorjeta ' +
+    'entra no faturamento da empresa, e quando o fiscal pede pra mostrar ' +
+    'quanto foi repartido e pra quem, quase ninguém tem onde mostrar — e ' +
+    'acaba pagando imposto em cima de dinheiro que é do colaborador.\n\n' +
+    'Montei um vídeo de 1 minuto mostrando funcionando. Se fizer sentido, ' +
+    'responde "vi" aqui que eu te mostro em 2 minutos, direto no seu celular.\n\n' +
+    'Dyeison — AID, Franca/SP';
+}
+function linkMail(nome, email){
+  return 'mailto:' + email +
+    '?subject=' + encodeURIComponent('Controle de gorjetas no ' + (nome || '')) +
+    '&body=' + encodeURIComponent(textoEmail(nome));
+}
+
+/* ---------- salvar ---------- */
+function salvar(id, s, o, z){
+  if (!ESTADO[id]) ESTADO[id] = {};
+  if (s !== undefined) ESTADO[id].s = s;
+  if (o !== undefined) ESTADO[id].o = o;
+  if (z !== undefined) ESTADO[id].z = z;
+  ESTADO[id].d = new Date().toISOString();
+  fila.push({id:id, s:ESTADO[id].s, o:ESTADO[id].o, z:ESTADO[id].z});
+  enviar();
+  desenhar();
+}
+
+function enviar(){
+  if (!fila.length) return;
+  const lote = fila.slice();
+  fila = [];
+  setSync('salvando\u2026', false);
+  (async function(){
+    try {
+      for (let i = 0; i < lote.length; i++){
+        const x = lote[i];
+        const patch = {atualizado_em: new Date().toISOString()};
+        if (x.s !== undefined) patch.status = x.s;
+        if (x.o !== undefined) patch.obs = x.o;
+        if (x.z !== undefined) patch.zap = x.z;
+        const r = await sb.from('prospectos').update(patch).eq('cnpj', x.id);
+        if (r.error) throw r.error;
+      }
+      const h = new Date();
+      setSync('\u2713 salvo \u00e0s ' + String(h.getHours()).padStart(2,'0') + ':' + String(h.getMinutes()).padStart(2,'0'), false);
+      contagens();
+    } catch(e){
+      lote.forEach(function(x){ fila.push(x); });
+      setSync('sem conex\u00e3o \u2014 guardado no aparelho, envia sozinho quando voltar', true);
+      setTimeout(enviar, 8000);
+    }
+  })();
+}
+
+function setSync(txt, erro){
+  const el = document.getElementById('sync');
+  el.textContent = txt;
+  el.className = 'sync' + (erro ? ' erro' : '');
+}
+
+/* ---------- contagens do topo ---------- */
+function contagens(){
+  const c = {ligou:0, zap:0, demo:0, fechou:0, falou:0};
+  Object.keys(ESTADO).forEach(function(k){
+    const s = ESTADO[k] && ESTADO[k].s;
+    if (s && c[s] !== undefined) c[s]++;
+    if (['ligou','zap','demo','fechou','nao'].indexOf(s) >= 0) c.falou++;
+  });
+  let contatadosHoje = 0;
+  hojeIds.forEach(function(id){ if (st(id) !== 'pendente') contatadosHoje++; });
+
+  document.getElementById('sHoje').textContent    = contatadosHoje + '/2';
+  document.getElementById('sFalou').textContent   = c.falou;
+  document.getElementById('sZap').textContent     = c.zap;
+  document.getElementById('sDemo').textContent    = c.demo;
+  document.getElementById('sFechou').textContent  = c.fechou;
+}
+
+/* ---------- filtros ---------- */
+function passaFiltro(item){
+  const s = st(item.id);
+  switch(filtro){
+    case 'pendentes': return s === 'pendente';
+    case 'hoje':      return hojeIds.indexOf(item.id) >= 0;
+    case 'falou':     return ['ligou','zap','demo','fechou','nao'].indexOf(s) >= 0;
+    case 'demo':      return s === 'demo';
+    case 'fechou':    return s === 'fechou';
+    default:          return true;
+  }
+}
+function passaBusca(item){
+  if (!termo) return true;
+  const alvo = ((item.nome||'')+' '+(item.bairro||'')+' '+(item.telefone||'')+' '+
+                (item.segmento||'')+' '+(item.cnpj||'')+' '+(item.endereco||'')).toLowerCase();
+  return alvo.indexOf(termo) >= 0;
+}
+
+/* ---------- desenho ---------- */
+function desenhar(){
+  const cont = document.getElementById('lista');
+  let visiveis = 0;
+  let html = '';
+
+  for (let i=0; i<LISTA.length; i++){
+    const it = LISTA[i];
+    if (!passaFiltro(it) || !passaBusca(it)) continue;
+    visiveis++;
+
+    const id = it.id, s = st(id), et = ROTULO[s] || s;
+    const marca = hojeIds.indexOf(id) >= 0 ? ' ★' : '';
+
+    html += '<div class="cartao" data-id="' + esc(id) + '">';
+    html +=   '<div class="cab" onclick="abrir(this)">';
+    html +=     '<div class="ponto ' + s + '"></div>';
+    html +=     '<div class="info">';
+    html +=       '<div class="nome">' + esc(it.nome || '(sem nome)') + marca + '</div>';
+    html +=       '<div class="sub">' + esc(it.bairro || '—') + ' · <span class="tel">' + esc(it.telefone || 'sem telefone') + '</span></div>';
+    html +=     '</div>';
+    if (s !== 'pendente') html += '<span class="etiq ' + s + '">' + esc(et) + '</span>';
+    html +=     '<span class="seta2">&#9654;</span>';
+    html +=   '</div>';
+
+    html +=   '<div class="detalhe">';
+    html +=     '<div class="linha"><b>Segmento:</b> ' + esc(it.segmento || '—') + '</div>';
+    html +=     '<div class="linha"><b>CNPJ:</b> ' + esc(it.cnpj || '—') + '</div>';
+    html +=     '<div class="linha"><b>Endere&ccedil;o:</b> ' + esc(it.endereco || '—') + '</div>';
+    if (diaOf(id)) html += '<div class="linha"><b>&Uacute;ltima a&ccedil;&atilde;o:</b> ' + esc(diaOf(id).slice(0,16).replace('T',' ')) + '</div>';
+
+    const zapAchado = zapOf(id);
+
+    /* e-mail do CNPJ: se e do contador, avisa antes que ele mande pro lugar errado */
+    if (it.email){
+      if (it.email_marcado === 'contador'){
+        html += '<div class="linha" style="margin-top:9px"><b>E-mail:</b> ' + esc(it.email) +
+                ' <span class="tagcont">é do contador — não use</span></div>';
+      } else {
+        html += '<div class="mailinha">';
+        html +=   '<a class="lmail" href="' + linkMail(it.nome, it.email) + '">✉ Escrever pra ' +
+                    esc(it.email) + '</a>';
+        html += '</div>';
+      }
+    }
+
+    /* achar o CANAL PUBLICO do restaurante: um toque ja abre a busca
+       com o nome dele. Ele nao precisa garimpar dado de pessoa -- o
+       restaurante publica o proprio zap na bio, no cardapio ou no perfil. */
+    html += '<div class="busca3">';
+    html +=   '<a target="_blank" rel="noopener" href="' + buscaGoogle(it.nome) + '">🔍 Google</a>';
+    html +=   '<a target="_blank" rel="noopener" href="' + buscaMapa(it.nome) + '">🗺 Mapa</a>';
+    html +=   '<a target="_blank" rel="noopener" href="' + buscaInsta(it.nome) + '">📸 Instagram</a>';
+    html += '</div>';
+
+    html += '<div class="zaplinha">';
+    html +=   '<input class="zapin" placeholder="WhatsApp que o restaurante publicou (com DDD)" value="' +
+                esc(zapAchado) + '" data-id="' + esc(id) + '" onblur="salvarZap(this)">';
+    html += '</div>';
+
+    html += '<div class="links">';
+    if (digitos(it.telefone).length >= 8)
+      html += '<a class="lcall" href="' + linkTel(it.telefone) + '">Fixo do estabelecimento</a>';
+    if (digitos(zapAchado).length >= 10)
+      html += '<a class="lzap" target="_blank" rel="noopener" href="' + linkZap(zapAchado) + '">Abrir zap</a>';
+    if (digitos(it.telefone).length < 8 && digitos(zapAchado).length < 10)
+      html += '<span class="linha" style="margin-top:6px">Sem contato ainda — toca em 🔍 Google lá em cima.</span>';
+    html += '</div>';
+
+    html +=     '<div class="acoes">';
+    html +=       botao(id, 'ligou',   'Ligou e falou', s);
+    html +=       botao(id, 'zap',     'Pegou o zap',   s);
+    html +=       botao(id, 'demo',    'Marcou demo',   s);
+    html +=       botao(id, 'fechou',  'FECHOU',        s);
+    html +=       botao(id, 'nao',     'Não quer',      s);
+    html +=     '</div>';
+
+    html +=     '<input class="obs" placeholder="Anotação…" value="' + esc(obsOf(id)) +
+                '" data-id="' + esc(id) + '" onblur="salvarObs(this)">';
+    html +=   '</div>';
+    html += '</div>';
+  }
+
+  cont.innerHTML = html || vazioMsg();
+  document.getElementById('contador').textContent =
+    visiveis + ' de ' + LISTA.length + ' restaurantes' + (filtro !== 'todos' ? ' · filtro: ' + filtro : '');
+  contagens();
+}
+
+function vazioMsg(){
+  if (filtro === 'hoje') return '<div class="vazio">Ninguém sorteado ainda.<br><br>Toque em <b>“Sortear 2 de hoje”</b> l&aacute; em cima.</div>';
+  if (filtro === 'pendentes') return '<div class="vazio">Nenhum pendente. <b>Terminou!</b></div>';
+  if (filtro === 'fechou') return '<div class="vazio">Ainda nenhuma venda fechada.<br>É o objetivo dos 14 dias.</div>';
+  return '<div class="vazio">Nenhum restaurante encontrado.<br>Tente outro nome ou bairro.</div>';
+}
+
+function botao(id, val, rotulo, atual){
+  const sel = (atual === val) ? ' sel' : '';
+  return '<button class="ac' + sel + '" data-id="' + esc(id) + '" data-v="' + val + '">' + rotulo + '</button>';
+}
+
+function abrir(cab){ cab.parentNode.classList.toggle('aberto'); }
+
+function salvarObs(inp){ salvar(inp.dataset.id, undefined, inp.value); }
+function salvarZap(inp){ salvar(inp.dataset.id, undefined, undefined, inp.value); }
+
+/* ---------- eventos (delegados) ---------- */
+document.getElementById('lista').addEventListener('click', function(e){
+  const b = e.target.closest('.ac');
+  if (!b) return;
+  e.stopPropagation();
+  const id = b.dataset.id, val = b.dataset.v;
+  salvar(id, st(id) === val ? 'pendente' : val);
+  const cartao = b.closest('.cartao');
+  if (cartao) cartao.classList.add('aberto');
+});
+
+document.getElementById('filtros').addEventListener('click', function(e){
+  const b = e.target.closest('.chip');
+  if (!b) return;
+  filtro = b.dataset.f;
+  sincronizarChips();
+  desenhar();
+});
+
+document.getElementById('busca').addEventListener('input', function(e){
+  termo = e.target.value.toLowerCase().trim();
+  desenhar();
+});
+
+function sincronizarChips(){
+  document.querySelectorAll('.chip').forEach(function(c){
+    c.classList.toggle('ativo', c.dataset.f === filtro);
+  });
+}
+
+document.getElementById('btnSortear').onclick = function(){
+  const pendentes = LISTA.filter(function(x){ return st(x.id) === 'pendente'; });
+  const sobra = pendentes.filter(function(x){ return hojeIds.indexOf(x.id) < 0; });
+  const copia = sobra.slice();
+  const sorteados = [];
+  for (let i = 0; i < 2 && copia.length; i++){
+    const k = Math.floor(Math.random() * copia.length);
+    sorteados.push(copia[k].id);
+    copia.splice(k, 1);
+  }
+  sorteados.forEach(function(id){ if (hojeIds.indexOf(id) < 0) hojeIds.push(id); });
+  gravaHoje();
+
+  filtro = 'hoje'; termo = '';
+  document.getElementById('busca').value = '';
+  sincronizarChips();
+  desenhar();
+  setSync('★ ' + sorteados.length + ' da sorte — aba Hoje', false);
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+
+document.getElementById('btnVerHoje').onclick = function(){
+  filtro = 'hoje'; sincronizarChips(); desenhar();
+  window.scrollTo({top: document.querySelector('.ferramentas').offsetTop - 5, behavior:'smooth'});
+};
+
+/* ---------- login ---------- */
+function mostrarGate(v){
+  document.getElementById('loginGate').style.display = v ? 'flex' : 'none';
+}
+function mostraSair(v){
+  const b = document.getElementById('btnSair');
+  if (b) b.style.display = v ? 'block' : 'none';
+}
+
+document.getElementById('formLogin').addEventListener('submit', async function(ev){
+  ev.preventDefault();
+  const btn = document.getElementById('btnEntrar');
+  const erro = document.getElementById('loginErro');
+  erro.textContent = '';
+  btn.disabled = true; btn.textContent = 'Entrando\u2026';
+  const r = await sb.auth.signInWithPassword({
+    email: document.getElementById('loginEmail').value.trim(),
+    password: document.getElementById('loginSenha').value
+  });
+  btn.disabled = false; btn.textContent = 'Entrar';
+  if (r.error){
+    erro.textContent = 'Nao entrou: ' + (r.error.message || 'verifique e-mail e senha');
+    return;
+  }
+  await boot();
+});
+
+/* ---------- inicial ---------- */
+async function boot(){
+  try {
+    const sess = await sb.auth.getSession();
+    if (!sess.data.session){ mostrarGate(true); mostraSair(false); return; }
+    mostrarGate(false); mostraSair(true);
+
+    setSync('carregando\u2026', false);
+    await carregarDados();
+    carregaHoje();
+    desenhar();
+    setSync('conectado \u00b7 ' + LISTA.length + ' restaurantes carregados', false);
+  } catch(e){
+    setSync('erro ao carregar: ' + (e.message || e), true);
+  }
+}
+setInterval(function(){ if (fila.length) enviar(); }, 5000);
+boot();
+</script>
+<button id="btnSair" style="display:none;position:fixed;right:14px;bottom:14px;z-index:9998;padding:10px 16px;border:1px solid #d8dcea;border-radius:999px;background:#fff;color:#5b6478;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer" onclick="sb.auth.signOut().then(function(){ location.reload(); })">Sair</button>
+</body>
+</html>

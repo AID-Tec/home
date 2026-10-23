@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Como contatar — AID</title>
+<style>
+  :root{
+    --azul:#123a63; --azul2:#1d5c96; --fundo:#eef1f5; --card:#fff;
+    --borda:#d7dde5; --texto:#16202b; --cinza:#68758a;
+    --verde:#137a4b; --amarelo:#a86a00; --laranja:#c0400f; --vermelho:#b3261e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       background:var(--fundo); color:var(--texto); font-size:16px; line-height:1.55;
+       padding-bottom:70px}
+  header{position:sticky; top:0; z-index:50; background:var(--azul); color:#fff;
+         padding:12px 14px; box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .h1{font-size:16.5px; font-weight:800}
+  .sub{font-size:11.5px; opacity:.75; margin-top:2px}
+  .prog{height:5px; background:rgba(255,255,255,.25); border-radius:3px; margin-top:8px}
+  .prog i{display:block; height:100%; background:#5fd39b; border-radius:3px; width:0; transition:width .3s}
+
+  .caixa{background:var(--card); border:1px solid var(--borda); border-radius:10px;
+         margin:12px; padding:13px}
+  .regua{font-size:11px; text-transform:uppercase; letter-spacing:1.1px; font-weight:800;
+         color:var(--azul2); border-bottom:2px solid #e8eef5; padding-bottom:5px;
+         margin:20px 12px 9px}
+  .p{margin:0 0 10px; font-size:14.5px}
+  .p:last-child{margin-bottom:0}
+  .p b{color:var(--azul)}
+
+  .ok{display:flex; gap:11px; align-items:flex-start; padding:12px 12px;
+      background:var(--card); border:1px solid var(--borda); border-radius:9px;
+      margin:0 12px 8px; cursor:pointer; min-height:56px}
+  .ok input{margin:3px 0 0; width:23px; height:23px; flex:0 0 23px; accent-color:var(--verde); cursor:pointer}
+  .ok .tx{flex:1}
+  .ok .tt{font-weight:800; font-size:15px; line-height:1.3}
+  .ok .ex{font-size:13.5px; color:var(--cinza); margin-top:3px}
+  .ok .num{display:inline-block; margin-top:5px; font-family:ui-monospace,Consolas,monospace;
+           font-size:13px; background:#eef4fa; color:var(--azul); padding:2px 7px; border-radius:4px}
+  .ok .pode{font-size:11.5px; color:var(--verde); font-weight:800; margin-top:5px; display:none}
+  .ok.f {border-color:#bfe0cd; background:#f4fbf7}
+  .ok.f .pode{display:block}
+  .ok.f .tt{text-decoration:line-through; color:var(--cinza)}
+  .ok.nao{border-color:#e6c3bd; background:#fdf4f3}
+  .ok.nao .tt{text-decoration:line-through; color:var(--cinza)}
+
+  .tab{width:100%; border-collapse:collapse; font-size:13.5px; margin-top:4px}
+  .tab th,.tab td{border-bottom:1px solid var(--borda); padding:8px 6px; text-align:left; vertical-align:top}
+  .tab th{font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--cinza)}
+  .tab td:first-child{white-space:nowrap; font-weight:800; font-family:ui-monospace,Consolas,monospace; font-size:12.5px}
+  .tab .ouro{background:#fffdf2}
+  .tab .ruim{background:#fdf4f3}
+  .tab .okk{background:#f4fbf7}
+
+  .aviso{background:#fff6f0; border-left:4px solid var(--laranja); padding:11px 13px;
+         border-radius:0 8px 8px 0; font-size:14px; margin:0 12px 12px}
+  .aviso b{color:var(--laranja)}
+  .aviso.verde{background:#f4fbf7; border-color:var(--verde)}
+  .aviso.verde b{color:var(--verde)}
+
+  .copiar{display:block; width:100%; border:1px solid var(--borda); background:#f7f9fb;
+          padding:11px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;
+          font-family:inherit; color:var(--azul2); margin-top:9px; text-align:left}
+  .copiar:active{background:#e8eef5}
+
+  .link{display:block; text-align:center; margin:20px 12px; font-weight:800;
+        color:var(--azul2); text-decoration:none; font-size:14.5px}
+  .sync{position:fixed; bottom:0; left:0; right:0; padding:9px 14px; font-size:12.5px;
+        text-align:center; z-index:60; background:#0d2a47; color:#9fd0ff}
+  .sync.erro{background:#5c1a15; color:#ffc9c4}
+  @media(min-width:760px){ .caixa,.ok,.aviso,.copiar,.tab{max-width:820px; margin-left:auto; margin-right:auto} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h1">Como contatar — a ordem certa</div>
+  <div class="sub" id="resumo">0 de 8</div>
+  <div class="prog"><i id="barra"></i></div>
+</header>
+
+<div class="aviso verde">
+  <b>A lista já tem tudo que você precisa.</b> São <b>477 fixos de estabelecimento</b>,
+  todos de Franca. Não precisa garimpar nada em lugar nenhum — o telefone da
+  empresa já está lá.
+</div>
+
+<div class="regua">A ordem — em qualquer contato</div>
+
+<div class="ok" data-id="ordem_1">
+  <input type="checkbox" id="ordem_1">
+  <div class="tx">
+    <div class="tt">1. Liga no fixo do ESTABELECIMENTO</div>
+    <div class="ex">É o telefone da empresa, não de pessoa. Quem atende já está no contexto:
+      está no balcão, no salão, no escritório.</div>
+    <div class="num">ex.: Tutiya Sushi Bar (16) 3725-4022</div>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="ok" data-id="ordem_2">
+  <input type="checkbox" id="ordem_2">
+  <div class="tx">
+    <div class="tt">2. Não atendeu? Instagram ou Facebook DO RESTAURANTE</div>
+    <div class="ex">Perfil da empresa — foto do salão, cardápio, endereço. Não o perfil
+      pessoal de quem trabalha lá.</div>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="ok" data-id="ordem_3">
+  <input type="checkbox" id="ordem_3">
+  <div class="tx">
+    <div class="tt">3. WhatsApp só se o RESTAURANTE publicar</div>
+    <div class="ex">Se o número está na bio do perfil da empresa ou no cardápio, é
+      canal da empresa. Aí sim dá pra mandar zap direto.</div>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="ok nao" data-id="nunca_1">
+  <input type="checkbox" id="nunca_1">
+  <div class="tx">
+    <div class="tt">✗ Nunca: celular particular de sócio achado em garimpo</div>
+    <div class="ex">É dado pessoal com origem que você não consegue comprovar
+      (LGPD, Lei 13.709/2018). E, na prática, não responde: a pessoa não está no contexto
+      e filtra número desconhecido.</div>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="regua">Janela de horário — quem decide é a cozinha</div>
+
+<div class="caixa" style="padding:6px 10px">
+  <table class="tab">
+    <tr><th>Hora</th><th>No restaurante</th></tr>
+    <tr class="ruim"><td>09:00</td><td>Fechado ou em preparo. Ninguém livre pra conversar</td></tr>
+    <tr class="okk"><td>11:00</td><td>Preparação. Ainda dá, mas é corrido</td></tr>
+    <tr class="ruim"><td>12:00–14:00</td><td><b>Pico do almoço. Nunca ligar</b> — vão desligar</td></tr>
+    <tr class="ouro"><td>14:00–16:00</td><td><b>Janela de ouro.</b> Almoço acabou, jantar não começou</td></tr>
+    <tr class="okk"><td>16:00–17:30</td><td>Ainda bom</td></tr>
+    <tr class="ruim"><td>18:00+</td><td>Serviço de jantar. Ocupado</td></tr>
+  </table>
+</div>
+
+<div class="aviso">
+  <b>Sua cobrança das 15:00 cai no meio da janela de ouro</b> — e bate com o seu horário:
+  pega o filho da escola, almoça, e aí abre o computador.
+</div>
+
+<div class="regua">O que fazer com o que já foi mandado</div>
+
+<div class="ok" data-id="reparo_1">
+  <input type="checkbox" id="reparo_1">
+  <div class="tx">
+    <div class="tt">Ligar pro fixo do Tutiya Sushi Bar</div>
+    <div class="ex">O zap foi pro celular da Carla. Liga no restaurante:
+      <b>(16) 3725-4022</b>. Se atender outro mundo, tudo bem — é o canal da empresa.</div>
+    <div class="num">(16) 3725-4022</div>
+    <button class="copiar" data-txt="(16) 3725-4022">📋 Copiar o número</button>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="ok" data-id="reparo_2">
+  <input type="checkbox" id="reparo_2">
+  <div class="tx">
+    <div class="tt">Ligar pro fixo do Espina Espetos e Bebidas</div>
+    <div class="ex">O zap foi pelo Instagram direto pra pessoa. Liga no estabelecimento:
+      <b>(16) 9123-7004</b>.</div>
+    <div class="num">(16) 9123-7004</div>
+    <button class="copiar" data-txt="(16) 9123-7004">📋 Copiar o número</button>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="regua">Duas ligações de hoje</div>
+
+<div class="ok" data-id="hoje_1">
+  <input type="checkbox" id="hoje_1">
+  <div class="tx">
+    <div class="tt">1ª ligação do dia — no fixo</div>
+    <div class="ex">Sorteia no painel e liga no telefone que aparecer. 60 segundos de fala.</div>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="ok" data-id="hoje_2">
+  <input type="checkbox" id="hoje_2">
+  <div class="tx">
+    <div class="tt">2ª ligação do dia — no fixo</div>
+    <div class="ex">Mesma coisa. Só isso: duas ligações.</div>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="aviso verde">
+  <b>Um minuto por ligação.</b> Não precisa de computador, não precisa de silêncio,
+  dá pra fazer sentado no carro. O que demora não é falar — é decidir ligar.
+</div>
+
+<a class="link" href="index.html">← Voltar pro painel do pacto</a>
+<div class="sync" id="sync">carregando…</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+
+let sb = null;
+let ITENS = [];
+const ids = ['ordem_1','ordem_2','ordem_3','nunca_1','reparo_1','reparo_2','hoje_1','hoje_2'];
+
+function pintarBarra(){
+  const feitos = ITENS.filter(i => i.s === 'feito').length;
+  document.getElementById('resumo').textContent = feitos + ' de ' + ids.length + ' marcados';
+  document.getElementById('barra').style.width = (100 * feitos / ids.length) + '%';
+}
+function aplicar(){
+  const mapa = {}; ITENS.forEach(i => mapa[i.id] = i.s);
+  ids.forEach(id => {
+    const box = document.getElementById(id);
+    if (!box) return;
+    const c = box.querySelector('input');
+    c.checked = (mapa[id] === 'feito');
+    box.classList.toggle('f', c.checked);
+  });
+  pintarBarra();
+}
+function ok(){ const s=document.getElementById('sync'); s.className='sync'; s.textContent='salvo ✓';
+  clearTimeout(window._t); window._t=setTimeout(()=>{s.textContent='tudo salvo';},2500); }
+function erro(){ const s=document.getElementById('sync'); s.className='sync erro'; s.textContent='não salvei — tentando de novo…'; }
+
+document.querySelectorAll('.ok').forEach(box => {
+  const c = box.querySelector('input');
+  c.addEventListener('change', () => {
+    box.classList.toggle('f', c.checked);
+    pintarBarra();
+    sb.from('marcacoes').upsert({chave: box.dataset.id, feito: c.checked, atualizado_em: new Date().toISOString()})
+      .then(r => { if (r.error) throw r.error; ok(); })
+      .catch(() => { erro(); c.checked = !c.checked; box.classList.remove('f'); pintarBarra(); });
+  });
+});
+
+document.querySelectorAll('.copiar').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const t = b.dataset.txt;
+  const done = () => { const o = b.textContent; b.textContent = '✓ Copiado'; setTimeout(()=>{b.textContent=o;},1600); };
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(t).then(done).catch(done); }
+  else { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta);
+         ta.select(); try { document.execCommand('copy'); } catch(err){} document.body.removeChild(ta); done(); }
+}));
+
+AID.entrar().then(function(sess){
+  if (!sess) return;
+  sb = AID.sb;
+  return sb.from('marcacoes').select('chave,feito').then(function(r){
+    if (r.error) throw r.error;
+    ITENS = (r.data || []).map(function(x){ return {id:x.chave, s: x.feito ? 'feito' : 'pendente'}; });
+    aplicar();
+    document.getElementById('sync').textContent = 'tudo salvo';
+  });
+}).catch(function(){ erro(); });
+</script>
+</body>
+</html>

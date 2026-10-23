@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Publicar Gorjetas no site AID — passo a passo</title>
+<style>
+  :root{
+    --azul:#123a63; --azul2:#1d5c96; --fundo:#eef1f5; --card:#fff;
+    --borda:#d7dde5; --texto:#16202b; --cinza:#68758a;
+    --verde:#137a4b; --amarelo:#a86a00; --laranja:#c0400f; --vermelho:#b3261e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       background:var(--fundo); color:var(--texto); font-size:16px; line-height:1.55;
+       padding-bottom:60px}
+  header{position:sticky; top:0; z-index:50; background:var(--azul); color:#fff;
+         padding:12px 14px; box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .h1{font-size:16.5px; font-weight:800}
+  .sub{font-size:11.5px; opacity:.75; margin-top:2px}
+  .barra{height:8px; background:rgba(255,255,255,.18); border-radius:6px; margin-top:10px; overflow:hidden}
+  .barra > i{display:block; height:100%; width:0; background:#8ff0be; transition:width .3s}
+  .cont{font-size:12.5px; margin-top:6px; color:#ffd166; font-weight:700}
+
+  .aviso{background:#fff6f0; border-left:4px solid var(--laranja); margin:12px;
+         padding:11px 13px; border-radius:0 8px 8px 0; font-size:14px}
+  .aviso b{color:var(--laranja)}
+
+  .fase{
+    font-size:11px; text-transform:uppercase; letter-spacing:1.2px; font-weight:800;
+    color:var(--azul2); background:#e6edf5; margin:20px 12px 8px; padding:9px 12px;
+    border-radius:8px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .fase span{font-size:10.5px; color:var(--cinza); letter-spacing:.3px; text-transform:none; font-weight:600}
+
+  .passo{
+    display:flex; gap:12px; background:var(--card); border:1px solid var(--borda);
+    border-radius:10px; margin:0 12px 9px; padding:13px; align-items:flex-start;
+    cursor:pointer;
+  }
+  .passo.feito{background:#f2fbf6; border-color:#b7e3cd}
+  .passo input{
+    width:22px; height:22px; margin:1px 0 0; flex-shrink:0; accent-color:var(--verde); cursor:pointer;
+  }
+  .corpo{flex:1; min-width:0}
+  .num{font-size:10.5px; font-weight:800; color:var(--cinza); letter-spacing:.8px}
+  .tt{font-weight:800; font-size:15px; margin-top:1px}
+  .passo.feito .tt{text-decoration:line-through; color:var(--cinza)}
+  .exp{font-size:14px; color:var(--cinza); margin-top:5px}
+  .exp b{color:var(--texto)}
+  .onde{font-size:13px; background:#f2f7fd; border-left:3px solid var(--azul2);
+        padding:7px 10px; border-radius:0 6px 6px 0; margin-top:7px}
+
+  .bloco{border:1px solid var(--borda); border-radius:8px; margin-top:9px; overflow:hidden; background:#fff}
+  .bloco .rot{font-size:10px; text-transform:uppercase; letter-spacing:.8px; font-weight:800;
+              background:#eef4fa; color:var(--azul2); padding:7px 10px}
+  .bloco .txt{padding:11px 12px; font-size:14.5px; white-space:pre-line; line-height:1.55}
+  .bloco .txt h4{margin:0 0 4px; font-size:14.5px}
+  .copiar{display:block; width:100%; border:0; border-top:1px solid var(--borda);
+          background:#f7f9fb; padding:11px; font-size:13px; font-weight:800; cursor:pointer;
+          font-family:inherit; color:var(--azul2)}
+  .copiar:active{background:#e8eef5}
+  .copiar.ok{background:#e0f5ea; color:var(--verde)}
+
+  .lugar{font-family:ui-monospace,Consolas,monospace; font-size:12.5px; background:#16202b;
+         color:#9fd0ff; padding:7px 10px; border-radius:6px; margin-top:8px; word-break:break-all}
+  a{color:var(--azul2)}
+
+  .btnz{
+    display:block; text-align:center; background:var(--verde); color:#fff; text-decoration:none;
+    font-weight:800; padding:14px; border-radius:9px; margin:16px 12px; font-size:15px;
+  }
+  .sync{position:fixed; bottom:0; left:0; right:0; padding:9px 14px; font-size:12.5px;
+        text-align:center; z-index:60; background:#0d2a47; color:#9fd0ff}
+  .sync.erro{background:#5c1a15; color:#ffc9c4}
+  @media(min-width:760px){ .passo,.fase,.aviso{max-width:820px; margin-left:auto; margin-right:auto} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h1">Publicar a página de Gorjetas no site AID</div>
+  <div class="sub">Passo a passo com caixinha — marca conforme faz, eu confiro depois</div>
+  <div class="barra"><i id="barra"></i></div>
+  <div class="cont" id="cont">0 de 19 feitos</div>
+</header>
+
+<div class="aviso">
+  <b>Bloqueia publicação:</b> preço e número do WhatsApp ainda não confirmados.
+  Os dois primeiros itens têm que estar marcados <b>antes</b> de você abrir o Google Sites.
+  O texto de todos os blocos está aqui dentro — dá pra copiar direto por um toque.
+</div>
+
+<!-- ================= FASE 0 ================= -->
+<div class="fase">FASE 0 — O que mudou com a página nova <span>~10 min</span></div>
+
+<label class="passo" data-id="site_16">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 0.1</div>
+    <div class="tt">Escolher a rota: montar no Sites ou incorporar a página pronta</div>
+    <div class="exp">O Google Sites <b>não importa HTML</b>. Existem duas rotas, e elas dão resultados diferentes:</div>
+    <div class="onde">
+      <b>(A) Montar bloco por bloco</b> — é o que os PASSOS 4 a 15 abaixo fazem. Funciona, mas o visual fica o do Google Sites, não o do DesignSystem.<br><br>
+      <b>(B) Incorporar a página pronta</b> — a página já está feita em <b>site/index.html</b>, com as cores e a fonte da AID. Ela precisa estar num endereço público, e aí entra no Sites por <b>Inserir &gt; Incorporar &gt; Por URL</b>. O visual fica idêntico.
+    </div>
+    <div class="exp"><b>Recomendo a B</b> — é a única que mantém o DesignSystem. A A serve de plano B.</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_17">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 0.2</div>
+    <div class="tt">Subir o vídeo no YouTube como “Não listado”</div>
+    <div class="exp">O Google Sites não aceita arquivo <b>.mp4</b>. Vídeo só entra por YouTube ou por link. O vídeo novo tem <b>75 segundos</b> e está em <b>video/video_gorjetas_ds.mp4</b>.</div>
+    <div class="onde">YouTube Studio → <b>Criar</b> → <b>Enviar vídeos</b> → escolha o arquivo → Visibilidade: <b>Não listado</b> → copie o link</div>
+    <div class="exp"><b>Não listado, não Privado.</b> Privado não toca em página pública. Não listado = só quem tem o link vê.</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_18">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 0.3</div>
+    <div class="tt">Acertar o tema do Sites com as cores da AID</div>
+    <div class="exp">Só se você for pela rota A. O Sites não aceita CSS, então o DesignSystem entra pelo tema — e fica aproximado, não idêntico.</div>
+    <div class="onde">
+      <b>Tema</b> (painel da direita) → <b>Personalizar</b>:<br>
+      cor principal <b>#2E3699</b> · fundo <b>#F9F9F9</b> · texto <b>#1C1C1C</b> · destaque <b>#4509AE</b><br>
+      fonte: <b>Montserrat</b> nos títulos e no corpo (se aparecer na lista)
+    </div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_19">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 0.4</div>
+    <div class="tt">Abrir a página nova como referência</div>
+    <div class="exp">A ordem das seções, os textos e o vídeo estão nela. Se for pela rota A, é daqui que você copia — não do arquivo antigo.</div>
+    <div class="lugar">D:\AIDSoluções\Gestão Gorjeta\site\index.html</div>
+  </div>
+</label>
+
+<!-- ================= FASE 1 ================= -->
+<div class="fase">FASE 1 — Antes de abrir o Google Sites <span>~5 min</span></div>
+
+<label class="passo" data-id="site_1">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 1</div>
+    <div class="tt">Decidir o preço do Bloco 9</div>
+    <div class="exp">Sem preço não existe página de venda. O texto já está escrito abaixo, mas os valores dependem da sua decisão. <b>Não publique sem marcar isto.</b></div>
+    <div class="onde">Opções que estão na mesa: <b>R$ 997 + R$ 57,99/mês</b> (recomendado) · <b>R$ 150 + R$ 57,99/mês</b> · <b>R$ 150 + R$ 149/mês</b>. Me responde qual e eu fecho o bloco pra você.</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_2">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 2</div>
+    <div class="tt">Conferir o número do WhatsApp</div>
+    <div class="exp">Todos os botões da página levarão pra ele. Se o número estiver errado, a página publicada vira porta fechada.</div>
+    <div class="lugar">https://wa.me/5516999986836</div>
+    <div class="exp">Se não for o seu, me corrige que eu troco em todos os blocos antes de você colar.</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_3">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 3</div>
+    <div class="tt">Deixar as 2 imagens em lugar fácil</div>
+    <div class="exp">Imagem de capa e imagem do relatório. Já estão prontas, 1920×1080, com a marca AID certa. Você vai precisar subir as duas pelo seletor de arquivos do Google Sites.</div>
+    <div class="lugar">D:\ORGCONSULT\PLANO\site_imagens\</div>
+    <div class="exp"><b>01-capa.png</b> → cabeçalho · <b>02-relatorio.png</b> → seção da demonstração</div>
+  </div>
+</label>
+
+<!-- ================= FASE 2 ================= -->
+<div class="fase">FASE 2 — Montar a página <span>~30 min</span></div>
+
+<label class="passo" data-id="site_4">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 4</div>
+    <div class="tt">Abrir o editor do site e criar a página nova</div>
+    <div class="exp">Entra pelo editor, não pela página publicada.</div>
+    <div class="onde">sites.google.com → clique no seu site <b>AID</b> → aba <b>Páginas</b> (painel da direita) → <b>+</b> → nomeie <b>Gorjetas</b> → Enter</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_5">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 5</div>
+    <div class="tt">Cabeçalho: imagem + título + subtítulo</div>
+    <div class="exp">O Google Sites já abre com um bloco de cabeçalho. Escolha o tipo <b>Capa</b> e troque a imagem de fundo pela <b>01-capa.png</b>.</div>
+    <div class="bloco">
+      <div class="rot">Título (cole no lugar)</div>
+      <div class="txt" id="c_tit">A gorjeta que ninguém sabe quanto é.</div>
+      <button class="copiar" type="button" data-alvo="c_tit">Copiar</button>
+    </div>
+    <div class="bloco">
+      <div class="rot">Subtítulo (cole embaixo)</div>
+      <div class="txt" id="c_sub">Registre por colaborador, por turno e por dia. O relatório sai pronto — e você tem a comprovação na hora em que precisar.</div>
+      <button class="copiar" type="button" data-alvo="c_sub">Copiar</button>
+    </div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_6">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 6</div>
+    <div class="tt">Botão da capa</div>
+    <div class="exp">Painel da direita → <b>Inserir → Botões</b>. Texto: <b>Peça uma demonstração</b>. Link abaixo.</div>
+    <div class="lugar">https://wa.me/5516999986836?text=Quero%20ver%20o%20sistema%20de%20gorjetas%20funcionando</div>
+    <div class="exp">Clique em <b>Botões</b> no painel, cole o texto, cole o link, <b>Guardar</b>.</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_7">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 7</div>
+    <div class="tt">Seção "O problema"</div>
+    <div class="exp">Inserir → <b>Texto</b>, estilo <b>Cabeçalho</b> pro título e <b>Normal</b> pro resto. Depois, dois blocos com marcador.</div>
+    <div class="bloco">
+      <div class="rot">Título</div>
+      <div class="txt" id="c_p1">O problema não é a gorjeta. É o que ninguém anotou.</div>
+      <button class="copiar" type="button" data-alvo="c_p1">Copiar</button>
+    </div>
+    <div class="bloco">
+      <div class="rot">Texto</div>
+      <div class="txt" id="c_p2">Em quase todo restaurante de Franca, a gorjeta é resolvida assim: no papel, na cabeça de alguém, ou numa divisão feita "no dia".
+
+Funciona. Até o dia em que alguém precisa responder três perguntas simples:
+
+• Quanto cada colaborador recebeu neste mês?
+• Isso bate com o que saiu na maquininha?
+• Onde está escrito isso?
+
+Hoje a resposta quase sempre é "meu contador resolve". E o contador só consegue resolver se existir um registro pra ele resolver.</div>
+      <button class="copiar" type="button" data-alvo="c_p2">Copiar</button>
+    </div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_8">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 8</div>
+    <div class="tt">Seção "O que o sistema resolve"</div>
+    <div class="exp">Título + três blocos, um por benefício. Repara que é <b>benefício</b>, não característica técnica.</div>
+    <div class="bloco">
+      <div class="rot">Conteúdo completo</div>
+      <div class="txt" id="c_s1">O que o sistema resolve
+
+1. Registra a gorjeta por pessoa, turno e dia.
+Cada lançamento tem quem, quando e quanto. Nada fica na cabeça de ninguém.
+
+2. O relatório sai pronto no fim do mês.
+Quanto cada colaborador recebeu, em quantos dias, e o total do período. Sem planilha montada na mão, sem soma que ninguém confere.
+
+3. Você entrega ao contador o que ele pede.
+Quando a prestação de contas chegar, o número está lá — separado e conferível.</div>
+      <button class="copiar" type="button" data-alvo="c_s1">Copiar</button>
+    </div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_9">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 9</div>
+    <div class="tt">Imagem do relatório + legenda</div>
+    <div class="exp">Inserir → <b>Carregar</b> → escolha <b>02-relatorio.png</b>. A legenda é obrigatória: ela avisa que os números são de exemplo, e é isso que impede a página de parecer uma mentira.</div>
+    <div class="bloco">
+      <div class="rot">Legenda (abaixo da imagem)</div>
+      <div class="txt" id="c_leg">Dados de exemplo. Assim que o sistema entrar no seu restaurante, esses números passam a ser os seus.</div>
+      <button class="copiar" type="button" data-alvo="c_leg">Copiar</button>
+    </div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_10">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 10</div>
+    <div class="tt">Seções "Em 3 passos" e "Para quem é"</div>
+    <div class="exp">Duas seções seguidas. A segunda usa marcador — é o texto que o dono do restaurante lê e se reconhece.</div>
+    <div class="bloco">
+      <div class="rot">Conteúdo completo</div>
+      <div class="txt" id="c_s2">Em 3 passos
+
+Passo 1 — Cadastramos sua equipe.
+Colaboradores, turnos e dias. Leva poucos minutos.
+
+Passo 2 — A gorjeta é lançada.
+No celular, no dia, enquanto a informação ainda está fresca.
+
+Passo 3 — O relatório sai sozinho.
+Mês fechado, você abre o relatório. Está tudo lá.
+
+Para quem é
+
+• Restaurantes, bares e lanchonetes que dividem gorjeta com a equipe
+• Quem hoje resolve isso no papel ou na cabeça de alguém
+• Quem precisa prestar contas ao contador — e não tem onde mostrar
+• Quem já precisou explicar um número que ninguém tinha anotado</div>
+      <button class="copiar" type="button" data-alvo="c_s2">Copiar</button>
+    </div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_11">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 11</div>
+    <div class="tt">CTA principal (WhatsApp)</div>
+    <div class="exp">Este é o botão que mais vai ser clicado. Texto curto, sem enrolação.</div>
+    <div class="bloco">
+      <div class="rot">Título</div>
+      <div class="txt" id="c_c1">Veja funcionando no seu celular. Leva 2 minutos.</div>
+      <button class="copiar" type="button" data-alvo="c_c1">Copiar</button>
+    </div>
+    <div class="bloco">
+      <div class="rot">Texto</div>
+      <div class="txt" id="c_c2">Eu mostro o sistema rodando, com a realidade do seu restaurante, direto no seu celular. São dois minutos, sem compromisso e sem instalar nada.</div>
+      <button class="copiar" type="button" data-alvo="c_c2">Copiar</button>
+    </div>
+    <div class="lugar">Link do botão: https://wa.me/5516999986836?text=Quero%20uma%20demonstra%C3%A7%C3%A3o%20do%20sistema%20de%20gorjetas</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_12">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 12</div>
+    <div class="tt">Investimento + Perguntas frequentes + rodapé</div>
+    <div class="exp">O de investimento só entra depois que o <b>passo 1</b> estiver decidido. FAQ fecha as objeções sozinhas, antes de você ligar.</div>
+    <div class="bloco">
+      <div class="rot">Investimento — estrutura recomendada</div>
+      <div class="txt" id="c_inv">Investimento
+
+Implantação: R$ 997,00 — pagamento único
+Cadastro da sua equipe, configuração do sistema e treinamento com quem for utilizar. É aqui que está o trabalho.
+
+Manutenção: R$ 57,99 por mês
+Hospedagem, suporte e ajustes. Cancele quando quiser.
+
+Condições e formas de pagamento: me pergunte no WhatsApp.</div>
+      <button class="copiar" type="button" data-alvo="c_inv">Copiar</button>
+    </div>
+    <div class="bloco">
+      <div class="rot">Perguntas frequentes</div>
+      <div class="txt" id="c_faq">Perguntas frequentes
+
+Preciso instalar alguma coisa?
+Não. O sistema é online — abre no navegador do celular ou do computador.
+
+Funciona no meu celular?
+Funciona. Ele foi feito pra ser usado na correria do salão, não numa mesa de escritório.
+
+E se eu tiver dúvida depois de contratado?
+Suporte por WhatsApp.
+
+Dá pra testar antes de decidir?
+Dá. É só pedir a demonstração — eu mostro com a realidade do seu restaurante, não com tela de exemplo.</div>
+      <button class="copiar" type="button" data-alvo="c_faq">Copiar</button>
+    </div>
+    <div class="bloco">
+      <div class="rot">Rodapé</div>
+      <div class="txt" id="c_rod">AID — Tecnologia Resolutiva
+www.aidtr.com.br</div>
+      <button class="copiar" type="button" data-alvo="c_rod">Copiar</button>
+    </div>
+  </div>
+</label>
+
+<!-- ================= FASE 3 ================= -->
+<div class="fase">FASE 3 — Publicar e conferir <span>~10 min</span></div>
+
+<label class="passo" data-id="site_13">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 13</div>
+    <div class="tt">Publicar</div>
+    <div class="exp">Canto superior direito → <b>Publicar</b>. Na primeira vez ele pergunta o caminho da página nova.</div>
+    <div class="onde">Caminho sugerido: <b>aidtr.com.br/gorjetas</b></div>
+    <div class="exp">Se o domínio próprio já estiver conectado ao site, ele aparece na lista de endereços. Publicar <b>não</b> apaga as outras páginas.</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_14">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 14</div>
+    <div class="tt">Testar no celular — obrigatório</div>
+    <div class="exp">Abre no <b>celular</b>, não no computador. Você vai divulgar esse link por zap, e é no telefone que ele vai ser aberto.</div>
+    <div class="onde">Confere 3 coisas: <b>1)</b> a página abriu · <b>2)</b> o texto não está cortado · <b>3)</b> toque em cada botão e vê se abre o WhatsApp com o nome certo</div>
+  </div>
+</label>
+
+<label class="passo" data-id="site_15">
+  <input type="checkbox">
+  <div class="corpo">
+    <div class="num">PASSO 15</div>
+    <div class="tt">Me avisar pra eu conferir</div>
+    <div class="exp">Manda o link aqui. Eu abro, leio tudo, testo os botões e te devolvo o que está quebrado. É o fechamento do ciclo: <b>você marca as caixinhas, eu confiro se o que foi proposto virou coisa real.</b></div>
+    <div class="exp">Se a página ficar com poucas caixinhas marcadas por muitos dias, é sinal de que algo te segurou — me chama que a gente destrava.</div>
+  </div>
+</label>
+
+<a class="btnz" href="index.html" style="margin-left:12px;margin-right:12px">Ir pro painel do pacto</a>
+
+<div class="sync" id="sync">carregando…</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+
+let sb = null;
+const ESTADO = {};   // id -> true/false
+const NS = 'site_';  // prefixo: itens desta pagina
+
+function itens(){ return Array.prototype.slice.call(document.querySelectorAll('.passo')); }
+
+function pintar(){
+  let n = 0;
+  itens().forEach(el=>{
+    const id = el.dataset.id, on = !!ESTADO[id];
+    const cb = el.querySelector('input');
+    if (cb.checked !== on) cb.checked = on;
+    el.classList.toggle('feito', on);
+    if (on) n++;
+  });
+  const total = itens().length;
+  document.getElementById('cont').textContent = n + ' de ' + total + ' feitos';
+  document.getElementById('barra').style.width = (total ? (n/total*100) : 0) + '%';
+}
+
+function sincronizar(id){
+  sb.from('marcacoes').upsert({chave: id, feito: !!ESTADO[id], atualizado_em: new Date().toISOString()})
+    .then(r=>{ if (r.error) throw r.error; marcarOk(); })
+    .catch(()=>{ marcarErro(); });
+}
+function marcarOk(){ const s=document.getElementById('sync'); s.className='sync'; s.textContent='salvo ✓'; 
+  clearTimeout(window._t); window._t=setTimeout(()=>{s.textContent='tudo salvo';},2500); }
+function marcarErro(){ const s=document.getElementById('sync'); s.className='sync erro'; s.textContent='não salvei — tentando de novo…'; }
+
+itens().forEach(el=>{
+  const cb = el.querySelector('input');
+  cb.addEventListener('change', e=>{
+    e.stopPropagation();
+    ESTADO[el.dataset.id] = cb.checked;
+    pintar(); sincronizar(el.dataset.id);
+  });
+  el.addEventListener('click', e=>{
+    if (e.target === cb) return;
+    e.preventDefault();
+    cb.checked = !cb.checked;
+    ESTADO[el.dataset.id] = cb.checked;
+    pintar(); sincronizar(el.dataset.id);
+  });
+});
+
+// ---- copiar (mesmo caminho do painel) ----
+document.querySelectorAll('.copiar').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation();
+    const el = document.getElementById(btn.dataset.alvo);
+    if(!el) return;
+    const txt = el.innerText.replace(/\u00a0/g,' ').trim();
+    const pronto = ()=>{ const a=btn.textContent; btn.textContent='Copiado ✓'; btn.classList.add('ok');
+      setTimeout(()=>{btn.textContent=a; btn.classList.remove('ok');},1500); };
+    const velho = ()=>{ const ta=document.createElement('textarea'); ta.value=txt;
+      ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;top:0;left:-9999px';
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,txt.length);
+      let d=false; try{d=document.execCommand('copy');}catch(err){}
+      document.body.removeChild(ta); d?pronto():alert('Não consegui copiar. Selecione e copie na mão.'); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(pronto).catch(velho);
+    else velho();
+  });
+});
+
+// ---- carrega estado gravado ----
+AID.entrar().then(function(sess){
+  if (!sess) return;
+  sb = AID.sb;
+  return sb.from('marcacoes').select('chave,feito').then(function(r){
+    if (r.error) throw r.error;
+    (r.data || []).forEach(function(x){ ESTADO[x.chave] = !!x.feito; });
+    pintar();
+    document.getElementById('sync').textContent = 'tudo salvo';
+  });
+}).catch(function(){
+  document.getElementById('sync').className='sync erro';
+  document.getElementById('sync').textContent = 'sem conexão — marcação não vai salvar';
+  pintar();
+});
+</script>
+</body>
+</html>
