@@ -1,4 +1,4 @@
-/* AID — login compartilhado das páginas de campo.
+/* AID — login compartilhado das páginas do pacto.
    Uso: AID.entrar().then(sess => { if (!sess) return; ... })
    A chave abaixo é a anon (pública por design). O que protege os dados é o RLS no banco. */
 (function () {
@@ -41,15 +41,40 @@
         if (r.error) { erro.textContent = 'Nao entrou: ' + (r.error.message || 'verifique e-mail e senha'); return; }
         var g = document.getElementById('loginGate');
         if (g) g.style.display = 'none';
+        botoes();
         document.dispatchEvent(new CustomEvent('aid:login'));
         if (window.__aidPendente) { var f = window.__aidPendente; window.__aidPendente = null; f(r.data.session); }
       });
     });
   }
 
+  function botoes() {
+    if (document.getElementById('aidConta')) return;
+    var d = document.createElement('div');
+    d.id = 'aidConta';
+    d.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:9998;display:flex;gap:8px';
+    d.innerHTML =
+      '<button id="aidSenha" style="padding:10px 16px;border:1px solid #d8dcea;border-radius:999px;background:#fff;color:#5b6478;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer">Trocar senha</button>' +
+      '<button id="aidSair" style="padding:10px 16px;border:1px solid #d8dcea;border-radius:999px;background:#fff;color:#5b6478;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer">Sair</button>';
+    document.body.appendChild(d);
+    document.getElementById('aidSair').onclick = function () {
+      sb.auth.signOut().then(function () { location.reload(); });
+    };
+    document.getElementById('aidSenha').onclick = trocarSenha;
+  }
+
+  function trocarSenha() {
+    var p = window.prompt('Nova senha (minimo 6 caracteres):');
+    if (!p) return;
+    if (p.length < 6) { window.alert('Curta demais — minimo 6 caracteres.'); return; }
+    sb.auth.updateUser({ password: p }).then(function (r) {
+      window.alert(r.error ? ('Nao trocou: ' + r.error.message) : 'Senha trocada.');
+    });
+  }
+
   async function entrar() {
     var s = await sb.auth.getSession();
-    if (s.data && s.data.session) return s.data.session;
+    if (s.data && s.data.session) { botoes(); return s.data.session; }
     return new Promise(function (resolve) {
       window.__aidPendente = resolve;
       abrirGate();

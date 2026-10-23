@@ -769,9 +769,22 @@ function mostrarGate(v){
   document.getElementById('loginGate').style.display = v ? 'flex' : 'none';
 }
 function mostraSair(v){
-  const b = document.getElementById('btnSair');
-  if (b) b.style.display = v ? 'block' : 'none';
+  const c = document.getElementById('aidConta');
+  if (c) c.style.display = v ? 'flex' : 'none';
 }
+
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('btnSair').addEventListener('click', function(){
+    sb.auth.signOut().then(function(){ location.reload(); });
+  });
+  document.getElementById('btnSenha').addEventListener('click', async function(){
+    const p = prompt('Nova senha (minimo 6 caracteres):');
+    if (!p) return;
+    if (p.length < 6) { alert('Curta demais — minimo 6 caracteres.'); return; }
+    const r = await sb.auth.updateUser({password: p});
+    alert(r.error ? ('Nao trocou: ' + r.error.message) : 'Senha trocada.');
+  });
+});
 
 document.getElementById('formLogin').addEventListener('submit', async function(ev){
   ev.preventDefault();
@@ -810,6 +823,9 @@ async function boot(){
 setInterval(function(){ if (fila.length) enviar(); }, 5000);
 boot();
 </script>
-<button id="btnSair" style="display:none;position:fixed;right:14px;bottom:14px;z-index:9998;padding:10px 16px;border:1px solid #d8dcea;border-radius:999px;background:#fff;color:#5b6478;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer" onclick="sb.auth.signOut().then(function(){ location.reload(); })">Sair</button>
+<div id="aidConta" style="display:none;position:fixed;right:14px;bottom:14px;z-index:9998;gap:8px">
+  <button id="btnSenha" style="padding:10px 16px;border:1px solid #d8dcea;border-radius:999px;background:#fff;color:#5b6478;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer">Trocar senha</button>
+  <button id="btnSair" style="padding:10px 16px;border:1px solid #d8dcea;border-radius:999px;background:#fff;color:#5b6478;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer">Sair</button>
+</div>
 </body>
 </html>
