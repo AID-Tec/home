@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pacto 14 dias — Gorjetas</title>
+<title>Pacto Gorjeta — 14 dias</title>
 <style>
   :root{
     --azul:#123a63; --azul2:#1d5c96; --fundo:#eef1f5; --card:#fff;
@@ -111,6 +111,7 @@
   .ponto.ligou{background:var(--azul2)} .ponto.zap{background:var(--roxo)}
   .ponto.demo{background:var(--amarelo)} .ponto.fechou{background:var(--verde)}
   .ponto.nao{background:var(--vermelho)}
+  .ponto.fora{background:#8a94a6}
   .info{flex:1; min-width:0}
   .nome{font-weight:700; font-size:15.5px; line-height:1.3;
         overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -122,6 +123,7 @@
   .etiq.ligou{background:#e3f0fc; color:var(--azul2)} .etiq.zap{background:#eee6fb; color:var(--roxo)}
   .etiq.demo{background:#fdf3dd; color:var(--amarelo)} .etiq.fechou{background:#e0f5ea; color:var(--verde)}
   .etiq.nao{background:#fbe6e5; color:var(--vermelho)}
+  .etiq.fora{background:#eceff3; color:#5b6478}
   .seta2{color:#aab4c2; font-size:13px; flex-shrink:0; transition:transform .2s}
   .cartao.aberto .seta2{transform:rotate(90deg)}
 
@@ -136,6 +138,12 @@
     text-align:center; font-family:inherit; color:var(--texto); min-width:88px;
   }
   .ac.sel{background:var(--azul); color:#fff; border-color:var(--azul)}
+  .ac.acfora{flex:1 1 100%; background:#fff; color:var(--cinza); border-style:dashed}
+  .ac.acfora.sel{background:#5b6478; color:#fff; border-style:solid; border-color:#5b6478}
+  .faixafora{
+    background:#eef1f5; border-left:4px solid #8a94a6; color:#4d5666;
+    font-size:13px; line-height:1.45; padding:9px 11px; margin-top:10px; border-radius:0 7px 7px 0;
+  }
   .links{display:flex; gap:8px; margin-top:11px}
   .links a{
     flex:1; text-align:center; text-decoration:none; font-weight:800; font-size:14.5px;
@@ -191,7 +199,7 @@
 <body>
 <div id="loginGate" style="position:fixed;inset:0;z-index:9999;background:#0f1430;display:flex;align-items:center;justify-content:center;padding:20px">
   <div style="width:100%;max-width:370px;background:#fff;border-radius:18px;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)">
-    <div style="font:700 22px/1.2 Montserrat,system-ui,sans-serif;color:#182A69">Pacto de 14 dias</div>
+    <div style="font:700 22px/1.2 Montserrat,system-ui,sans-serif;color:#182A69">Pacto Gorjeta</div>
     <div style="font:400 13px/1.5 Montserrat,system-ui,sans-serif;color:#5b6478;margin:6px 0 20px">Acesso restrito. Entre com o e-mail e a senha.</div>
     <form id="formLogin" autocomplete="on">
       <input id="loginEmail" type="email" placeholder="E-mail" autocomplete="username" required
@@ -207,7 +215,7 @@
 
 
 <header>
-  <div class="h1">Pacto de 14 dias — Sistema de Gorjetas</div>
+  <div class="h1">Pacto Gorjeta — 14 dias</div>
   <div class="stats">
     <div class="stat meta"><b id="sHoje">0/2</b><span>Hoje</span></div>
     <div class="stat"><b id="sFalou">0</b><span>Falou</span></div>
@@ -222,6 +230,7 @@
   <div class="navsec">
     <a href="contato.html">📞 Como contatar</a>
     <a href="site.html">✓ Passo a passo do site</a>
+    <a href="copy.html">✍ Aprovar as copies</a>
     <a href="ideias.html">💡 Ideias guardadas</a>
     <a href="../video.mp4">▶ Ver o vídeo</a>
   </div>
@@ -340,6 +349,7 @@ Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostr
     <button class="chip" data-f="falou">Já falou</button>
     <button class="chip" data-f="demo">Demo marcada</button>
     <button class="chip" data-f="fechou">Fechou</button>
+    <button class="chip" data-f="fora">Fora do escopo</button>
   </div>
   <div class="contador" id="contador">—</div>
 </div>
@@ -413,8 +423,8 @@ function copiarMsg(id, btn) {
   }
 }
 
-const ROTULO = {pendente:'pendente', ligou:'ligou', zap:'zap', demo:'demo', nao:'não quer', fechou:'fechou'};
-const STATUS_ACEITOS = ['pendente','ligou','zap','demo','nao','fechou'];
+const ROTULO = {pendente:'pendente', ligou:'ligou', zap:'zap', demo:'demo', nao:'não quer', fora:'fora do escopo', fechou:'fechou'};
+const STATUS_ACEITOS = ['pendente','ligou','zap','demo','nao','fora','fechou'];
 
 let filtro = 'todos';
 let termo  = '';
@@ -574,7 +584,7 @@ function contagens(){
     if (['ligou','zap','demo','fechou','nao'].indexOf(s) >= 0) c.falou++;
   });
   let contatadosHoje = 0;
-  hojeIds.forEach(function(id){ if (st(id) !== 'pendente') contatadosHoje++; });
+  hojeIds.forEach(function(id){ const s = st(id); if (s !== 'pendente' && s !== 'fora') contatadosHoje++; });
 
   document.getElementById('sHoje').textContent    = contatadosHoje + '/2';
   document.getElementById('sFalou').textContent   = c.falou;
@@ -592,6 +602,7 @@ function passaFiltro(item){
     case 'falou':     return ['ligou','zap','demo','fechou','nao'].indexOf(s) >= 0;
     case 'demo':      return s === 'demo';
     case 'fechou':    return s === 'fechou';
+    case 'fora':      return s === 'fora';
     default:          return true;
   }
 }
@@ -635,6 +646,11 @@ function desenhar(){
 
     const zapAchado = zapOf(id);
 
+    if (s === 'fora'){
+      html += '<div class="faixafora"><b>Fora do escopo.</b> Não entra no sorteio do dia e não conta como contato. ' +
+              'Se foi engano, toque em <b>Voltar pra fila</b> no fim do cartão.</div>';
+    }
+
     /* e-mail do CNPJ: se e do contador, avisa antes que ele mande pro lugar errado */
     if (it.email){
       if (it.email_marcado === 'contador'){
@@ -677,6 +693,8 @@ function desenhar(){
     html +=       botao(id, 'demo',    'Marcou demo',   s);
     html +=       botao(id, 'fechou',  'FECHOU',        s);
     html +=       botao(id, 'nao',     'Não quer',      s);
+    html +=       '<button class="ac acfora' + (s === 'fora' ? ' sel' : '') + '" data-id="' + esc(id) +
+                  '" data-v="fora">' + (s === 'fora' ? '↩ Voltar pra fila' : 'Fora do escopo') + '</button>';
     html +=     '</div>';
 
     html +=     '<input class="obs" placeholder="Anotação…" value="' + esc(obsOf(id)) +
@@ -686,8 +704,11 @@ function desenhar(){
   }
 
   cont.innerHTML = html || vazioMsg();
+  const nFora = LISTA.filter(function(x){ return st(x.id) === 'fora'; }).length;
   document.getElementById('contador').textContent =
-    visiveis + ' de ' + LISTA.length + ' restaurantes' + (filtro !== 'todos' ? ' · filtro: ' + filtro : '');
+    visiveis + ' de ' + LISTA.length + ' restaurantes' +
+    (nFora ? ' · ' + nFora + ' fora do escopo' : '') +
+    (filtro !== 'todos' ? ' · filtro: ' + filtro : '');
   contagens();
 }
 
@@ -695,6 +716,7 @@ function vazioMsg(){
   if (filtro === 'hoje') return '<div class="vazio">Ninguém sorteado ainda.<br><br>Toque em <b>“Sortear 2 de hoje”</b> l&aacute; em cima.</div>';
   if (filtro === 'pendentes') return '<div class="vazio">Nenhum pendente. <b>Terminou!</b></div>';
   if (filtro === 'fechou') return '<div class="vazio">Ainda nenhuma venda fechada.<br>É o objetivo dos 14 dias.</div>';
+  if (filtro === 'fora') return '<div class="vazio">Nenhuma empresa fora do escopo.<br>Marque no cartão: <b>Fora do escopo</b>.</div>';
   return '<div class="vazio">Nenhum restaurante encontrado.<br>Tente outro nome ou bairro.</div>';
 }
 
