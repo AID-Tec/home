@@ -152,7 +152,7 @@ h4{font-size:clamp(18px,2vw,21px); font-weight:700; line-height:1.3; margin:0}
 }
 .hero .envolve{position:relative; z-index:2}
 
-.trilho{display:flex; width:100%; transition:transform .75s cubic-bezier(.33,.02,.16,1); will-change:transform}
+.trilho{display:flex; width:100%; overflow:hidden; transition:transform .75s cubic-bezier(.33,.02,.16,1); will-change:transform}
 /* flex:0 0 100% trava a largura de cada slide na largura da tela.
    Sem isso, um texto longo estica o slide e o vizinho aparece na borda. */
 .slide{flex:0 0 100%; width:100%; min-width:0; display:grid; grid-template-columns:1.02fr .98fr; gap:var(--3xl); align-items:center}
