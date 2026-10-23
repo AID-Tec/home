@@ -265,12 +265,12 @@ async function carregar(){
 }
 
 AID.entrar().then(function(sess){
-  if (!sess) {
+  sb = (window.AID && AID.sb) ? AID.sb : null;
+  if (!sess || !sb) {
     document.getElementById('sync').className='sync erro';
     document.getElementById('sync').textContent='Faça login no Pacto para gerar a lista';
     return;
   }
-  sb = AID.sb;
   carregar();
 });
 </script>
