@@ -136,7 +136,7 @@
   </div>
   <div class="lista">
     <table>
-      <thead><tr><th>E-mail</th><th>Empresa / nome</th><th>Origem</th></tr></thead>
+      <thead><tr><th>E-mail</th><th>Empresa / nome</th><th>Segmento</th></tr></thead>
       <tbody id="prev"></tbody>
     </table>
   </div>
@@ -196,7 +196,7 @@ function render(d){
   dom.innerHTML = (d.dominios||[]).map(x => '<div class="linha"><div class="nome">'+x.dom+'</div><div class="qtd">'+x.qtd+'</div></div>').join('') || '<div class="linha"><div class="nome">sem dados</div></div>';
 
   const prev = document.getElementById('prev');
-  prev.innerHTML = (d.preview||[]).map(x => '<tr><td>'+x.email+'</td><td>'+(x.empresa||'')+'</td><td>'+(x.origem||'')+'</td></tr>').join('');
+  prev.innerHTML = (d.preview||[]).map(x => '<tr><td>'+x.email+'</td><td>'+(x.empresa||'')+'</td><td>'+(x.segmento||'')+'</td></tr>').join('');
 
   const btn = document.getElementById('btnGerar');
   btn.disabled = false;
@@ -220,7 +220,7 @@ function render(d){
 
 async function carregar(){
   try {
-    const r = await sb.from('prospectos').select('id,email,nome,origem,email_marcado');
+    const r = await sb.from('prospectos').select('id,email,nome,segmento,email_marcado');
     if (r.error) throw r.error;
     const rows = r.data || [];
     const total = rows.length;
@@ -243,7 +243,7 @@ async function carregar(){
     elegiveis.forEach(x => {
       const em = (x.email||'').trim().toLowerCase();
       if (!em) return;
-      if (!mapa.has(em)) mapa.set(em, {email: em, empresa: x.empresa || x.nome || '', origem: x.origem || ''});
+      if (!mapa.has(em)) mapa.set(em, {email: em, empresa: x.nome || '', segmento: x.segmento || ''});
     });
     LISTA = Array.from(mapa.values());
     const distintos = LISTA.length;
