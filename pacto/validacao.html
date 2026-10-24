@@ -308,7 +308,7 @@ AID.entrar().then(function(sess){
   if (!sess) return;
   sb = AID.sb;
   sb.from('prospectos')
-    .select('cnpj,nome,razao,cnae_real,atividade,situacao,email,telefone,bairro,status,zap_web,site,instagram')
+    .select('cnpj,nome,razao,cnae_real,atividade,situacao,email,telefone,bairro,status,revisado_em,zap_web,site,instagram')
     .order('nome')
     .then(function(r){
       if (r.error) throw r.error;
