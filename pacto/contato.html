@@ -5,14 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Como contatar — AID</title>
 <style>
-  :root{
-    --azul:#123a63; --azul2:#1d5c96; --fundo:#eef1f5; --card:#fff;
-    --borda:#d7dde5; --texto:#16202b; --cinza:#68758a;
-    --verde:#137a4b; --amarelo:#a86a00; --laranja:#c0400f; --vermelho:#b3261e;
+  :root{/* AID Design System v1.0.0 — tokens, nenhum hex inventado */
+    --azul:#182A69;        /* navy-500 */
+    --azul2:#2E3699;       /* indigo-500 */
+    --azul3:#20266B;       /* indigo-700 */
+    --fundo:#F9F9F9; --card:#FFFFFF; --borda:#E4E4E4;
+    --texto:#1C1C1C; --cinza:#6E6E6E;
+    --verde:#1E9E5A; --amarelo:#a86a00; --roxo:#4509AE; --vermelho:#b3261e;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
-  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  body{font-family:"Montserrat","Segoe UI",Arial,sans-serif;
        background:var(--fundo); color:var(--texto); font-size:16px; line-height:1.55;
        padding-bottom:70px}
   header{position:sticky; top:0; z-index:50; background:var(--azul); color:#fff;
@@ -78,45 +81,58 @@
 
 <header>
   <div class="h1">Como contatar — a ordem certa</div>
-  <div class="sub" id="resumo">0 de 8</div>
+  <div class="sub" id="resumo">0 de 9</div>
   <div class="prog"><i id="barra"></i></div>
 </header>
 
 <div class="aviso verde">
-  <b>A lista já tem tudo que você precisa.</b> São <b>477 fixos de estabelecimento</b>,
-  todos de Franca. Não precisa buscar telefone em lugar nenhum — o telefone da
-  empresa já está lá.
+  <b>A lista já tem tudo que você precisa.</b> São <b>451 e-mails</b> de empresas
+  de Franca (o endereço que a própria empresa declarou), o telefone de todas, e o
+  WhatsApp que a empresa publica no perfil. Não precisa buscar dado em lugar nenhum.
 </div>
 
 <div class="regua">A ordem — em qualquer contato</div>
 
-<div class="ok" data-id="ordem_1">
-  <input type="checkbox" id="ordem_1">
+<div class="ok" data-id="email_1">
+  <input type="checkbox" id="email_1">
   <div class="tx">
-    <div class="tt">1. Liga no fixo do ESTABELECIMENTO</div>
-    <div class="ex">É o telefone da empresa, não de pessoa. Quem atende já está no contexto:
-      está no balcão, no salão, no escritório.</div>
-    <div class="num">ex.: Tutiya Sushi Bar (16) 3725-4022</div>
+    <div class="tt">1. E-mail primeiro — o canal que a empresa declarou</div>
+    <div class="ex">Vem do cadastro do CNPJ ou do site da casa. É canal da empresa,
+      escrito, e a pessoa lê no tempo dela — sem interromper salão nem cozinha.
+      O painel já abre a redação com o texto pronto.</div>
     <div class="pode">✓ marcado</div>
   </div>
 </div>
 
-<div class="ok" data-id="ordem_2">
-  <input type="checkbox" id="ordem_2">
+<div class="ok" data-id="zap_1">
+  <input type="checkbox" id="zap_1">
   <div class="tx">
-    <div class="tt">2. Não atendeu? Instagram ou Facebook DO RESTAURANTE</div>
+    <div class="tt">2. Zap depois — só se a EMPRESA publicar o número</div>
+    <div class="ex">Se o WhatsApp está na bio do perfil da empresa, no cardápio ou no
+      site, é canal da empresa. Mesma regra do e-mail: curto, com pergunta, uma frase
+      que vale no e-mail vale no zap.</div>
+    <div class="pode">✓ marcado</div>
+  </div>
+</div>
+
+<div class="ok" data-id="insta_1">
+  <input type="checkbox" id="insta_1">
+  <div class="tx">
+    <div class="tt">3. Instagram ou Facebook DO RESTAURANTE</div>
     <div class="ex">Perfil da empresa — foto do salão, cardápio, endereço. Não o perfil
-      pessoal de quem trabalha lá.</div>
+      pessoal de quem trabalha lá. Serve pra achar o canal certo, não pra pular etapa.</div>
     <div class="pode">✓ marcado</div>
   </div>
 </div>
 
-<div class="ok" data-id="ordem_3">
-  <input type="checkbox" id="ordem_3">
+<div class="ok" data-id="liga_1">
+  <input type="checkbox" id="liga_1">
   <div class="tx">
-    <div class="tt">3. WhatsApp só se o RESTAURANTE publicar</div>
-    <div class="ex">Se o número está na bio do perfil da empresa ou no cardápio, é
-      canal da empresa. Aí sim dá pra mandar zap direto.</div>
+    <div class="tt">4. Ligação no fixo — ÚLTIMO recurso</div>
+    <div class="ex">Só quando e-mail e zap não responderem. Aí sim: telefone da
+      empresa, não de pessoa. Quem atende já está no contexto — está no balcão,
+      no salão, no escritório.</div>
+    <div class="num">ex.: Tutiya Sushi Bar (16) 3725-4022</div>
     <div class="pode">✓ marcado</div>
   </div>
 </div>
@@ -132,7 +148,7 @@
   </div>
 </div>
 
-<div class="regua">Janela de horário — quem decide é a cozinha</div>
+<div class="regua">Janela de horário — a ligação é que respeita a cozinha</div>
 
 <div class="caixa" style="padding:6px 10px">
   <table class="tab">
@@ -147,18 +163,20 @@
 </div>
 
 <div class="aviso">
-  <b>Sua cobrança das 15:00 cai no meio da janela de ouro</b> — e bate com o seu horário:
-  pega o filho da escola, almoça, e aí abre o computador.
+  <b>E-mail e zap não têm janela.</b> Mandam a qualquer hora e a pessoa lê quando
+  puder — é justamente por isso que passaram pra frente. A janela de ouro acima
+  só vale quando você for <b>ligar</b> (etapa 4).
 </div>
 
-<div class="regua">O que fazer com o que já foi mandado</div>
+<div class="regua">O que fazer com o que já foi mandado pra lugar errado</div>
 
 <div class="ok" data-id="reparo_1">
   <input type="checkbox" id="reparo_1">
   <div class="tx">
-    <div class="tt">Ligar pro fixo do Tutiya Sushi Bar</div>
-    <div class="ex">O zap foi pro celular da Carla. Liga no restaurante:
-      <b>(16) 3725-4022</b>. Se atender outro mundo, tudo bem — é o canal da empresa.</div>
+    <div class="tt">Tutiya Sushi Bar — mandar pro canal da empresa</div>
+    <div class="ex">O zap foi pro celular da Carla. Escreve no canal da casa:
+      e-mail no <b>(16) 3725-4022</b> é o fixo, dá pra ligar na etapa 4, ou acha o
+      e-mail/zap da empresa no perfil do Google.</div>
     <div class="num">(16) 3725-4022</div>
     <button class="copiar" data-txt="(16) 3725-4022">📋 Copiar o número</button>
     <div class="pode">✓ marcado</div>
@@ -168,22 +186,23 @@
 <div class="ok" data-id="reparo_2">
   <input type="checkbox" id="reparo_2">
   <div class="tx">
-    <div class="tt">Ligar pro fixo do Espina Espetos e Bebidas</div>
-    <div class="ex">O zap foi pelo Instagram direto pra pessoa. Liga no estabelecimento:
-      <b>(16) 9123-7004</b>.</div>
+    <div class="tt">Espina Espetos e Bebidas — idem</div>
+    <div class="ex">O zap foi pelo Instagram direto pra pessoa. O canal da casa é o
+      <b>(16) 9123-7004</b> — escreve ou, se não responder, liga na etapa 4.</div>
     <div class="num">(16) 9123-7004</div>
     <button class="copiar" data-txt="(16) 9123-7004">📋 Copiar o número</button>
     <div class="pode">✓ marcado</div>
   </div>
 </div>
 
-<div class="regua">Duas ligações de hoje</div>
+<div class="regua">Dois e-mails de hoje</div>
 
 <div class="ok" data-id="hoje_1">
   <input type="checkbox" id="hoje_1">
   <div class="tx">
-    <div class="tt">1ª ligação do dia — no fixo</div>
-    <div class="ex">Sorteia no painel e liga no telefone que aparecer. 60 segundos de fala.</div>
+    <div class="tt">1º e-mail do dia</div>
+    <div class="ex">Sorteia no painel e manda pelo Brevo ou pelo botão do cartão.
+      Um minuto: abre, confere o nome, envia.</div>
     <div class="pode">✓ marcado</div>
   </div>
 </div>
@@ -191,15 +210,16 @@
 <div class="ok" data-id="hoje_2">
   <input type="checkbox" id="hoje_2">
   <div class="tx">
-    <div class="tt">2ª ligação do dia — no fixo</div>
-    <div class="ex">Mesma coisa. Só isso: duas ligações.</div>
+    <div class="tt">2º e-mail do dia</div>
+    <div class="ex">Mesma coisa. Só isso: dois e-mails. O zap entra no D+6 pra quem
+      não responder, e a ligação só depois.</div>
     <div class="pode">✓ marcado</div>
   </div>
 </div>
 
 <div class="aviso verde">
-  <b>Um minuto por ligação.</b> Não precisa de computador, não precisa de silêncio,
-  dá pra fazer sentado no carro. O que demora não é falar — é decidir ligar.
+  <b>Um minuto por e-mail.</b> Não precisa de computador, não precisa de silêncio,
+  dá pra fazer sentado no carro. O que demora não é escrever — é decidir mandar.
 </div>
 
 <a class="link" href="index.html">← Voltar pro painel do pacto</a>
@@ -211,7 +231,7 @@
 
 let sb = null;
 let ITENS = [];
-const ids = ['ordem_1','ordem_2','ordem_3','nunca_1','reparo_1','reparo_2','hoje_1','hoje_2'];
+const ids = ['email_1','zap_1','insta_1','liga_1','nunca_1','reparo_1','reparo_2','hoje_1','hoje_2'];
 
 function pintarBarra(){
   const feitos = ITENS.filter(i => i.s === 'feito').length;

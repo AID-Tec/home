@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Validar base — atividade real por CNPJ</title>
+<style>
+  :root{
+    /* AID Design System v1.0.0 — tokens, nenhum hex inventado */
+    --azul:#182A69;        /* navy-500 */
+    --azul2:#2E3699;       /* indigo-500 */
+    --azul3:#20266B;       /* indigo-700 */
+    --fundo:#F9F9F9; --card:#FFFFFF; --borda:#E4E4E4;
+    --texto:#1C1C1C; --cinza:#6E6E6E;
+    --verde:#1E9E5A; --amarelo:#a86a00; --roxo:#4509AE; --vermelho:#b3261e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Montserrat','Segoe UI',Arial,sans-serif;
+    background:var(--fundo); color:var(--texto); font-size:16px; line-height:1.5;
+    padding-bottom:56px;
+  }
+  a{color:var(--azul2)}
+
+  header{
+    position:sticky; top:0; z-index:50; background:var(--azul); color:#fff;
+    padding:10px 14px; box-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+  .h1{font-size:17px; font-weight:800; letter-spacing:.2px}
+  .frase{font-size:11.5px; opacity:.75; margin-top:2px; line-height:1.35}
+
+  .aviso{margin:12px; padding:10px 12px; border-radius:9px; font-size:13.5px; line-height:1.5}
+  .aviso.azul{background:#eef1fb; border-left:4px solid var(--azul2)}
+  .aviso.verde{background:#e6f4ec; border-left:4px solid var(--verde)}
+
+  .regua{
+    margin:18px 12px 8px; font-size:11px; text-transform:uppercase;
+    letter-spacing:1px; color:var(--azul2); font-weight:800;
+  }
+  .stats{display:flex; gap:6px; margin:12px 12px 0; flex-wrap:wrap}
+  .stat{
+    flex:1; min-width:86px; background:var(--card); border:1px solid var(--borda);
+    border-radius:9px; padding:8px 10px; text-align:center;
+  }
+  .stat b{display:block; font-size:19px; font-weight:800}
+  .stat span{font-size:10.5px; color:var(--cinza); text-transform:uppercase; letter-spacing:.4px}
+
+  .chips{display:flex; gap:6px; padding:12px 12px 0; flex-wrap:wrap}
+  .chip{
+    border:1px solid var(--borda); background:var(--card); border-radius:999px;
+    padding:7px 12px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  .chip.ativo{background:var(--azul2); color:#fff; border-color:var(--azul2)}
+
+  .lista{padding:0 12px}
+  .cartao{
+    background:var(--card); border:1px solid var(--borda); border-radius:10px;
+    margin-bottom:9px; padding:12px 13px;
+  }
+  .nome{font-weight:700; font-size:15.5px; line-height:1.35}
+  .razao{font-size:11.5px; color:var(--cinza); margin-top:1px}
+  .atv{
+    margin-top:7px; font-size:13px; line-height:1.45;
+    background:var(--fundo); border-radius:7px; padding:7px 9px;
+    border-left:3px solid var(--azul2);
+  }
+  .atv .cod{font-weight:800; color:var(--azul2)}
+  .sit{font-weight:800}
+  .sit.ativa{color:var(--verde)} .sit.baixada,.sit.inapta{color:var(--vermelho)}
+
+  .flag{
+    display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.4px; padding:3px 7px; border-radius:5px; margin-top:7px;
+  }
+  .flag.fora{background:#fbe6e5; color:var(--vermelho)}
+  .flag.vizinho{background:#fdf3dd; color:var(--amarelo)}
+  .flag.ok{background:#e0f5ea; color:var(--verde)}
+  .flag.jafora{background:#eceff3; color:var(--cinza)}
+
+  .acoes{display:flex; gap:6px; margin-top:10px}
+  .btn{
+    border:0; border-radius:7px; padding:9px 12px; font-size:13px; font-weight:700;
+    cursor:pointer; font-family:inherit; flex:1;
+  }
+  .btn.manter{background:var(--verde); color:#fff}
+  .btn.tirar{background:#fbe6e5; color:var(--vermelho); border:1px solid #f0c9c5}
+  .btn:disabled{opacity:.45; cursor:default}
+  .busca3{display:flex; gap:6px; margin-top:8px}
+  .busca3 a{
+    flex:1; text-align:center; text-decoration:none; font-weight:700; font-size:12px;
+    padding:8px 3px; border-radius:7px; background:var(--fundo); color:var(--azul2);
+    border:1px solid var(--borda);
+  }
+  .canais{margin-top:8px; font-size:12.5px; color:var(--cinza); line-height:1.6}
+  .canais a{font-weight:700}
+
+  .sync{padding:16px; text-align:center; font-size:12.5px; color:var(--cinza)}
+  .vazio{padding:22px; text-align:center; color:var(--cinza); font-size:14px}
+
+  @media(max-width:420px){
+    .nome{word-break:break-word}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h1">Validar base — atividade real da Receita</div>
+  <div class="frase">O CNAE antigo da base era errado (tudo marcado como restaurante). Aqui está o que a Receita diz hoje.</div>
+</header>
+
+<div class="aviso azul">
+  <b>O alvo é o dono, não o atendente.</b> A decisão de comprar ou não é de
+  quem comanda — então o que vale é o canal que o próprio negócio publica:
+  WhatsApp publicado no perfil, e-mail no site ou no iFood. Aqui a decisão é com
+  o <b>CNAE real do CNPJ</b> (fonte: Receita Federal) + a situação cadastral +
+  o que a empresa publica hoje. Você decide; o painel guarda.
+</div>
+
+<div class="stats">
+  <div class="stat"><b id="sTotal">—</b><span>na base</span></div>
+  <div class="stat"><b id="sFora" style="color:var(--vermelho)">—</b><span>fora do segmento</span></div>
+  <div class="stat"><b id="sIna" style="color:var(--vermelho)">—</b><span>baixada/inapta</span></div>
+  <div class="stat"><b id="sDec" style="color:var(--verde)">—</b><span>decididas</span></div>
+</div>
+
+<div class="chips" id="chips">
+  <button class="chip ativo" data-f="fora">🔴 Fora do segmento</button>
+  <button class="chip" data-f="ina">⚠ Sem CNPJ ativo</button>
+  <button class="chip" data-f="vizinho">🟡 Comércio de comida</button>
+  <button class="chip" data-f="tudo">Tudo</button>
+</div>
+
+<div class="regua" id="titulo">Carregando…</div>
+<div class="lista" id="lista"></div>
+<div class="sync" id="sync">carregando…</div>
+
+<script src="vendor/supabase.js"></script>
+<script src="app.js"></script>
+<script>
+let sb = null;
+let BASE = [];
+let FILTRO = 'fora';
+let DECIDIDAS = 0;
+
+/* CNAE de comida PRÓXIMO do alvo (comércio/indústria alimentar): não é
+   restaurante, mas é estabelecimento que mexe com comida — decisão sua. */
+const CLASSES_VIZINHAS = {
+  '4721':'laticínios e frios', '4722':'açougue', '4723':'bebidas',
+  '4724':'hortifruti', '4729':'mercearia alimentar/conveniência',
+  '4712':'mercadorias em geral', '4713':'lojas de variedades',
+  '4618':'atacado de alimentos', '4621':'atacado de café',
+  '4632':'atacado de bebidas', '4633':'atacado de carnes',
+  '4634':'atacado de bebidas não alcoólicas', '4635':'atacado de hortifruti',
+  '4637':'atacado de doces/gelados', '4639':'atacado de gêneros alimentícios',
+  '4691':'atacador geral', '4693':'atacado de materiais de construção',
+  '10':'indústria de alimentos', '11':'indústria de bebidas'
+};
+
+function classeDe(cnae){
+  if (!cnae) return '?';
+  return String(cnae).replace(/\D/g,'').slice(0,4);
+}
+
+function tipoDe(it){
+  const c = String(it.cnae_real || '').replace(/\D/g,'');
+  if (!c) return 'sem_dado';
+  if (c.startsWith('56') || c.startsWith('55')) return 'ok';
+  const pre = c.slice(0,4), pre3 = c.slice(0,3), pre2 = c.slice(0,2);
+  if (CLASSES_VIZINHAS[pre] || CLASSES_VIZINHAS[pre3] || CLASSES_VIZINHAS[pre2]) return 'vizinho';
+  return 'fora';
+}
+
+function inaDe(it){
+  const s = (it.situacao || '').toUpperCase();
+  return s && s !== 'ATIVA';
+}
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+const situ = s => {
+  const u = (s || '').toUpperCase();
+  if (u === 'ATIVA') return '<span class="sit ativa">ATIVA</span>';
+  if (u) return '<span class="sit baixada">' + esc(u) + '</span>';
+  return '<span style="color:var(--cinza)">situação desconhecida</span>';
+};
+
+const linkTel = t => { const d = String(t||'').replace(/\D/g,''); return d.length >= 10 ? 'tel:+55'+d : null; };
+
+function pintar(){
+  const filtro = FILTRO;
+  const itens = BASE.filter(function(it){
+    const t = tipoDe(it), ina = inaDe(it);
+    if (filtro === 'fora')   return t === 'fora';
+    if (filtro === 'ina')    return ina;
+    if (filtro === 'vizinho')return t === 'vizinho';
+    return true;
+  });
+
+  document.getElementById('titulo').textContent =
+    filtro === 'fora'   ? 'Empresas que a Receita diz NÃO SEREM de alimentação (' + itens.length + ')' :
+    filtro === 'ina'    ? 'CNPJ baixado, inapto ou suspenso (' + itens.length + ')' :
+    filtro === 'vizinho'?'Comércio/indústria de comida — não é restaurante, mas é do meio (' + itens.length + ')' :
+                          'Base inteira (' + itens.length + ')';
+
+  let html = '';
+  itens.forEach(function(it, i){
+    const t = tipoDe(it), ina = inaDe(it);
+    const foraJa = it.status === 'fora';
+    html += '<div class="cartao">';
+    html +=   '<div class="nome">' + esc(it.nome) + '</div>';
+    if (it.razao && it.razao.toUpperCase() !== String(it.nome).toUpperCase())
+      html += '<div class="razao">' + esc(it.razao) + '</div>';
+    html +=   '<div class="atv">';
+    html +=     '<span class="cod">CNAE ' + esc(it.cnae_real || '?') + '</span> — ' + esc(it.atividade || 'sem descrição') +
+                ' · Receita: ' + situ(it.situacao);
+    html +=   '</div>';
+    if (t === 'ok')        html += '<span class="flag ok">alimentação/hospitalidade ✓</span>';
+    if (t === 'vizinho')   html += '<span class="flag vizinho">comércio de comida — decidir</span>';
+    if (t === 'fora')      html += '<span class="flag fora">fora do segmento</span>';
+    if (ina)               html += '<span class="flag fora">CNPJ não ativo</span>';
+    if (foraJa)            html += '<span class="flag jafora">já tirada da lista</span>';
+
+    html +=   '<div class="canais">';
+    if (linkTel(it.telefone)) html += '☎ <a href="' + linkTel(it.telefone) + '">' + esc(it.telefone) + '</a>';
+    if (it.email) html += ' · ✉ <a href="mailto:' + esc(it.email) + '">' + esc(it.email) + '</a>';
+    html +=   '</div>';
+
+    html +=   '<div class="acoes">';
+    html +=     '<button class="btn manter" data-i="' + i + '" data-a="manter"' + (foraJa ? '' : ' disabled') + '>✓ Devolver pra lista</button>';
+    html +=     '<button class="btn tirar" data-i="' + i + '" data-a="tirar"' + (foraJa ? ' disabled' : '') + '>✗ Tirar da lista</button>';
+    html +=   '</div>';
+
+    html +=   '<div class="busca3">';
+    html +=     '<a target="_blank" rel="noopener" href="https://www.google.com/search?q=' +
+                encodeURIComponent('"' + it.nome + '" Franca SP') + '">🔍 conferir no Google</a>';
+    html +=     '<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/' +
+                encodeURIComponent(it.nome + ' Franca SP') + '">🗺 mapa</a>';
+    html +=     (it.site ? '<a target="_blank" rel="noopener" href="https://' + esc(it.site) + '">🌐 site</a>' : '<a target="_blank" rel="noopener" href="https://www.google.com/search?q=' + encodeURIComponent('site:instagram.com "' + it.nome + '" Franca') + '">📸 insta</a>');
+    html +=   '</div>';
+    html += '</div>';
+  });
+  if (!itens.length) html = '<div class="vazio">nada nesta aba — bom sinal</div>';
+  document.getElementById('lista').innerHTML = html;
+
+  document.querySelectorAll('#lista .btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      const it = itens[parseInt(b.dataset.i, 10)];
+      decide(it, b.dataset.a === 'tirar' ? 'fora' : 'pendente', b);
+    });
+  });
+
+  // estatisticas
+  const foraTotal = BASE.filter(function(x){ return tipoDe(x) === 'fora'; }).length;
+  const inaTotal  = BASE.filter(inaDe).length;
+  const decididas = BASE.filter(function(x){ return x.status === 'fora'; }).length;
+  document.getElementById('sTotal').textContent = BASE.length;
+  document.getElementById('sFora').textContent  = foraTotal;
+  document.getElementById('sIna').textContent   = inaTotal;
+  document.getElementById('sDec').textContent   = decididas;
+}
+
+function decide(it, novo, btn){
+  if (btn) { btn.disabled = true; btn.textContent = 'salvando…'; }
+  sb.from('prospectos').update({ status: novo })
+    .eq('cnpj', it.cnpj)
+    .then(function(r){
+      if (r.error) throw r.error;
+      it.status = novo;
+      DECIDIDAS++;
+      pintar();
+    })
+    .catch(function(){
+      if (btn) { btn.disabled = false; btn.textContent = 'deu erro — tentar de novo'; }
+    });
+}
+
+document.querySelectorAll('#chips .chip').forEach(function(c){
+  c.addEventListener('click', function(){
+    document.querySelectorAll('#chips .chip').forEach(function(x){ x.classList.remove('ativo'); });
+    c.classList.add('ativo');
+    FILTRO = c.dataset.f;
+    pintar();
+  });
+});
+
+AID.entrar().then(function(sess){
+  if (!sess) return;
+  sb = AID.sb;
+  sb.from('prospectos')
+    .select('cnpj,nome,razao,cnae_real,atividade,situacao,email,telefone,bairro,status,zap_web,site,instagram')
+    .order('nome')
+    .then(function(r){
+      if (r.error) throw r.error;
+      BASE = r.data || [];
+      pintar();
+      document.getElementById('sync').textContent = 'base carregada — as decisões são salvas na hora';
+    })
+    .catch(function(){
+      document.getElementById('sync').textContent = 'não consegui carregar a base';
+    });
+});
+</script>
+</body>
+</html>
