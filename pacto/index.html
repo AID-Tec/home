@@ -206,6 +206,40 @@
   }
   .sync.erro{background:#5c1a15; color:#ffc9c4}
   .vazio{text-align:center; padding:40px 20px; color:var(--cinza); font-size:14.5px}
+
+  /* ---------- fluxo guiado — 4 passos, na ordem ---------- */
+  .fluxo{list-style:none; margin:0; padding:0}
+  .fluxo li{
+    display:flex; gap:11px; align-items:flex-start;
+    border:1px solid var(--borda); border-radius:9px;
+    background:var(--card); padding:11px 12px; margin-top:9px;
+  }
+  .fluxo li:first-child{margin-top:13px}
+  .fluxo .fpn{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    background:var(--indigo-100); color:var(--azul2);
+    font:800 13px/26px 'Montserrat',sans-serif; text-align:center;
+  }
+  .fluxo .fpb{flex:1; min-width:0}
+  .fluxo .fpt{display:block; font-size:14.5px; font-weight:800}
+  .fluxo .fpd{display:block; font-size:12.5px; color:var(--cinza); margin-top:2px}
+  .fluxo .fcta{
+    display:inline-block; margin-top:8px; padding:9px 14px; border-radius:7px;
+    background:var(--azul2); color:#fff; text-decoration:none;
+    font-size:13px; font-weight:800;
+  }
+  .fluxo .fcta.see{background:transparent; color:var(--verde); padding:8px 0 0; font-size:12.5px}
+  /* passo atual: é por aqui que se começa */
+  .fluxo li.atual{border:2px solid var(--azul2); background:var(--indigo-50); padding:10px 11px}
+  .fluxo li.atual .fpn{background:var(--azul2); color:#fff}
+  /* passo fechado: verde e pronto — não pede mais nada (só "ver") */
+  .fluxo li.feito{background:#e0f5ea; border-color:#e0f5ea}
+  .fluxo li.feito .fpn{background:var(--verde); color:#fff}
+  .fluxo li.feito .fpt{color:var(--verde)}
+  /* futuro: visível e acessível — não grita, mas não trava */
+  .fluxo li.futuro .fcta{background:var(--card); color:var(--azul2); border:1px solid var(--indigo-200)}
+  .fluxo .fquem{font-size:12.5px; color:var(--cinza); margin-top:13px; font-weight:700}
+
   @media(min-width:720px){
     .lista,.caixa,.ferramentas{max-width:760px; margin-left:auto; margin-right:auto}
   }
@@ -252,6 +286,22 @@
     <a href="../video.mp4">▶ Ver o vídeo</a>
   </div>
 </header>
+
+<!-- ============ FLUXO GUIADO — POR ONDE COMECAR ============ -->
+<div class="caixa aberta" id="boxFluxo">
+  <div class="topo" onclick="this.parentNode.classList.toggle('aberta')">
+    <span>Por onde começar — 4 passos</span><span class="seta">&#9654;</span>
+  </div>
+  <div class="corpo">
+    <ol class="fluxo" id="fluxo"></ol>
+    <div class="fquem" id="fluxoResumo">—</div>
+    <div class="nota" style="margin-top:9px">
+      Passo <b style="color:var(--verde)">verde</b> = acabou, não precisa voltar.
+      Dá pra pular e fazer qualquer passo fora de ordem — a ordem é o caminho
+      mais curto, não uma trava.
+    </div>
+  </div>
+</div>
 
 <!-- ============ VIDEO ============ -->
 <div class="caixa aberta" id="boxVideo">
@@ -394,6 +444,8 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 
 let ESTADO = {};
 let LISTA  = [];
+/* dados dos passos 2 e 3 do fluxo (-1 = não consegui conferir) */
+let FLUXO  = {copias:-1, copiasApr:-1, campanhas:-1};
 
 async function carregarDados(){
   /* o lixo (CNPJ baixado/inapto/suspenso, eliminado no banco com status
@@ -421,6 +473,21 @@ async function carregarDados(){
   if (r2.error) throw r2.error;
   hojeIds = (r2.data || []).map(function(r){ return r.cnpj; });
   gravaHojeLocal();
+
+  /* passos 2 e 3 do fluxo: se falharem, não derruba a página —
+     os dois passos só aparecem como "não consegui conferir" */
+  try {
+    const rc = await sb.from('copias').select('status');
+    if (rc.error) throw rc.error;
+    const todas = rc.data || [];
+    FLUXO.copias = todas.length;
+    FLUXO.copiasApr = todas.filter(function(x){ return x.status === 'aprovado'; }).length;
+  } catch(e){ FLUXO.copias = -1; FLUXO.copiasApr = -1; }
+  try {
+    const rm = await sb.from('campanhas').select('nome,atualizado_em').order('atualizado_em', {ascending:false});
+    if (rm.error) throw rm.error;
+    FLUXO.campanhas = (rm.data || []).length;
+  } catch(e){ FLUXO.campanhas = -1; }
 }
 
 // ---- copiar mensagem do zap em 1 toque ----
@@ -636,6 +703,92 @@ function contagens(){
   document.getElementById('sZap').textContent     = c.zap;
   document.getElementById('sDemo').textContent    = c.demo;
   document.getElementById('sFechou').textContent  = c.fechou;
+  desenharFluxo();
+}
+
+/* ---------- fluxo guiado: 4 passos, na ordem ----------
+   Passo fechado = verde e só leitura (só "ver"). O primeiro em aberto
+   recebe o destaque "atual" — é por ali que se começa. Os demais ficam
+   visíveis e clicáveis: dá pra adiantar trabalho, nada trava. */
+function desenharFluxo(){
+  /* passo 1: trava só no que a Receita diz NÃO ser de comida ou CNPJ
+     inativo. Comércio de comida vizinho não trava — é chamada do dono. */
+  let p1 = 0, p1Fora = 0, p1Ina = 0;
+  LISTA.forEach(function(it){
+    if (st(it.id) !== 'pendente') return;
+    const sit = String(it.situacao || '').toUpperCase();
+    const ina = !!(sit && sit !== 'ATIVA');
+    const fora = tipoDe(it) === 'fora';
+    if (ina) p1Ina++;
+    if (fora) p1Fora++;
+    if (ina || fora) p1++;
+  });
+
+  /* passo 4: mesmo critério do placar Hoje (sorteio do dia + status) */
+  let hj = 0;
+  hojeIds.forEach(function(id){ const s = st(id); if (s !== 'pendente' && s !== 'fora') hj++; });
+
+  const p2ok = FLUXO.copias > 0 && FLUXO.copiasApr === FLUXO.copias;
+  const p3ok = FLUXO.campanhas > 0;
+  const p4ok = hj >= 2;
+
+  let det1;
+  if (p1 === 0) det1 = 'nenhum impedimento — base revisada';
+  else {
+    const ps = [];
+    if (p1Fora) ps.push(p1Fora + ' fora do segmento');
+    if (p1Ina)  ps.push(p1Ina + ' CNPJ inativo');
+    det1 = 'revisar: ' + ps.join(' · ');
+  }
+  const det2 = FLUXO.copias < 0 ? 'não consegui conferir agora'
+             : FLUXO.copias === 0 ? 'nenhuma copy no banco'
+             : p2ok ? FLUXO.copiasApr + ' de ' + FLUXO.copias + ' aprovadas'
+             : 'faltam ' + (FLUXO.copias - FLUXO.copiasApr) + ' de ' + FLUXO.copias;
+  const det3 = FLUXO.campanhas < 0 ? 'não consegui conferir agora'
+             : FLUXO.campanhas === 0 ? 'nenhuma lista gerada ainda'
+             : FLUXO.campanhas + ' lista(s) salva(s) no Pacto';
+  const det4 = p4ok ? hj + ' de 2 — pacto de hoje cumprido'
+             : (hojeIds.length ? hj + ' de 2 contatados' : 'sorteie os 2 de hoje');
+
+  const passos = [
+    {ok:p1===0, tit:'Validar a base',     det:det1, href:'validacao.html', cta:'Abrir a validação'},
+    {ok:p2ok,   tit:'Aprovar as copies',  det:det2, href:'copy.html',      cta:'Aprovar as copies'},
+    {ok:p3ok,   tit:'Gerar a lista de e-mails', det:det3, href:'campanha.html', cta:'Gerar a lista'},
+    {ok:p4ok,   tit:'Operar hoje',        det:det4, href:null,             cta:null}
+  ];
+
+  let html = '', primeiroAberto = false, proximo = 0;
+  passos.forEach(function(p, i){
+    const n = i + 1;
+    let cls;
+    if (p.ok) cls = 'feito';
+    else if (!primeiroAberto){ cls = 'atual'; primeiroAberto = true; proximo = n; }
+    else cls = 'futuro';
+
+    let cta;
+    if (p.ok){
+      cta = p.href
+        ? '<a class="fcta see" href="' + p.href + '">ver</a>'
+        : '<a class="fcta see" href="#" onclick="document.getElementById(\'btnVerHoje\').click();return false">ver hoje</a>';
+    } else if (!p.href){
+      cta = hojeIds.length
+        ? '<a class="fcta" href="#" onclick="document.getElementById(\'btnVerHoje\').click();return false">Ver os 2 de hoje</a>'
+        : '<a class="fcta" href="#" onclick="document.getElementById(\'btnSortear\').click();return false">Sortear 2 de hoje</a>';
+    } else {
+      cta = '<a class="fcta" href="' + p.href + '">' + p.cta + '</a>';
+    }
+
+    html += '<li class="' + cls + '">' +
+            '<span class="fpn">' + (p.ok ? '&#10003;' : n) + '</span>' +
+            '<div class="fpb"><b class="fpt">' + n + '. ' + p.tit + '</b>' +
+            '<span class="fpd">' + esc(p.det) + '</span>' + cta + '</div></li>';
+  });
+
+  document.getElementById('fluxo').innerHTML = html;
+  const feitos = passos.filter(function(p){ return p.ok; }).length;
+  document.getElementById('fluxoResumo').textContent =
+    feitos + ' de 4 fechados' +
+    (proximo ? ' · o próximo é o passo ' + proximo : ' · tudo fechado — pacto rodando');
 }
 
 /* ---------- filtros ---------- */

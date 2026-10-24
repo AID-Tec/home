@@ -94,7 +94,7 @@
 <div class="regua">A ordem — em qualquer contato</div>
 
 <div class="ok" data-id="email_1">
-  <input type="checkbox" id="email_1">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">1. E-mail primeiro — o canal que a empresa declarou</div>
     <div class="ex">Vem do cadastro do CNPJ ou do site da casa. É canal da empresa,
@@ -105,7 +105,7 @@
 </div>
 
 <div class="ok" data-id="zap_1">
-  <input type="checkbox" id="zap_1">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">2. Zap depois — só se a EMPRESA publicar o número</div>
     <div class="ex">Se o WhatsApp está na bio do perfil da empresa, no cardápio ou no
@@ -116,7 +116,7 @@
 </div>
 
 <div class="ok" data-id="insta_1">
-  <input type="checkbox" id="insta_1">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">3. Instagram ou Facebook DO RESTAURANTE</div>
     <div class="ex">Perfil da empresa — foto do salão, cardápio, endereço. Não o perfil
@@ -126,7 +126,7 @@
 </div>
 
 <div class="ok" data-id="liga_1">
-  <input type="checkbox" id="liga_1">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">4. Ligação no fixo — ÚLTIMO recurso</div>
     <div class="ex">Só quando e-mail e zap não responderem. Aí sim: telefone da
@@ -138,7 +138,7 @@
 </div>
 
 <div class="ok nao" data-id="nunca_1">
-  <input type="checkbox" id="nunca_1">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">✗ Nunca: celular particular de sócio sem origem comprovável</div>
     <div class="ex">É dado pessoal com origem que você não consegue comprovar
@@ -171,7 +171,7 @@
 <div class="regua">O que fazer com o que já foi mandado pra lugar errado</div>
 
 <div class="ok" data-id="reparo_1">
-  <input type="checkbox" id="reparo_1">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">Tutiya Sushi Bar — mandar pro canal da empresa</div>
     <div class="ex">O zap foi pro celular da Carla. Escreve no canal da casa:
@@ -184,7 +184,7 @@
 </div>
 
 <div class="ok" data-id="reparo_2">
-  <input type="checkbox" id="reparo_2">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">Espina Espetos e Bebidas — idem</div>
     <div class="ex">O zap foi pelo Instagram direto pra pessoa. O canal da casa é o
@@ -198,7 +198,7 @@
 <div class="regua">Dois e-mails de hoje</div>
 
 <div class="ok" data-id="hoje_1">
-  <input type="checkbox" id="hoje_1">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">1º e-mail do dia</div>
     <div class="ex">Sorteia no painel e manda pelo Brevo ou pelo botão do cartão.
@@ -208,7 +208,7 @@
 </div>
 
 <div class="ok" data-id="hoje_2">
-  <input type="checkbox" id="hoje_2">
+  <input type="checkbox">
   <div class="tx">
     <div class="tt">2º e-mail do dia</div>
     <div class="ex">Mesma coisa. Só isso: dois e-mails. O zap entra no D+6 pra quem
@@ -241,7 +241,8 @@ function pintarBarra(){
 function aplicar(){
   const mapa = {}; ITENS.forEach(i => mapa[i.id] = i.s);
   ids.forEach(id => {
-    const box = document.getElementById(id);
+    /* a caixa é a div .ok (data-id) — o input não tem id (evita id duplicado) */
+    const box = document.querySelector('.ok[data-id="' + id + '"]');
     if (!box) return;
     const c = box.querySelector('input');
     c.checked = (mapa[id] === 'feito');
