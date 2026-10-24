@@ -206,6 +206,12 @@ function pintar(){
                           'Base inteira (' + itens.length + ')';
 
   let html = '';
+  /* os que ainda NAO tem decisao do dono vem primeiro — e' por eles que se acaba */
+  itens.sort(function(a, b){
+    const da = (a.status === 'pendente' && !a.revisado_em) ? 0 : 1;
+    const db = (b.status === 'pendente' && !b.revisado_em) ? 0 : 1;
+    return da - db;
+  });
   itens.forEach(function(it, i){
     const t = tipoDe(it), ina = inaDe(it);
     const foraJa = it.status === 'fora';
@@ -222,6 +228,7 @@ function pintar(){
     if (t === 'fora')      html += '<span class="flag fora">fora do segmento</span>';
     if (ina)               html += '<span class="flag fora">CNPJ não ativo</span>';
     if (foraJa)            html += '<span class="flag jafora">já tirada da lista</span>';
+    else if (it.revisado_em) html += '<span class="flag ok">✓ revisado — mantido na lista</span>';
 
     html +=   '<div class="canais">';
     if (linkTel(it.telefone)) html += '☎ <a href="' + linkTel(it.telefone) + '">' + esc(it.telefone) + '</a>';
@@ -229,7 +236,8 @@ function pintar(){
     html +=   '</div>';
 
     html +=   '<div class="acoes">';
-    html +=     '<button class="btn manter" data-i="' + i + '" data-a="manter"' + (foraJa ? '' : ' disabled') + '>✓ Devolver pra lista</button>';
+    html +=     '<button class="btn manter" data-i="' + i + '" data-a="manter">' +
+                (foraJa ? '✓ Devolver pra lista' : '✓ Manter na lista') + '</button>';
     html +=     '<button class="btn tirar" data-i="' + i + '" data-a="tirar"' + (foraJa ? ' disabled' : '') + '>✗ Tirar da lista</button>';
     html +=   '</div>';
 
@@ -255,20 +263,30 @@ function pintar(){
   // estatisticas
   const foraTotal = BASE.filter(function(x){ return tipoDe(x) === 'fora'; }).length;
   const inaTotal  = BASE.filter(inaDe).length;
-  const decididas = BASE.filter(function(x){ return x.status === 'fora'; }).length;
+  const decididas = BASE.filter(function(x){ return x.status === 'fora' || x.revisado_em; }).length;
+  const semDecisao = itens.filter(function(x){ return x.status === 'pendente' && !x.revisado_em; }).length;
   document.getElementById('sTotal').textContent = BASE.length;
   document.getElementById('sFora').textContent  = foraTotal;
   document.getElementById('sIna').textContent   = inaTotal;
   document.getElementById('sDec').textContent   = decididas;
+
+  // no titulo da aba, quanto ainda falta decidir
+  const extra = (filtro !== 'tudo' && semDecisao > 0) ? ' · ' + semDecisao + ' ainda sem decisão' : '';
+  const base = document.getElementById('titulo').textContent;
+  document.getElementById('titulo').textContent = base.replace(/ · \d+ ainda sem decisão/, '') + extra;
 }
 
 function decide(it, novo, btn){
   if (btn) { btn.disabled = true; btn.textContent = 'salvando…'; }
-  sb.from('prospectos').update({ status: novo })
+  const agora = new Date().toISOString();
+  /* qualquer decisão (manter ou tirar) deixa registro: revisado_em marca que
+     o dono OLHOU e decidiu — é o que deixa o passo 1 do fluxo fechar */
+  sb.from('prospectos').update({ status: novo, revisado_em: agora, atualizado_em: agora })
     .eq('cnpj', it.cnpj)
     .then(function(r){
       if (r.error) throw r.error;
       it.status = novo;
+      it.revisado_em = agora;   /* reflete na hora, sem precisar recarregar */
       DECIDIDAS++;
       pintar();
     })

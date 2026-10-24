@@ -459,7 +459,7 @@ async function carregarDados(){
       segmento: r.segmento, endereco: r.endereco,
       /* verdade real: vem da Receita (enriquecimento) e do Google Maps */
       razao: r.razao, cnae_real: r.cnae_real, atividade: r.atividade,
-      situacao: r.situacao, categoria_maps: r.categoria_maps,
+      situacao: r.situacao, categoria_maps: r.categoria_maps, revisado_em: r.revisado_em,
       nota_maps: r.nota_maps, avaliacoes_maps: r.avaliacoes_maps,
       site: r.site || r.site_maps, instagram: r.instagram, zap_web: r.zap_web
     };
@@ -712,10 +712,12 @@ function contagens(){
    visíveis e clicáveis: dá pra adiantar trabalho, nada trava. */
 function desenharFluxo(){
   /* passo 1: trava só no que a Receita diz NÃO ser de comida ou CNPJ
-     inativo. Comércio de comida vizinho não trava — é chamada do dono. */
+     inativo SEM decisão do dono. Quem já olhou (revisado_em) ou está
+     fora da lista não conta — comércio vizinho nunca travou. */
   let p1 = 0, p1Fora = 0, p1Ina = 0;
   LISTA.forEach(function(it){
     if (st(it.id) !== 'pendente') return;
+    if (it.revisado_em) return;
     const sit = String(it.situacao || '').toUpperCase();
     const ina = !!(sit && sit !== 'ATIVA');
     const fora = tipoDe(it) === 'fora';
