@@ -32,7 +32,7 @@
   .bt{font-weight:800; font-size:15px; line-height:1.3}
   .bf{font-size:11.5px; color:var(--cinza); margin-top:1px}
 
-  .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--borda)}
+  .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--borda)}
   @media (max-width:680px){ .grid{grid-template-columns:repeat(2,1fr)} }
   .kpi{background:var(--card); padding:12px 14px; text-align:center}
   .kpi .num{font-size:28px; font-weight:900; color:var(--azul)}
@@ -56,6 +56,28 @@
   .lista td:last-child{text-align:right; color:var(--cinza); font-size:12.5px}
 
   .nota{font-size:13px; color:var(--cinza); padding:11px 14px; background:#f7f9fb; border-top:1px solid #eef1f5}
+
+  .bcont{width:calc(100% - 28px); margin:12px 14px 0; padding:12px; font-size:15px;
+         border:1px solid var(--borda); border-radius:9px; background:#fff; font-family:inherit}
+  .bcont:focus{outline:2px solid var(--azul2); border-color:transparent}
+  .cfiltros{display:flex; gap:6px; margin:9px 14px 0; overflow-x:auto; padding-bottom:2px}
+  .cchip{border:1px solid var(--borda); background:#fff; color:var(--cinza);
+         border-radius:20px; padding:6px 12px; font-size:12.5px; font-weight:700;
+         cursor:pointer; white-space:nowrap; font-family:inherit}
+  .cchip.ativo{background:var(--azul); color:#fff; border-color:var(--azul)}
+  .clista{max-height:420px; overflow:auto; padding:10px 14px 14px}
+  .crow{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid #eef1f5}
+  .crow:first-child{border-top:0}
+  .cinfo{flex:1; min-width:0}
+  .cnome{font-weight:700; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .cmail{font-size:12.5px; color:var(--cinza); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .cetiq{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.4px;
+         padding:3px 7px; border-radius:5px; flex-shrink:0; background:#eef4fa; color:var(--azul2)}
+  .cetiq.fora{background:#eceff3; color:#5b6478}
+  .cbtn{border:1px solid #e7b3ae; background:#fbe6e5; color:var(--vermelho); border-radius:8px;
+        padding:9px 11px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; flex-shrink:0}
+  .cbtn.volta{background:#f7f9fb; color:var(--azul2); border-color:var(--borda)}
+  .cvazio{padding:16px 4px; color:var(--cinza); font-size:13.5px}
   .info{background:#f2f7fd; border-left:4px solid var(--azul2); padding:11px 13px;
         border-radius:0 8px 8px 0; font-size:13.5px; margin:12px; line-height:1.5}
   .info b{color:var(--azul2)}
@@ -83,8 +105,8 @@
 
 <div class="info">
   <b>Tudo centralizado aqui.</b> A lista é gerada direto da tabela <i>prospectos</i>, com os
-  filtros já definidos. Sem abrir o Brevo pra filtrar. O resultado fica pronto pra usar na
-  campanha.
+  filtros já definidos. Sem abrir o Brevo pra filtrar. Se alguma empresa não fizer sentido,
+  marque como <b>fora do escopo</b> no bloco C — ela sai da contagem e do envio na hora.
 </div>
 
 <!-- A -->
@@ -98,6 +120,7 @@
     <div class="kpi"><div class="num" id="k-com">-</div><div class="lbl">Com e-mail</div></div>
     <div class="kpi"><div class="num" id="k-cont">-</div><div class="lbl">Marcados contador</div></div>
     <div class="kpi"><div class="num" id="k-sem">-</div><div class="lbl">Sem e-mail</div></div>
+    <div class="kpi"><div class="num" id="k-fora">-</div><div class="lbl">Fora do escopo</div></div>
   </div>
 </div>
 
@@ -115,7 +138,7 @@
   </div>
   <div class="nota">
     <b>Regra fixa:</b> tem e-mail · não é <b>contador</b> (<i>email_marcado != 'contador'</i>) ·
-    1 por e-mail (minúsculo, sem espaços)
+    não está <b>fora do escopo</b> · 1 por e-mail (minúsculo, sem espaços)
   </div>
 </div>
 
@@ -123,15 +146,34 @@
 <div class="bloco">
   <div class="btopo">
     <div class="letra">C</div>
-    <div><div class="bt">Principais domínios</div><div class="bf">pra conferir se bate com o esperado</div></div>
+    <div><div class="bt">Contestações — fora do escopo</div><div class="bf">tira da lista quem não deve receber nem contar</div></div>
   </div>
-  <div id="dominios"></div>
+  <div class="nota">
+    Marque a empresa que <b>não faz sentido</b> (fora da praça, errada, sem condição). Ela sai da
+    contagem e da lista de envio — e fica guardada no cadastro, valendo pra qualquer campanha futura.
+  </div>
+  <input class="bcont" id="cBusca" type="search" placeholder="Buscar empresa, bairro ou e-mail…" autocomplete="off">
+  <div class="cfiltros" id="cFiltros">
+    <button class="cchip ativo" data-cf="todos">Todas</button>
+    <button class="cchip" data-cf="na">Na lista</button>
+    <button class="cchip" data-cf="fora">Fora do escopo</button>
+  </div>
+  <div class="clista" id="cLista"></div>
 </div>
 
 <!-- D -->
 <div class="bloco">
   <div class="btopo">
     <div class="letra">D</div>
+    <div><div class="bt">Principais domínios</div><div class="bf">pra conferir se bate com o esperado</div></div>
+  </div>
+  <div id="dominios"></div>
+</div>
+
+<!-- E -->
+<div class="bloco">
+  <div class="btopo">
+    <div class="letra">E</div>
     <div><div class="bt">Pré-visualização</div><div class="bf">primeiros 25 prontos para envio</div></div>
   </div>
   <div class="lista">
@@ -156,24 +198,119 @@
 <script src="app.js"></script>
 <script>
 let sb = null;
-let LISTA = [];
+let LISTA = [];     // prontos pra envio (sem 'fora', sem contador, dedup)
+let TODOS = [];     // todas as linhas com e-mail, pra tela de contestação
+let BASE = [];      // base bruta (toda a tabela)
+let cfiltro = 'todos';
+let ctermo = '';
 
+function esc(s){ return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function ok(txt){ const s=document.getElementById('sync'); s.className='sync'; s.textContent=txt||'ok'; clearTimeout(window._t); window._t=setTimeout(()=>{s.textContent='tudo pronto';},2000); }
 function erro(msg){ const s=document.getElementById('sync'); s.className='sync erro'; s.textContent=msg||'erro ao carregar'; }
 
-function pintar(){
-  const k = {
-    total: document.getElementById('k-total'),
-    com: document.getElementById('k-com'),
-    cont: document.getElementById('k-cont'),
-    sem: document.getElementById('k-sem'),
-    elig: document.getElementById('k-elig'),
-    dist: document.getElementById('k-dist'),
-    dup: document.getElementById('k-dup'),
-    pronto: document.getElementById('k-pronto')
-  };
+/* ---------------- contestações (fora do escopo) ---------------- */
+function pintarCont(){
+  const el = document.getElementById('cLista');
+  const t = ctermo;
+  const vis = TODOS.filter(x => {
+    const fora = x.status === 'fora';
+    if (cfiltro === 'na' && fora) return false;
+    if (cfiltro === 'fora' && !fora) return false;
+    if (!t) return true;
+    const alvo = ((x.nome||'')+' '+(x.bairro||'')+' '+(x.email||'')+' '+(x.segmento||'')).toLowerCase();
+    return alvo.indexOf(t) >= 0;
+  });
+  if (!vis.length){ el.innerHTML = '<div class="cvazio">nenhuma empresa aqui</div>'; return; }
+  el.innerHTML = vis.slice(0,400).map(x => {
+    const fora = x.status === 'fora';
+    return '<div class="crow">' +
+      '<div class="cinfo">' +
+        '<div class="cnome">' + esc(x.nome || '(sem nome)') + '</div>' +
+        '<div class="cmail">' + esc(x.email) + (x.bairro ? ' · ' + esc(x.bairro) : '') + '</div>' +
+      '</div>' +
+      '<span class="cetiq' + (fora ? ' fora' : '') + '">' + (fora ? 'fora' : 'na lista') + '</span>' +
+      '<button class="cbtn' + (fora ? ' volta' : '') + '" data-email="' + esc(x.email) + '" data-st="' + (fora ? 'na' : 'fora') + '">' +
+        (fora ? '↩ Voltar pra lista' : '✕ Fora do escopo') +
+      '</button>' +
+    '</div>';
+  }).join('');
+  if (vis.length > 400) el.innerHTML += '<div class="cvazio">mostrando 400 de ' + vis.length + ' — use a busca pra afinar</div>';
 
-  // será preenchido por carregar()
+  el.querySelectorAll('.cbtn').forEach(b => b.addEventListener('click', function(){
+    contestar(b.dataset.email, b.dataset.st === 'fora');
+  }));
+}
+
+async function contestar(email, fora){
+  const linhas = TODOS.filter(x => x.email === email);
+  if (!linhas.length) return;
+  const antes = linhas.map(x => x.status);
+  linhas.forEach(x => x.status = fora ? 'fora' : 'pendente');
+  pintarCont(); recalcula();
+  try {
+    // atualiza por como o e-mail está gravado no banco (pode ter maiúscula/espaço)
+    const originais = Array.from(new Set(linhas.map(x => x.dbemail)));
+    for (const orig of originais) {
+      const r = await sb.from('prospectos')
+        .update({ status: fora ? 'fora' : 'pendente', atualizado_em: new Date().toISOString() })
+        .eq('email', orig);
+      if (r.error) throw r.error;
+    }
+    ok(fora ? 'tirado da lista ✓' : 'voltou pra lista ✓');
+  } catch(e) {
+    linhas.forEach((x,i) => x.status = antes[i]);
+    pintarCont(); recalcula();
+    erro('não salvei: ' + (e.message || e));
+  }
+}
+
+document.getElementById('cBusca').addEventListener('input', function(e){
+  ctermo = e.target.value.toLowerCase().trim(); pintarCont();
+});
+document.getElementById('cFiltros').addEventListener('click', function(e){
+  const b = e.target.closest('.cchip'); if (!b) return;
+  cfiltro = b.dataset.cf;
+  document.querySelectorAll('.cchip').forEach(c => c.classList.toggle('ativo', c === b));
+  pintarCont();
+});
+
+/* ---------------- contagens + lista pronta ---------------- */
+function recalcula(){
+  let com_email = 0, contador = 0, sem_email = 0, fora = 0;
+  TODOS.forEach(x => { if (x.status === 'fora') fora++; });
+  BASE.forEach(x => {
+    const em = (x.email||'').trim();
+    if (!em) sem_email++;
+    else {
+      com_email++;
+      if ((x.email_marcado||'').toLowerCase() === 'contador') contador++;
+    }
+  });
+
+  const elegiveis = TODOS.filter(x => {
+    if (x.status === 'fora') return false;
+    if ((x.email_marcado||'').toLowerCase() === 'contador') return false;
+    return true;
+  });
+
+  const mapa = new Map();
+  elegiveis.forEach(x => {
+    const em = x.email;
+    if (!mapa.has(em)) mapa.set(em, {email: em, empresa: x.nome || '', segmento: x.segmento || ''});
+  });
+  LISTA = Array.from(mapa.values());
+  const distintos = LISTA.length;
+  const duplicados = elegiveis.length - distintos;
+
+  const domMap = new Map();
+  LISTA.forEach(x => {
+    const d = x.email.split('@')[1] || '';
+    domMap.set(d, (domMap.get(d)||0)+1);
+  });
+  const dominios = Array.from(domMap.entries()).map(([dom,qtd])=>({dom,qtd})).sort((a,b)=>b.qtd-a.qtd).slice(0,8);
+
+  render({total: BASE.length, com_email, contador, sem_email, fora, elegiveis: elegiveis.length,
+          distintos, duplicados, dominios, preview: LISTA.slice(0,25)});
 }
 
 function render(d){
@@ -181,6 +318,7 @@ function render(d){
   document.getElementById('k-com').textContent = d.com_email;
   document.getElementById('k-cont').textContent = d.contador;
   document.getElementById('k-sem').textContent = d.sem_email;
+  document.getElementById('k-fora').textContent = d.fora;
   document.getElementById('k-elig').textContent = d.elegiveis;
   document.getElementById('k-dist').textContent = d.distintos;
   document.getElementById('k-dup').textContent = d.duplicados;
@@ -190,13 +328,13 @@ function render(d){
   const pct = d.distintos ? Math.min(100, Math.round(d.distintos * 100 / 350)) : 0;
   barra.style.width = pct + '%';
   document.getElementById('progtxt').textContent = d.distintos + ' distintos prontos · ' + pct + '% do alvo (~350)';
-  document.getElementById('resumo').textContent = 'Controle de Gorjetas · ' + d.distintos + ' contatos distintos';
+  document.getElementById('resumo').textContent = 'Controle de Gorjetas · ' + d.distintos + ' contatos distintos' + (d.fora ? ' · ' + d.fora + ' fora do escopo' : '');
 
   const dom = document.getElementById('dominios');
-  dom.innerHTML = (d.dominios||[]).map(x => '<div class="linha"><div class="nome">'+x.dom+'</div><div class="qtd">'+x.qtd+'</div></div>').join('') || '<div class="linha"><div class="nome">sem dados</div></div>';
+  dom.innerHTML = (d.dominios||[]).map(x => '<div class="linha"><div class="nome">'+esc(x.dom)+'</div><div class="qtd">'+x.qtd+'</div></div>').join('') || '<div class="linha"><div class="nome">sem dados</div></div>';
 
   const prev = document.getElementById('prev');
-  prev.innerHTML = (d.preview||[]).map(x => '<tr><td>'+x.email+'</td><td>'+(x.empresa||'')+'</td><td>'+(x.segmento||'')+'</td></tr>').join('');
+  prev.innerHTML = (d.preview||[]).map(x => '<tr><td>'+esc(x.email)+'</td><td>'+esc(x.empresa||'')+'</td><td>'+esc(x.segmento||'')+'</td></tr>').join('');
 
   const btn = document.getElementById('btnGerar');
   btn.disabled = false;
@@ -213,50 +351,27 @@ function render(d){
     } catch(e) {
       btn.disabled = false;
       btn.textContent = 'Tentar novamente';
-      erro();
+      erro('não salvei: ' + (e.message || e));
     }
   };
 }
 
 async function carregar(){
   try {
-    const r = await sb.from('prospectos').select('id,email,nome,segmento,email_marcado');
+    const r = await sb.from('prospectos').select('id,email,nome,segmento,email_marcado,bairro,status').not('email','is',null);
     if (r.error) throw r.error;
     const rows = r.data || [];
-    const total = rows.length;
-    let com_email = 0, contador = 0, sem_email = 0;
-    rows.forEach(x => {
-      const em = (x.email||'').trim();
-      if (!em) sem_email++;
-      else {
-        com_email++;
-        if ((x.email_marcado||'').toLowerCase() === 'contador') contador++;
-      }
-    });
-    const elegiveis = rows.filter(x => {
-      const em = (x.email||'').trim();
-      if (!em) return false;
-      if ((x.email_marcado||'').toLowerCase() === 'contador') return false;
-      return true;
-    });
-    const mapa = new Map();
-    elegiveis.forEach(x => {
-      const em = (x.email||'').trim().toLowerCase();
-      if (!em) return;
-      if (!mapa.has(em)) mapa.set(em, {email: em, empresa: x.nome || '', segmento: x.segmento || ''});
-    });
-    LISTA = Array.from(mapa.values());
-    const distintos = LISTA.length;
-    const duplicados = elegiveis.length - distintos;
-
-    const domMap = new Map();
-    LISTA.forEach(x => {
-      const d = x.email.split('@')[1] || '';
-      domMap.set(d, (domMap.get(d)||0)+1);
-    });
-    const dominios = Array.from(domMap.entries()).map(([dom,qtd])=>({dom,qtd})).sort((a,b)=>b.qtd-a.qtd).slice(0,8);
-
-    render({total, com_email, contador, sem_email, elegiveis: elegiveis.length, distintos, duplicados, dominios, preview: LISTA.slice(0,25)});
+    // base bruta: todas as linhas da tabela
+    const r2 = await sb.from('prospectos').select('id,email');
+    if (r2.error) throw r2.error;
+    BASE = r2.data || [];
+    // com e-mail, já normalizado, pra tela de contestação
+    TODOS = rows
+      .map(x => ({email: (x.email||'').trim().toLowerCase(), dbemail: x.email, nome: x.nome, bairro: x.bairro,
+                  segmento: x.segmento, email_marcado: x.email_marcado, status: x.status || 'pendente'}))
+      .filter(x => x.email.indexOf('@') > 0);
+    pintarCont();
+    recalcula();
     ok('tudo pronto');
   } catch(e) {
     console.error(e);
