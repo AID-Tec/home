@@ -378,10 +378,4 @@ details p{padding:0 0 22px; margin:0; color:var(--texto-suave); font-size:16px}
   .reveal{opacity:1; transform:none; transition:none}
 }
 
-/* ---------- aviso de rascunho ---------- */
-.rascunho{
-  position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:200;
-  background:var(--n900); color:#fff; font-size:13px; padding:10px 18px; border-radius:var(--r-pill);
-  box-shadow:var(--sombra-lg); display:flex; align-items:center; gap:10px;
-}
-.rascunho i{width:8px; height:8px; border-radius:50%; background:#F2B01E; display:block}
+
