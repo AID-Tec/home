@@ -379,7 +379,6 @@ Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostr
     <button class="chip" data-f="falou">Já contatou</button>
     <button class="chip" data-f="demo">Demo marcada</button>
     <button class="chip" data-f="fechou">Fechou</button>
-    <button class="chip" data-f="fora">Fora do escopo</button>
   </div>
   <div class="contador" id="contador">—</div>
 </div>
@@ -397,7 +396,9 @@ let ESTADO = {};
 let LISTA  = [];
 
 async function carregarDados(){
-  const r1 = await sb.from('prospectos').select('*').order('nome');
+  /* o lixo (CNPJ baixado/inapto/suspenso, eliminado no banco com status
+     'fora') NEM E' BUSCADO — nao polui lista, sorteio nem contadores */
+  const r1 = await sb.from('prospectos').select('*').neq('status','fora').order('nome');
   if (r1.error) throw r1.error;
   LISTA = (r1.data || []).map(function(r){
     return {
@@ -647,7 +648,6 @@ function passaFiltro(item){
     case 'falou':     return ['email','ligou','zap','demo','fechou','nao'].indexOf(s) >= 0;
     case 'demo':      return s === 'demo';
     case 'fechou':    return s === 'fechou';
-    case 'fora':      return s === 'fora';
     default:          return true;
   }
 }
@@ -691,6 +691,8 @@ function desenhar(){
 
   for (let i=0; i<LISTA.length; i++){
     const it = LISTA[i];
+    /* 'fora' nao passa pelo painel — eliminado nao ve, nao sorteia, nao conta */
+    if (st(it.id) === 'fora') continue;
     if (!passaFiltro(it) || !passaBusca(it)) continue;
     visiveis++;
 
@@ -801,10 +803,8 @@ function desenhar(){
   }
 
   cont.innerHTML = html || vazioMsg();
-  const nFora = LISTA.filter(function(x){ return st(x.id) === 'fora'; }).length;
   document.getElementById('contador').textContent =
     visiveis + ' de ' + LISTA.length + ' restaurantes' +
-    (nFora ? ' · ' + nFora + ' fora do escopo' : '') +
     (filtro !== 'todos' ? ' · filtro: ' + filtro : '');
   contagens();
 }
@@ -813,7 +813,6 @@ function vazioMsg(){
   if (filtro === 'hoje') return '<div class="vazio">Ninguém sorteado ainda.<br><br>Toque em <b>“Sortear 2 de hoje”</b> l&aacute; em cima.</div>';
   if (filtro === 'pendentes') return '<div class="vazio">Nenhum pendente. <b>Terminou!</b></div>';
   if (filtro === 'fechou') return '<div class="vazio">Ainda nenhuma venda fechada.<br>É o objetivo dos 14 dias.</div>';
-  if (filtro === 'fora') return '<div class="vazio">Nenhuma empresa fora do escopo.<br>Marque no cartão: <b>Fora do escopo</b>.</div>';
   return '<div class="vazio">Nenhum restaurante encontrado.<br>Tente outro nome ou bairro.</div>';
 }
 

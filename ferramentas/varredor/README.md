@@ -13,13 +13,30 @@ Por que é padrão: cadastro de Receita Federal é autodeclarado e ninguém
 atualiza (e-mail do contador de 2015, telefone já desligado). Quem tem
 WhatsApp hoje é quem publicou hoje. E erro de segmento queima o nome da AID —
 então a atividade real do CNPJ (BrasilAPI) entra junto, e o painel de
-validação (`pacto/validar-base.html`) transforma isso em decisão.
+validação (`pacto/validacao.html`) transforma isso em decisão.
+
+**Lixo sai antes de virar campanha**: CNPJ baixado, inapto ou suspenso na
+Receita vira `status='fora'` no banco — não é opinião, é a própria Receita
+dizendo que a empresa não existe mais. E o painel operacional
+(`pacto/index.html`) nem busca linhas `fora`: fora da lista, do sorteio e dos
+contadores.
 
 ## Como roda
 
 ```
 node varredor.js --base "Franca SP" [--limite 50] [--fontes ddg,bing,searx]
+node maps_para_base.js [--limite 100] [--profundidade 3]   # passo do Google Maps
 ```
+
+**Google Maps é o passo principal e NÃO precisa de Docker.** O motor é o
+[gosom/google-maps-scraper](https://github.com/gosom/google-maps-scraper) (MIT);
+baixa-se o binário da release e roda direto — testado no Windows assim
+(26 jobs/min, zero falhas: 20/20 telefone e categoria na amostra, site em 13/20).
+Docker só entraria como alternativa pra rodar em Linux/macOS sem binário; no
+Windows padrão da AID, não instalar (mais uma peça pra quebrar, sem ganho).
+E-mail no modo `-email` do gosom foi **reprovado no teste** (1/20 e era rastro
+de rastreio do Wix) — não entra na ponte até ser confiável; e-mail vem do crawl
+de site e do Brevo.
 
 Credenciais **nunca no código**: vem só de variável de ambiente.
 
@@ -62,5 +79,5 @@ Credenciais **nunca no código**: vem só de variável de ambiente.
 - [ ] Definir `--base` (cidade) e a tabela de entrada
 - [ ] Rodar `--limite 10` e conferir 10 linhas à mão antes de soltar tudo
 - [ ] Rodar completo (retomável — pode deixar rodando)
-- [ ] Abrir `pacto/validar-base.html` e decidir quem entra/sai
+- [ ] Abrir `pacto/validacao.html` e decidir quem entra/sai
 - [ ] Só então gerar a campanha (`pacto/campanha.html`)
