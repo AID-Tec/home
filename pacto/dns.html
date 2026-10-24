@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Checklist do DNS — Pacto Gorjeta</title>
+<title>Trocar o site pro GitHub — Checklist do DNS</title>
 <style>
   :root{
     --azul:#123a63; --azul2:#1d5c96; --fundo:#eef1f5; --card:#fff;
@@ -29,6 +29,7 @@
   .btopo{padding:12px 14px; border-bottom:1px solid var(--borda); display:flex; align-items:center; gap:9px}
   .letra{width:24px; height:24px; border-radius:6px; background:var(--azul); color:#fff;
          font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0}
+  .letra.pronto{background:var(--verde)}
   .bt{font-weight:800; font-size:15px; line-height:1.3}
   .bf{font-size:11.5px; color:var(--cinza); margin-top:1px}
 
@@ -44,6 +45,17 @@
   .item.on .it{color:var(--cinza); text-decoration:line-through}
   .it{font-size:14.5px; line-height:1.45}
   .it b{font-weight:800}
+
+  .feito{
+    display:flex; gap:10px; padding:11px 14px; border-bottom:1px solid #eef1f5;
+    font-size:14.5px; align-items:flex-start;
+  }
+  .feito:last-child{border-bottom:0}
+  .feito .v{width:22px; height:22px; border-radius:50%; background:var(--verde); color:#fff;
+            flex-shrink:0; display:flex; align-items:center; justify-content:center;
+            font-size:13px; font-weight:900; margin-top:1px}
+  .feito .t b{font-weight:800}
+  .feito .d{font-size:12px; color:var(--cinza)}
 
   .rec{
     margin-top:7px; background:#0f1b2d; color:#c8e6ff; border-radius:7px; padding:8px 10px;
@@ -65,6 +77,9 @@
   .info{background:#f2f7fd; border-left:4px solid var(--azul2); padding:11px 13px;
         border-radius:0 8px 8px 0; font-size:13.5px; margin:12px; line-height:1.5}
   .info b{color:var(--azul2)}
+  .perigo{background:#fff2f1; border-left:4px solid var(--vermelho); padding:11px 13px;
+          border-radius:0 8px 8px 0; font-size:13.5px; margin:12px; line-height:1.5}
+  .perigo b{color:var(--vermelho)}
 
   table{width:100%; border-collapse:collapse; font-size:13px}
   td{padding:8px 14px; border-bottom:1px solid #eef1f5; vertical-align:top}
@@ -82,112 +97,134 @@
   .sync{position:fixed; bottom:0; left:0; right:0; padding:9px 14px; font-size:12.5px;
         text-align:center; z-index:60; background:#0d2a47; color:#9fd0ff}
   .sync.erro{background:#5c1a15; color:#ffc9c4}
-  @media(min-width:760px){ .bloco,.alerta,.info{max-width:820px; margin-left:auto; margin-right:auto} }
+  @media(min-width:760px){ .bloco,.alerta,.info,.perigo{max-width:820px; margin-left:auto; margin-right:auto} }
 </style>
 </head>
 <body>
 
 <header>
   <div class="marca">Pacto Gorjeta</div>
-  <div class="h1">Checklist do DNS</div>
+  <div class="h1">Site novo no ar: GitHub Pages</div>
   <div class="sub" id="resumo">carregando…</div>
   <div class="prog"><i id="barra"></i></div>
   <div class="progtxt" id="progtxt">—</div>
 </header>
 
 <div class="info">
-  <b>Trocar o DNS não apaga a hospedagem.</b> O que está na InfinityFree continua lá —
-  a troca só muda <i>quem responde</i> pelo endereço. Enquanto você recriar os registros
-  abaixo, site e e-mail continuam funcionando.
+  <b>Só o site muda de lugar — o e-mail não mexe.</b> O GitHub já aceitou o domínio
+  <b>aidtr.com.br</b> no repositório. Falta só apontar os registros do site no painel do
+  Registro.br. MX, SPF, Brevo e DMARC continuam exatamente como estão.
 </div>
 
 <!-- A -->
 <div class="bloco">
   <div class="btopo">
-    <div class="letra">A</div>
-    <div><div class="bt">O que existe hoje</div><div class="bf">só leitura — não precisa mexer</div></div>
+    <div class="letra pronto">✓</div>
+    <div><div class="bt">O que já está pronto</div><div class="bf">feito — não precisa mexer</div></div>
   </div>
-  <table>
-    <tr><td>raiz</td><td>A → <b>185.27.134.143</b> (InfinityFree)<br><span style="color:#68758a">é uma página de proteção, não é o site</span></td></tr>
-    <tr><td>www</td><td>CNAME → <b>ghs.googlehosted.com</b> (Google Sites)</td></tr>
-    <tr><td>e-mail</td><td>MX <b>mx1/mx2.improvmx.com</b> + SPF do ImprovMX</td></tr>
-    <tr><td>Brevo</td><td>domínio já cadastrado lá, aguardando os registros da parte E</td></tr>
-  </table>
+  <div class="feito"><div class="v">✓</div><div class="t">
+    <b>Domínio aceito pelo GitHub Pages</b>
+    <div class="d">arquivo CNAME com aidtr.com.br enviado ao repositório AID-Tec/home — o GitHub já responde por ele</div>
+  </div></div>
+  <div class="feito"><div class="v">✓</div><div class="t">
+    <b>Site publicado na raiz do repositório</b>
+    <div class="d">site institucional em <code>/</code>, LP de gorjetas em <code>/gorjetas/</code>, painel em <code>/pacto/</code></div>
+  </div></div>
+  <div class="feito"><div class="v">✓</div><div class="t">
+    <b>E-mail funcionando</b>
+    <div class="d">MX mx1/mx2.improvmx.com respondendo — fora do escopo desta troca</div>
+  </div></div>
+  <div class="feito"><div class="v">✓</div><div class="t">
+    <b>Brevo autenticado</b>
+    <div class="d">DKIM, brevo-code, DMARC e SPF já validados no painel do Brevo</div>
+  </div></div>
 </div>
 
 <!-- B -->
 <div class="bloco">
   <div class="btopo">
     <div class="letra">B</div>
-    <div><div class="bt">Antes de mexer</div><div class="bf">2 minutos</div></div>
+    <div><div class="bt">Registros que não podem ser apagados</div><div class="bf">só leitura — copie se precisar conferir</div></div>
   </div>
-  <div class="item" data-k="b1"><div class="cx">✓</div><div class="it">Tenho a <b>senha do Registro.br</b> em mãos</div></div>
-  <div class="item" data-k="b2"><div class="cx">✓</div><div class="it">Tenho o <b>Gmail aberto</b> para testar o e-mail depois</div></div>
-  <div class="item" data-k="b3"><div class="cx">✓</div><div class="it">Entendi: <b>não cancelar a InfinityFree</b> agora</div></div>
+  <table>
+    <tr><td>raiz</td><td>A → <b>(nenhum hoje)</b> — é isso que vamos criar</td></tr>
+    <tr><td>www</td><td>CNAME → <b>ghs.googlehosted.com</b> (Google Sites) — será trocado no bloco C</td></tr>
+    <tr><td>e-mail</td><td>MX <b>mx1/mx2.improvmx.com</b> — não mexer</td></tr>
+    <tr><td>Brevo</td><td>brevo-code + DMARC + SPF já validados — não mexer</td></tr>
+  </table>
   <div class="nota">
-    <b>Redirecionamentos</b> (você disse que não são essenciais — ficam arquivados aqui):
-    <br>/ComprarAidCalc · /instagram · /sptaidcalc · /tutorialaidcalc · /whatsapp
-    <br>Se um dia quiser de volta, eu recrio em 10 minutos no site novo.
-    <textarea id="notas" placeholder="Anotação livre (opcional)"></textarea>
+    <b>SPF é um só.</b> O TXT da raiz hoje é este — não crie outro nem apague:
+    <div class="rec"><span>v=spf1 include:spf.improvmx.com include:spf.brevo.com ~all</span><button data-copy="v=spf1 include:spf.improvmx.com include:spf.brevo.com ~all">copiar</button></div>
   </div>
+</div>
+
+<div class="perigo">
+  <b>Não apague nada que não esteja no bloco C.</b> Se sair o MX, o SPF, o brevo-code ou o
+  DMARC, o e-mail e o envio do Brevo param — e mensagem perdida não volta.
 </div>
 
 <!-- C -->
 <div class="bloco">
   <div class="btopo">
     <div class="letra">C</div>
-    <div><div class="bt">Ativar o DNS do Registro.br</div><div class="bf">faça C1 e C2 seguidos, sem parar no meio</div></div>
+    <div><div class="bt">No painel do Registro.br</div><div class="bf">Meus domínios → aidtr.com.br → Configurar zona DNS</div></div>
   </div>
 
-  <div class="item" data-k="c1"><div class="cx">✓</div>
-    <div class="it">No painel do Registro.br → <b>DNS</b> → marcar <b>“Utilizar os servidores DNS do Registro.br”</b></div></div>
+  <div class="item" data-k="g1"><div class="cx">✓</div>
+    <div class="it">Abri o painel do <b>Registro.br</b> e entrei na <b>Configurar zona DNS</b> do aidtr.com.br</div></div>
 
-  <div class="item" data-k="c2"><div class="cx">✓</div>
-    <div class="it">Criar o <b>A da raiz</b>
-      <div class="rec"><span>A &nbsp; @ &nbsp; 185.27.134.143</span><button data-copy="185.27.134.143">copiar</button></div>
+  <div class="item" data-k="g2"><div class="cx">✓</div>
+    <div class="it">Criei o <b>1º A da raiz</b>
+      <div class="rec"><span>A &nbsp; @ &nbsp; 185.199.108.153</span><button data-copy="185.199.108.153">copiar</button></div>
     </div></div>
 
-  <div class="item" data-k="c3"><div class="cx">✓</div>
-    <div class="it">Criar o <b>CNAME do www</b>
-      <div class="rec"><span>CNAME &nbsp; www &nbsp; ghs.googlehosted.com</span><button data-copy="ghs.googlehosted.com">copiar</button></div>
+  <div class="item" data-k="g3"><div class="cx">✓</div>
+    <div class="it">Criei o <b>2º A da raiz</b>
+      <div class="rec"><span>A &nbsp; @ &nbsp; 185.199.109.153</span><button data-copy="185.199.109.153">copiar</button></div>
     </div></div>
 
-  <div class="item" data-k="c4"><div class="cx">✓</div>
-    <div class="it">Criar o <b>CNAME de verificação do Google</b>
-      <div class="rec"><span>CNAME &nbsp; ebffccp7t6cz &nbsp; gv-l7yeh2jaaqrdvp.dv.googlehosted.com</span><button data-copy="gv-l7yeh2jaaqrdvp.dv.googlehosted.com">copiar</button></div>
+  <div class="item" data-k="g4"><div class="cx">✓</div>
+    <div class="it">Criei o <b>3º A da raiz</b>
+      <div class="rec"><span>A &nbsp; @ &nbsp; 185.199.110.153</span><button data-copy="185.199.110.153">copiar</button></div>
     </div></div>
 
-  <div class="item" data-k="c5"><div class="cx">✓</div>
-    <div class="it">Criar o <b>MX 10</b>
-      <div class="rec"><span>MX &nbsp; @ &nbsp; 10 &nbsp; mx1.improvmx.com</span><button data-copy="mx1.improvmx.com">copiar</button></div>
+  <div class="item" data-k="g5"><div class="cx">✓</div>
+    <div class="it">Criei o <b>4º A da raiz</b>
+      <div class="rec"><span>A &nbsp; @ &nbsp; 185.199.111.153</span><button data-copy="185.199.111.153">copiar</button></div>
     </div></div>
 
-  <div class="item" data-k="c6"><div class="cx">✓</div>
-    <div class="it">Criar o <b>MX 20</b>
-      <div class="rec"><span>MX &nbsp; @ &nbsp; 20 &nbsp; mx2.improvmx.com</span><button data-copy="mx2.improvmx.com">copiar</button></div>
+  <div class="item" data-k="g6"><div class="cx">✓</div>
+    <div class="it">Troquei o <b>CNAME do www</b> — apaguei o <code>ghs.googlehosted.com</code> e coloquei:
+      <div class="rec"><span>CNAME &nbsp; www &nbsp; aid-tec.github.io</span><button data-copy="aid-tec.github.io">copiar</button></div>
     </div></div>
 
-  <div class="item" data-k="c7"><div class="cx">✓</div>
-    <div class="it">Criar o <b>TXT do SPF</b> na raiz
-      <div class="rec"><span>v=spf1 include:spf.improvmx.com ~all</span><button data-copy="v=spf1 include:spf.improvmx.com ~all">copiar</button></div>
-    </div></div>
+  <div class="item" data-k="g7"><div class="cx">✓</div>
+    <div class="it">Conferi que os <b>MX, TXT (SPF + brevo-code), _dmarc</b> continuam intactos</div></div>
 
-  <div class="item" data-k="c8"><div class="cx">✓</div>
-    <div class="it"><b>Não</b> criar o A do www (aquilo era sobra e quebra o CNAME)</div></div>
+  <div class="item" data-k="g8"><div class="cx">✓</div>
+    <div class="it"><b>Salvei</b> a zona e saí do painel</div></div>
+
+  <div class="nota">
+    No Registro.br a raiz aparece como <b>vazio</b> ou <b>@</b> — os dois são o mesmo endereço.
+    <b>Registros A não aceitam nome de host</b>: só o IP.
+  </div>
 </div>
 
 <!-- D -->
 <div class="bloco">
   <div class="btopo">
     <div class="letra">D</div>
-    <div><div class="bt">Testar</div><div class="bf">espere uns 5 minutos</div></div>
+    <div><div class="bt">Testar</div><div class="bf">depois de salvar — pode demorar uns minutos</div></div>
   </div>
-  <div class="item" data-k="d1"><div class="cx">✓</div><div class="it"><b>www.aidtr.com.br</b> abre o site normalmente</div></div>
-  <div class="item" data-k="d2"><div class="cx">✓</div><div class="it">Mandei um e-mail de <b>outro endereço</b> para comercial@aidtr.com.br e <b>chegou</b></div></div>
-  <div class="item" data-k="d3"><div class="cx">✓</div><div class="it">Avisei no chat que o DNS está de pé</div></div>
+  <div class="item" data-k="h1"><div class="cx">✓</div><div class="it">Espere <b>5 a 15 minutos</b> (propagação do DNS)</div></div>
+  <div class="item" data-k="h2"><div class="cx">✓</div><div class="it"><b>https://www.aidtr.com.br</b> abre o site novo</div></div>
+  <div class="item" data-k="h3"><div class="cx">✓</div><div class="it"><b>https://aidtr.com.br</b> (a raiz) também abre</div></div>
+  <div class="item" data-k="h4"><div class="cx">✓</div><div class="it">Mandei um e-mail de <b>outro endereço</b> para comercial@aidtr.com.br e <b>chegou</b></div></div>
+  <div class="item" data-k="h5"><div class="cx">✓</div><div class="it">Avisei no chat — <b>eu verifico o certificado HTTPS</b> daqui</div></div>
   <div class="nota">
-    Durante a troca o domínio pode ficar alguns minutos sem responder.
-    <b>E-mail não se perde</b>: quem não entrega agora tenta de novo por horas.
+    <b>Cadeado ainda não aparece de primeira.</b> O GitHub leva de 5 minutos a 24 horas para
+    emitir o certificado do domínio. Enquanto isso pode aparecer aviso de segurança — é normal,
+    não desfaça os registros.
   </div>
 </div>
 
@@ -195,51 +232,17 @@
 <div class="bloco">
   <div class="btopo">
     <div class="letra">E</div>
-    <div><div class="bt">Brevo — autenticar o domínio</div><div class="bf">só depois que D estiver ok</div></div>
+    <div><div class="bt">Depois, sem pressa</div><div class="bf">não bloqueia nada</div></div>
   </div>
-
-  <div class="item" data-k="e1"><div class="cx">✓</div>
-    <div class="it"><b>DKIM 1</b>
-      <div class="rec"><span>CNAME &nbsp; brevo1._domainkey &nbsp; b1.aidtr-com-br.dkim.brevo.com</span><button data-copy="b1.aidtr-com-br.dkim.brevo.com">copiar</button></div>
-    </div></div>
-
-  <div class="item" data-k="e2"><div class="cx">✓</div>
-    <div class="it"><b>DKIM 2</b>
-      <div class="rec"><span>CNAME &nbsp; brevo2._domainkey &nbsp; b2.aidtr-com-br.dkim.brevo.com</span><button data-copy="b2.aidtr-com-br.dkim.brevo.com">copiar</button></div>
-    </div></div>
-
-  <div class="item" data-k="e3"><div class="cx">✓</div>
-    <div class="it"><b>Código do Brevo</b> (TXT na raiz)
-      <div class="rec"><span>brevo-code:db5f1a0ede0fe867a4a0cece52ecddbb</span><button data-copy="brevo-code:db5f1a0ede0fe867a4a0cece52ecddbb">copiar</button></div>
-    </div></div>
-
-  <div class="item" data-k="e4"><div class="cx">✓</div>
-    <div class="it"><b>DMARC</b> (TXT no _dmarc)
-      <div class="rec"><span>v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com</span><button data-copy="v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com">copiar</button></div>
-    </div></div>
-
-  <div class="item" data-k="e5"><div class="cx">✓</div>
-    <div class="it"><b>Atualizar o SPF</b> — substituir o TXT da raiz por este
-      <div class="rec"><span>v=spf1 include:spf.improvmx.com include:spf.brevo.com ~all</span><button data-copy="v=spf1 include:spf.improvmx.com include:spf.brevo.com ~all">copiar</button></div>
-    </div></div>
-
-  <div class="item" data-k="e6"><div class="cx">✓</div>
-    <div class="it">Avisei no chat — <b>eu verifico no Brevo</b> se o domínio ficou autenticado</div></div>
-
+  <div class="item" data-k="i1"><div class="cx">✓</div><div class="it">GitHub → Settings → Pages → marcar <b>Enforce HTTPS</b> (só quando o certificado sair)</div></div>
+  <div class="item" data-k="i2"><div class="cx">✓</div><div class="it">Testei o site <b>no celular</b> (fora do Wi-Fi de casa)</div></div>
+  <div class="item" data-k="i3"><div class="cx">✓</div><div class="it">Confirmar que o <b>Google Sites antigo</b> não é mais usado por ninguém</div></div>
   <div class="nota">
-    Não crie um segundo TXT de SPF: <b>SPF é um só</b>. Substitua o de cima, não adicione outro.
+    <b>Opcional (se quiser):</b> para o Google não indexar a raiz sem www, dá pra adicionar depois
+    4 registros AAAA na raiz: <code>2606:50c0:8000::153</code>, <code>::109:153</code>,
+    <code>::110:153</code>, <code>::111:153</code>. Hoje não é necessário — o CNAME do www resolve.
+    <textarea id="notas" placeholder="Anotação livre (opcional)"></textarea>
   </div>
-</div>
-
-<!-- F -->
-<div class="bloco">
-  <div class="btopo">
-    <div class="letra">F</div>
-    <div><div class="bt">Só depois — sem pressa</div><div class="bf">não bloqueia nada</div></div>
-  </div>
-  <div class="item" data-k="f1"><div class="cx">✓</div><div class="it">Migrar o site novo (GitHub Pages) para a raiz de aidtr.com.br</div></div>
-  <div class="item" data-k="f2"><div class="cx">✓</div><div class="it">Recriar os redirecionamentos antigos, se fizer falta</div></div>
-  <div class="item" data-k="f3"><div class="cx">✓</div><div class="it">Cancelar a conta da InfinityFree (só depois de 2 semanas tudo ok)</div></div>
 </div>
 
 <a class="link" href="index.html">← Voltar pro Pacto Gorjeta</a>
@@ -275,7 +278,7 @@ function pintar(){
   document.getElementById('barra').style.width = pct + '%';
   document.getElementById('progtxt').textContent = feitos + ' de ' + total + ' passos · ' + pct + '%';
   document.getElementById('resumo').textContent = feitos === total && total
-    ? 'tudo concluído — domínio migrado'
+    ? 'tudo concluído — domínio migrado pro GitHub'
     : 'marque cada passo conforme faz';
 }
 
