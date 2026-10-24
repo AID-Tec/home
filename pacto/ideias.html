@@ -96,7 +96,7 @@
   <button class="btn" id="btnAdd">Guardar ideia</button>
 
   <div class="aviso">
-    <b>Data padrão: 03/11</b> — é o dia seguinte ao fim do pacto de 14 dias.
+    <b>Data padrão: 14 dias a partir de hoje</b> — o dia seguinte ao fim do ciclo.
     Isso é de propósito. Guardar uma ideia custa 20 segundos; <b>construir</b> uma ideia
     custa semanas de tempo que agora só existe pra fechar as 2 ligações do dia.
   </div>
@@ -189,8 +189,12 @@ function carregar(){
   }).catch(() => { erro(); });
 }
 
-// data padrao: dia seguinte ao fim do pacto (02/11/2026 -> 03/11/2026)
-document.getElementById('data').value = '2026-11-03';
+// data padrao: fim do ciclo de 14 dias contado de hoje (vale pra qualquer projeto)
+(function(){
+  const d = new Date(); d.setDate(d.getDate() + 14);
+  document.getElementById('data').value =
+    d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+})();
 AID.entrar().then(function(sess){
   if (!sess) return;
   sb = AID.sb;

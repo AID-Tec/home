@@ -150,7 +150,7 @@
     padding:13px; border-radius:9px; color:#fff;
   }
   .lcall{background:var(--azul2)} .lzap{background:var(--verde)}
-  /* busca do CANAL PUBLICO do restaurante -- ele nao garimpa dado de pessoa */
+  /* busca do CANAL PUBLICO do restaurante -- ele nao busca dado de pessoa */
   .busca3{display:flex; gap:6px; margin-top:11px}
   .busca3 a{
     flex:1; text-align:center; text-decoration:none; font-weight:700; font-size:12px;
@@ -494,7 +494,7 @@ function diaOf(id){ const x = ESTADO[id]; return (x && x.d) ? x.d : ''; }
 function zapOf(id){ const x = ESTADO[id]; return (x && x.z) ? x.z : ''; }
 
 /* ---------- buscar o canal publico do restaurante ----------
-   Ele NAO precisa garimpar dado de pessoa. Tem o nome e o endereco
+   Ele NAO precisa buscar dado de pessoa. Tem o nome e o endereco
    na base -- um toque ja manda a query pronta pro Google.
    O que ele acha ali e o canal que o proprio restaurante publicou. */
 function buscaGoogle(nome){ return 'https://www.google.com/search?q=' +
@@ -506,7 +506,7 @@ function buscaInsta(nome){ return 'https://www.google.com/search?q=' +
 
 /* ---------- e-mail cadastrado no CNPJ ----------
    Isso vem do registro publico da Receita: a propria empresa declarou
-   esse endereco como canal de correspondencia. Diferente de garimpo,
+   esse endereco como canal de correspondencia. Diferente de coleta sem origem,
    aqui a origem e comprovavel e o contato e da empresa.
 
    O texto abaixo e a MENSAGEM A do painel (a dele), com uma frase
@@ -665,7 +665,7 @@ function desenhar(){
     }
 
     /* achar o CANAL PUBLICO do restaurante: um toque ja abre a busca
-       com o nome dele. Ele nao precisa garimpar dado de pessoa -- o
+       com o nome dele. Ele nao precisa buscar dado de pessoa -- o
        restaurante publica o proprio zap na bio, no cardapio ou no perfil. */
     html += '<div class="busca3">';
     html +=   '<a target="_blank" rel="noopener" href="' + buscaGoogle(it.nome) + '">🔍 Google</a>';
