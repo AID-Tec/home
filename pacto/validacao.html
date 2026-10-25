@@ -19,7 +19,7 @@
   body{
     font-family:'Montserrat','Segoe UI',Arial,sans-serif;
     background:var(--fundo); color:var(--texto); font-size:16px; line-height:1.5;
-    padding-bottom:56px;
+    padding-bottom:112px; /* barra fixa "terminei" + link do fim */
   }
   a{color:var(--azul2)}
 
@@ -98,6 +98,21 @@
   .sync{padding:16px; text-align:center; font-size:12.5px; color:var(--cinza)}
   .vazio{padding:22px; text-align:center; color:var(--cinza); font-size:14px}
 
+  /* volta sempre visivel (o topo é sticky) */
+  .volta{color:#fff; text-decoration:none; font-weight:800; margin-right:9px; padding:2px 6px}
+  .link{display:block; text-align:center; margin:18px 12px; font-weight:800;
+        color:var(--azul2); text-decoration:none; font-size:14.5px}
+
+  /* barra fixa: "terminei?" com conferencia de verdade */
+  .barra{position:fixed; left:0; right:0; bottom:0; z-index:60;
+    background:var(--card); border-top:1px solid var(--borda); padding:8px 12px 12px}
+  .bmsg{text-align:center; font-size:13px; line-height:1.4; margin-bottom:7px; color:var(--cinza)}
+  .bmsg.ok{color:var(--verde); font-weight:700}
+  .bmsg.falta{color:var(--amarelo); font-weight:700}
+  .barra button{display:block; width:100%; border:0; border-radius:9px; padding:14px;
+    font:800 15px/1.2 'Montserrat',sans-serif; background:var(--azul2); color:#fff; cursor:pointer}
+  .barra button.ir{background:var(--verde)}
+
   @media(max-width:420px){
     .nome{word-break:break-word}
   }
@@ -106,7 +121,7 @@
 <body>
 
 <header>
-  <div class="h1">Validar base — atividade real da Receita</div>
+  <div class="h1"><a class="volta" href="index.html" title="Voltar pro painel">←</a>Validar base — atividade real da Receita</div>
   <div class="frase">O CNAE antigo da base era errado (tudo marcado como restaurante). Aqui está o que a Receita diz hoje.</div>
 </header>
 
@@ -134,7 +149,14 @@
 
 <div class="regua" id="titulo">Carregando…</div>
 <div class="lista" id="lista"></div>
+<a class="link" href="index.html">← Voltar pro Pacto Gorjeta</a>
 <div class="sync" id="sync">carregando…</div>
+
+<!-- barra fixa: confere de verdade se a validação fechou -->
+<div class="barra" id="barraTerminei">
+  <div class="bmsg" id="termineiMsg" style="display:none"></div>
+  <button id="btnTerminei" type="button">✓ Terminei — conferir se fechou</button>
+</div>
 
 <script src="vendor/supabase.js"></script>
 <script src="app.js"></script>
@@ -302,6 +324,31 @@ document.querySelectorAll('#chips .chip').forEach(function(c){
     FILTRO = c.dataset.f;
     pintar();
   });
+});
+
+/* ---------- "terminei?" — confere com a MESMA regra do passo 1 do fluxo:
+   pendente + sem revisado_em + (fora do segmento ou CNPJ inativo) ---------- */
+let TERMINEI_OK = false;
+document.getElementById('btnTerminei').addEventListener('click', function(){
+  if (TERMINEI_OK) { location.href = 'index.html'; return; }
+  const sem = BASE.filter(function(x){
+    return x.status === 'pendente' && !x.revisado_em && (tipoDe(x) === 'fora' || inaDe(x));
+  });
+  const msg = document.getElementById('termineiMsg');
+  if (sem.length === 0){
+    TERMINEI_OK = true;
+    msg.textContent = '✓ Fechou — nenhuma empresa fora do segmento ou com CNPJ inativo sem decisão. Passo 1 do fluxo está verde.';
+    msg.className = 'bmsg ok';
+    msg.style.display = 'block';
+    this.textContent = 'Voltar pro painel →';
+    this.classList.add('ir');
+  } else {
+    msg.textContent = 'Faltam ' + sem.length + ' sem decisão — deixei no topo da lista.';
+    msg.className = 'bmsg falta';
+    msg.style.display = 'block';
+    pintar();
+    document.getElementById('lista').scrollIntoView({behavior:'smooth', block:'start'});
+  }
 });
 
 AID.entrar().then(function(sess){
