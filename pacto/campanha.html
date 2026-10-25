@@ -189,9 +189,10 @@
 </div>
 
 <div class="alerta">
-  <b>Sem envio direto.</b> Essa tela só monta e guarda a lista. O disparo continua no fluxo que a
-  gente já tem (Brevo / sequência aprovada). O objetivo aqui é <b>centralizar</b> a geração
-  dessa lista, pra usar em qualquer campanha no futuro.
+  <b>Sem envio direto.</b> Essa tela só monta e guarda a lista. Quem dispara é
+  <code>ferramentas/disparo</code> (API do Brevo, 10 por dia): ele lê <b>exatamente esta
+  regra</b>, manda a copy aprovada com o rodapé LGPD e marca quem já recebeu — por isso
+  a lista daqui e a fila do disparo nunca divergem.
 </div>
 
 <button class="btn" id="btnGerar" disabled>Gerando lista...</button>
