@@ -10,8 +10,21 @@ Lê a base do Pacto (`prospectos`), monta a fila com a regra fixa da aba
 Campanha (tem e-mail · não é contador · não está fora do escopo · 1 por
 e-mail), pega a **copy aprovada** da tabela `copias` (padrão `email_1`,
 D+1), personaliza `{{contact.EMPRESA}}` por destinatário, anexa o **rodapé
-LGPD** e dispara pela **API do Brevo** — um a um, com pausa, no horário
-comercial.
+LGPD** e dispara pelo **Brevo** — um a um, com pausa, no horário comercial.
+
+**Transporte (automático, conforme a chave que existe na máquina):**
+
+| Chave em `chaves.env` | Caminho usado |
+|---|---|
+| `xsmtpsib-…` (SMTP) | servidor `smtp.brevo.com` via `smtp.js` — **é o caso atual** |
+| `xkeysib-…` (API) | API HTTPS `api.brevo.com/v3/smtp/email` (reserva) |
+
+As duas são a mesma conta em abas diferentes do Brevo; o tool serve pras
+duas. SMTP exige o `SMTP_LOGIN` (aba SMTP, *"Your SMTP login"*).
+
+**Cópia oculta (BCC) pra você**: todo envio leva `aidtecnologiaresolutiva@gmail.com`
+como destinatário oculto — só no **envelope**, nunca como cabeçalho (o
+prospect não vê). `--bcc outro@email` troca; `--sem-bcc` desliga.
 
 Por que assim, e não "montar campanha à mão no Brevo": o texto aprovado é o
 que sai (não uma cópia colada e esquecida), e **cada envio marca a linha**,
@@ -36,13 +49,17 @@ não olhou) e **CNPJ inativo** — primeiro ele decide, depois ele recebe.
 
 Poucos por dia = resposta acompanhada, horário comercial respeitado (CLT),
 entregabilidade observada. O limite fica na constante `RITMO_DIA` do
-`disparar.js`: `--limite` acima de 10 é recusado.
+`disparar.js`: `--limite` acima de 10 é recusado. O contador do dia vive em
+`%LOCALAPPDATA%\aid\ritmo.json` (local, vale mesmo sem estatística do Brevo)
+e o tool sempre para em 10 — repetir o comando no mesmo dia só manda o que
+falta.
 
 ## Como roda
 
 ```
 node ferramentas\disparo\disparar.js                    # dry-run: só o plano, NÃO envia
-node ferramentas\disparo\disparar.js --limite 3 --enviar # teste pequeno (faça primeiro)
+node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você (valida a chave)
+node ferramentas\disparo\disparar.js --limite 3 --enviar # teste pequeno com a lista real
 node ferramentas\disparo\disparar.js --enviar            # os 10 do dia
 node ferramentas\disparo\disparar.js --copy email_2 --status email --enviar   # follow-up D+4
 ```
@@ -59,24 +76,27 @@ powershell -ExecutionPolicy Bypass -File ferramentas\disparo\guarda_chave.ps1
 ```
 
 Escreve `%LOCALAPPDATA%\aid\chaves.env` (fora do repositório) com
-`BREVO_API_KEY`, `PACTO_EMAIL`, `PACTO_SENHA`. Variável de ambiente do
-terminal tem prioridade sobre o arquivo. Chave do Brevo: site.brevo.com >
-SMTP & API > Chaves de API > gerar com permissão de envio de e-mail.
+`BREVO_API_KEY`, `PACTO_EMAIL`, `PACTO_SENHA` e `SMTP_LOGIN`. O que já está
+salvo ele mantém — só pergunta o que faltar. Variável de ambiente do
+terminal tem prioridade sobre o arquivo.
 
 | Variável | O que é |
 |---|---|
-| `BREVO_API_KEY` | chave da API do Brevo (envio) |
+| `BREVO_API_KEY` | chave do Brevo: `xsmtpsib-` (SMTP, aba SMTP) ou `xkeysib-` (API, aba API Keys) |
+| `SMTP_LOGIN` | login SMTP (aba SMTP, *"Your SMTP login"*) — não é segredo, só serve junto com a chave |
 | `PACTO_EMAIL` `PACTO_SENHA` | login do painel — o tool LÊ a lista e MARCA o enviado como esse usuário autenticado (o anon não passa do RLS) |
 
 ### Opções
 
 | Flag | O que faz |
 |---|---|
+| `--teste` | 1 e-mail só pra você (assunto `[teste] …`) — valida chave/domínio sem tocar na lista |
 | `--limite N` | quantos envia (padrão e máximo: 10) |
 | `--copy CHAVE` | qual copy manda (padrão `email_1`; aprovadas: `email_1`, `email_2`, `email_3`) |
 | `--status LISTA` | de quem recebe (padrão `pendente`; pro D+4: `--status email`) |
 | `--replyto EMAIL` | para onde cai a resposta (padrão: `aidtecnologiaresolutiva@gmail.com`) |
 | `--de "Nome <e>"` | remetente (padrão: Dyeison — AID Tecnologia <dyeison@aidtr.com.br>) |
+| `--bcc EMAIL` / `--sem-bcc` | troca / desliga a cópia oculta que cai na sua caixa |
 | `--pausa MS` | pausa entre envios (padrão 400 ms) |
 | `--fora-horario` | libera envio fora das 8h–18h seg–sex |
 | `--forcar` | envia copy não aprovada (só teste) |
@@ -98,9 +118,11 @@ SMTP & API > Chaves de API > gerar com permissão de envio de e-mail.
 
 ## Checklist — primeira vez
 
-- [ ] Rodar `guarda_chave.ps1` (chave do Brevo + login do painel)
-- [ ] `node disparar.js` — conferir o dry-run: contagem, assunto, prévia
-- [ ] `node disparar.js --limite 3 --enviar` — 3 e-mails, ver se chegam
-- [ ] Conferir no painel: os 3 viraram `email`, saíram do sorteio
-- [ ] Daí em diante, 1 por dia: `node disparar.js --enviar`
+- [x] Rodar `guarda_chave.ps1` (chave do Brevo + login do painel + SMTP login)
+- [x] `node disparar.js` — conferir o dry-run: contagem, assunto, prévia
+- [x] `node disparar.js --teste` — 1 e-mail cai na sua caixa (chave + domínio ok)
+- [x] `node disparar.js --limite 3 --enviar` — 3 e-mails reais, ver se chegam
+- [x] Conferir no painel: os 3 viraram `email`, saíram do sorteio
+- [ ] Todo dia, 1 por dia: `node disparar.js --enviar` (10/dia, seg–sex 8–18h)
+- [ ] Conferir que as cópias ocultas chegam na sua caixa (BCC)
 - [ ] Em D+4: `--copy email_2 --status email --enviar` (o 2º da sequência)

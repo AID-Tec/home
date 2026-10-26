@@ -31,6 +31,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { mandaEmail } = require('./smtp');
 
 /* ----------------------------- constantes ------------------------------- */
 /* Ritmo do projeto: 10 e-mails por dia. Não é limite técnico — a cota do
@@ -42,10 +43,30 @@ const COTA_TECNICA = 300;   // teto técnico do Brevo (plano gratuito) — nunca
 const PAUSA_MS = 400;      // respiro entre envios (e não estoura a cota)
 const HORA_INI = 8;        // horário comercial CLT: 8h–18h, seg–sex
 const HORA_FIM = 18;
+const EMAIL_DONO = 'aidtecnologiaresolutiva@gmail.com';  /* respostas + cópia BCC */
 const ARQ_CHAVES = process.env.LOCALAPPDATA
   ? path.join(process.env.LOCALAPPDATA, 'aid', 'chaves.env')
   : path.join(process.env.HOME || process.env.USERPROFILE || '.', '.aid', 'chaves.env');
+const ARQ_RITMO = path.join(path.dirname(ARQ_CHAVES), 'ritmo.json');
 const BREVO = 'https://api.brevo.com/v3/smtp/email';
+
+/* --- ritmo do dia em arquivo local (vale mesmo sem acesso à API de stats) --- */
+function diaHoje() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+    '-' + String(d.getDate()).padStart(2, '0');
+}
+function leRitmo() {
+  try {
+    const j = JSON.parse(fs.readFileSync(ARQ_RITMO, 'utf8'));
+    return (j.dia === diaHoje()) ? (j.n || 0) : 0;
+  } catch (e) { return 0; }
+}
+function somaRitmo(n) {
+  try {
+    fs.writeFileSync(ARQ_RITMO, JSON.stringify({ dia: diaHoje(), n: leRitmo() + n }));
+  } catch (e) { /* disco cheio não derruba o envio */ }
+}
 
 /* mesma definição do painel (pacto/index.html) — segmento REAL da Receita */
 const CLASSES_VIZINHAS = {
@@ -87,7 +108,8 @@ function leArgs(argv) {
   const o = {
     enviar: false, limite: RITMO_DIA, copy: 'email_1', status: ['pendente'],
     pausa: PAUSA_MS, forcar: false, ajuda: false, foraHorario: false,
-    replyto: null, de: null
+    replyto: null, de: null, teste: false,
+    bcc: undefined            /* undefined = usa o padrão (você); null = sem BCC */
   };
   const pega = (i, nome) => {
     if (i >= argv.length) { console.error('faltou o valor de ' + nome); process.exit(2); }
@@ -96,6 +118,7 @@ function leArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--enviar') o.enviar = true;
+    else if (a === '--teste') o.teste = true;   /* 1 e-mail só pra você — não toca na lista */
     else if (a === '--limite') o.limite = parseInt(pega(++i, '--limite'), 10);
     else if (a.indexOf('--limite=') === 0) o.limite = parseInt(a.slice(9), 10);
     else if (a === '--copy') o.copy = pega(++i, '--copy');
@@ -104,6 +127,8 @@ function leArgs(argv) {
     else if (a.indexOf('--status=') === 0) o.status = a.slice(9).split(',').map(s => s.trim()).filter(Boolean);
     else if (a === '--pausa') o.pausa = parseInt(pega(++i, '--pausa'), 10);
     else if (a === '--replyto') o.replyto = pega(++i, '--replyto');
+    else if (a === '--bcc') o.bcc = pega(++i, '--bcc');
+    else if (a === '--sem-bcc') o.bcc = null;
     else if (a === '--de') o.de = pega(++i, '--de');
     else if (a === '--forcar') o.forcar = true;
     else if (a === '--fora-horario') o.foraHorario = true;
@@ -135,7 +160,8 @@ function leChaves() {
       const k = l.slice(0, i).trim();
       let v = l.slice(i + 1).trim();
       if ((v[0] === '"' && v[v.length - 1] === '"') || (v[0] === "'" && v[v.length - 1] === "'")) v = v.slice(1, -1);
-      if (!(k in env)) env[k] = v;   /* variável do terminal manda sobre o arquivo */
+      /* variável do terminal manda, MAS só se tiver valor — vazio não apaga o arquivo */
+      if (!(k in env) || env[k] === '') env[k] = v;
     });
   } catch (e) { /* sem arquivo: só variáveis de ambiente */ }
   return env;
@@ -261,6 +287,7 @@ nesse ritmo — é de propósito: poucos por dia dá pra acompanhar resposta.
 (O Brevo deixaria ir a ${COTA_TECNICA}/dia de graça; aqui isso nunca é sugerido.)
 
   node disparar.js                       dry-run: mostra o plano, NÃO envia
+  node disparar.js --teste               1 e-mail só pra você (valida a chave)
   node disparar.js --enviar              manda os ${RITMO_DIA} do dia
   node disparar.js --limite 3 --enviar   teste pequeno (antes do bloco do dia)
 
@@ -268,7 +295,9 @@ Opções
   --limite N        quantos envia nesta rodada (padrão e máximo: ${RITMO_DIA})
   --copy CHAVE      qual copy manda (padrão: email_1). Aprovadas: email_1, email_2, email_3
   --status LISTA    de quem recebe (padrão: pendente). Pro follow-up D+4: --status email
-  --replyto EMAIL   para onde cai a resposta (padrão: aidtecnologiaresolutiva@gmail.com)
+  --replyto EMAIL   para onde cai a resposta (padrão: ${EMAIL_DONO})
+  --bcc EMAIL       cópia oculta de cada envio na sua caixa (padrão: ligada,
+                    com o e-mail acima). --sem-bcc desliga
   --de "Nome <e>"   remetente (padrão: Dyeison — AID Tecnologia <dyeison@aidtr.com.br>)
   --pausa MS        pausa entre envios (padrão: ${PAUSA_MS} ms)
   --forcar          envia copy sem aprovação
@@ -285,6 +314,11 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
 
   const env = leChaves();
   const cfg = leConfigApp();
+  /* resposta cai em você; e TODO e-mail sai com cópia oculta (BCC) na sua
+     caixa — assim você vê o texto exatamente como o prospect recebeu,
+     sem abrir o Brevo. Desliga com --sem-bcc, muda com --bcc x@y */
+  const replyTo = args.replyto || EMAIL_DONO;
+  const bcc = (args.bcc === null) ? null : (args.bcc || EMAIL_DONO);
 
   /* --- credenciais do painel (para LER a lista e marcar o que foi enviado) --- */
   const emailPacto = env.PACTO_EMAIL, senhaPacto = env.PACTO_SENHA;
@@ -362,6 +396,8 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
     (previa.copy.quando ? ' · ' + previa.copy.quando : '') + ' — ' + previa.copy.titulo);
   console.log('  assunto: ' + previa.assunto);
   console.log('  rodapé LGPD: ' + (previa.temRodape ? 'anexado ✓' : 'AUSENTE'));
+  console.log('  respostas caem em: ' + replyTo);
+  console.log('  cópia oculta (BCC) pra você: ' + (bcc || 'desligada (--sem-bcc)'));
 
   if (!alvo.lista.length) {
     console.log('\nNinguém na fila com --status ' + args.status.join(',') + '. Nada a fazer.');
@@ -377,6 +413,47 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   console.log('  texto (3 primeiras linhas):');
   v0.corpo.split('\n').slice(0, 3).forEach(l => console.log('    ' + l));
 
+  /* --- --teste: 1 e-mail só pra você — valida chave + domínio + entrega,
+         sem tocar na lista e sem marcar nada no painel --- */
+  if (args.teste) {
+    const tr = resolveTransporte(env);
+    if (!tr) {
+      console.error('\nFalta a chave do Brevo (BREVO_API_KEY). Rode .\\guarda_chave.ps1');
+      process.exit(2);
+    }
+    const rem = parseRemetente(args.de);
+    const v = montaTexto(copias, args.copy, 'Teste do Pacto Gorjeta');
+    const assunto = '[teste] ' + v.assunto;
+    console.log('\n=== TESTE: 1 e-mail pra ' + EMAIL_DONO + ' — não toca na lista ===');
+    console.log('transporte: ' + (tr.tipo === 'api' ? 'API do Brevo' : 'SMTP do Brevo (a chave que você gerou)'));
+    const r = (tr.tipo === 'api')
+      ? await enviaBrevo(tr.chave, {
+          sender: rem, to: [{ email: EMAIL_DONO, name: 'Dyeison' }],
+          replyTo: { email: replyTo }, subject: assunto,
+          textContent: v.corpo, htmlContent: htmlDe(v.corpo)
+        })
+      : await mandaEmail({
+          de: rem, para: { email: EMAIL_DONO, nome: 'Dyeison' }, bcc: null,
+          replyTo: replyTo, assunto: assunto, texto: v.corpo, html: htmlDe(v.corpo),
+          senha: tr.senha, logins: tr.logins
+        });
+    if (r.ok) {
+      console.log('✓ enviado' + (r.detalhe ? ' — ' + r.detalhe : '') + (r.login ? ' · login ' + r.login : ''));
+      console.log('Confira sua caixa de entrada: assunto "' + assunto + '"');
+      console.log('Chegou = chave e domínio valendo → dá pra rodar o teste de 3.');
+    } else {
+      const motivo = (r.j && r.j.message) ? r.j.message : (r.detalhe || r.txt || '(sem detalhe)');
+      console.log('✗ FALHOU (' + (r.status || r.codigo || 0) + '): ' + motivo);
+      if (r.tipo === 'auth') {
+        console.log('A chave não autentica. Confira qual foi gerada:');
+        console.log('  API (xkeysib-): Settings > SMTP & API > aba API Keys');
+        console.log('  SMTP (xsmtpsib-): aba SMTP — o tool já serve pras duas.');
+      }
+      process.exit(1);
+    }
+    return;
+  }
+
   if (!args.enviar) {
     const dias = Math.ceil(alvo.lista.length / RITMO_DIA);
     console.log('\n=== DRY RUN: nada foi enviado ===');
@@ -390,35 +467,35 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   }
 
   /* --- envio real --- */
-  const chaveBrevo = env.BREVO_API_KEY;
-  if (!chaveBrevo) {
-    console.error('\nFalta BREVO_API_KEY. Rode uma vez:  .\\guarda_chave.ps1');
+  const tr = resolveTransporte(env);
+  if (!tr) {
+    console.error('\nFalta a chave do Brevo (BREVO_API_KEY). Rode uma vez:  .\\guarda_chave.ps1');
     console.error('(a chave fica só na sua máquina, fora do Git)');
     process.exit(2);
   }
-  /* ritmo do dia já cumprido? (melhor esforço — se o Brevo não devolver, segue) */
-  const jaHoje = await enviadosHoje(chaveBrevo);
-  if (jaHoje !== null) {
-    console.log('\nJá enviados hoje no Brevo: ' + jaHoje + ' · ritmo do projeto: ' + RITMO_DIA + '/dia');
-    if (jaHoje >= RITMO_DIA) {
-      console.error('Ritmo de hoje já cumprido (' + jaHoje + ' de ' + RITMO_DIA + ').');
-      console.error('Amanhã sai o próximo bloco (quem recebeu já saiu da fila).');
-      process.exit(3);
-    }
-    if (jaHoje + args.limite > RITMO_DIA) {
-      args.limite = RITMO_DIA - jaHoje;
-      console.log('Ajustando pra caber no ritmo de hoje: --limite ' + args.limite);
-    }
-    if (jaHoje + args.limite > COTA_TECNICA) {
-      console.error('Passaria da cota técnica do Brevo (' + COTA_TECNICA + '/dia).');
-      process.exit(2);
-    }
+  /* ritmo do dia: contador local (vale sempre) + estatística do Brevo (se API) */
+  const jaApi = (tr.tipo === 'api') ? ((await enviadosHoje(tr.chave)) || 0) : 0;
+  const jaHoje = Math.max(leRitmo(), jaApi);
+  console.log('\nJá enviados hoje: ' + jaHoje + ' de ' + RITMO_DIA + ' (ritmo do projeto)');
+  if (jaHoje >= RITMO_DIA) {
+    console.error('Ritmo de hoje já cumprido (' + jaHoje + ' de ' + RITMO_DIA + ').');
+    console.error('Amanhã sai o próximo bloco (quem recebeu já saiu da fila).');
+    process.exit(3);
+  }
+  if (jaHoje + args.limite > RITMO_DIA) {
+    args.limite = RITMO_DIA - jaHoje;
+    console.log('Ajustando pra caber no ritmo de hoje: --limite ' + args.limite);
+  }
+  if (tr.tipo === 'api' && jaHoje + args.limite > COTA_TECNICA) {
+    console.error('Passaria da cota técnica do Brevo (' + COTA_TECNICA + '/dia).');
+    process.exit(2);
   }
 
   const remetente = parseRemetente(args.de);
-  const replyTo = args.replyto || 'aidtecnologiaresolutiva@gmail.com';
   const fila = alvo.lista.slice(0, args.limite);
   console.log('\n=== ENVIANDO ' + fila.length + ' e-mail(s) · pausa ' + args.pausa + ' ms ===');
+  console.log('  transporte: ' + (tr.tipo === 'api' ? 'API do Brevo' : 'SMTP do Brevo (a chave que você gerou)'));
+  console.log('  cópia oculta (BCC) em ' + (bcc || '(desligada)'));
 
   const enviados = [];
   const falhas = [];
@@ -435,12 +512,20 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
       textContent: v.corpo,
       htmlContent: htmlDe(v.corpo)
     };
-    const r = await enviaBrevo(chaveBrevo, pacote);
+    if (bcc) pacote.bcc = [{ email: bcc }];   /* cópia na sua caixa */
+    const r = (tr.tipo === 'api')
+      ? await enviaBrevo(tr.chave, pacote)
+      : await mandaEmail({
+          de: remetente, para: { email: p.email, nome: p.nome }, bcc: bcc,
+          replyTo: replyTo, assunto: v.assunto, texto: v.corpo, html: htmlDe(v.corpo),
+          senha: tr.senha, logins: tr.logins
+        });
     const ag = new Date().toTimeString().slice(0, 8);
 
     if (r.ok) {
       enviados.push(p);
       seguidas = 0;
+      somaRitmo(1);           /* ritmo do dia também vale sem API (contador local) */
       /* marca NA HORA: retomável e o sorteio diário não repete */
       try {
         await rest(cfg, tok, 'prospectos?id=eq.' + encodeURIComponent(p.id), 'PATCH',
@@ -454,18 +539,25 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
       console.log('  [' + (i + 1) + '/' + fila.length + '] ' + ag + ' ✓ ' +
         p.email + ' (' + p.nome + ')');
     } else {
-      const motivo = (r.j && r.j.message) ? r.j.message : r.txt;
-      falhas.push({ p: p, status: r.status, motivo: motivo });
+      const motivo = (r.j && r.j.message) ? r.j.message
+                   : (r.detalhe || r.txt || '(sem detalhe)');
+      const codigo = r.status || r.codigo || 0;
+      falhas.push({ p: p, status: codigo, motivo: motivo });
       console.log('  [' + (i + 1) + '/' + fila.length + '] ✗ ' + p.email +
-        ' -> ' + r.status + ' ' + String(motivo).slice(0, 160));
-      if (r.status === 429) {
+        ' -> ' + codigo + ' ' + String(motivo).slice(0, 160));
+      if (r.tipo === 'auth') {
+        console.log('\nA chave não passou na autenticação do servidor de e-mail.');
+        console.log('Se trocou a chave, rode de novo o .\\guarda_chave.ps1 com a nova.');
+        break;
+      }
+      if (codigo === 429) {
         console.log('\nCota/limite do Brevo atingido — parando aqui.');
         console.log('O que já saiu está marcado; o resto vai na próxima rodada.');
         break;
       }
       seguidas++;
       if (seguidas >= 3) {
-        console.log('\n3 falhas seguidas — parei pra não martelar a API.');
+        console.log('\n3 falhas seguidas — parei pra não martelar.');
         console.log('Confira a chave (--ajuda) e rode de novo (é retomável).');
         break;
       }
@@ -495,6 +587,18 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   console.error('\nERRO: ' + e.message);
   process.exit(1);
 });
+
+/* qual transporte serve pra chave que existe na máquina:
+   xkeysib-  = chave de API  -> envia por HTTPS na API do Brevo
+   xsmtpsib- = chave de SMTP  -> envia pelo servidor de e-mail do Brevo (smtp.js)
+   As duas são a MESMA conta em abas diferentes do Brevo; o tool serve pras duas. */
+function resolveTransporte(env) {
+  const chave = env.BREVO_API_KEY || env.SMTP_SENHA || '';
+  if (!chave) return null;
+  if (chave.indexOf('xkeysib') === 0) return { tipo: 'api', chave: chave };
+  const logins = env.SMTP_LOGIN ? [env.SMTP_LOGIN] : [EMAIL_DONO, 'dyeison@aidtr.com.br'];
+  return { tipo: 'smtp', senha: chave, logins: logins };
+}
 
 /* remetente: "Nome <email>" ou só email */
 function parseRemetente(de) {
