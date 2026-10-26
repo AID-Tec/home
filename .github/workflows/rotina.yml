@@ -1,0 +1,98 @@
+# =============================================================================
+# Pacto Gorjeta · rotina automática de envio (GitHub Actions)
+# =============================================================================
+# Por que existe: o agendador do PC dependia de alguém lembrar/agendar. Aqui o
+# relógio mora no GitHub (24/7, grátis porque o repo é público) e roda a MESMA
+# ferramenta testada — ferramentas/disparo/disparar.js — no modo --rotina, que
+# decide sozinho o que venceu lendo a tabela "envios" no banco.
+#
+# Três gatilhos por dia útil (horário de Brasília, UTC-3, sem horário de verão):
+#   09:00 BRT = 12:00 UTC  -> faixa das 9h  (1º contato / atrasados)
+#   15:00 BRT = 18:00 UTC  -> faixas 9 e 15 (D+4)
+#   18:00 BRT = 21:00 UTC  -> todas         (D+9 + tudo que ficou pendendo)
+# Se um gatilho atrasar além da tolerância da ferramenta (18h05), nada se
+# perde: o próximo gatilho pega os vencidos (é assim que a rotina foi feita).
+#
+# SEGREDOS: só nos Secrets do repositório (Settings → Secrets → Actions) e
+# injetados como variáveis de ambiente. Nenhum valor aqui; nenhum no Git.
+# O repo é público e o LOG do workflow também — por isso a ferramenta liga o
+# modo sigilo sozinha quando detecta CI=true (nenhum e-mail de prospecto no log).
+# =============================================================================
+name: Pacto · rotina de envio
+
+on:
+  schedule:
+    - cron: '0 12 * * 1-5'   # 09:00 BRT (seg–sex)
+    - cron: '0 18 * * 1-5'   # 15:00 BRT (seg–sex)
+    - cron: '0 21 * * 1-5'   # 18:00 BRT (seg–sex)
+  workflow_dispatch:          # gatilho manual (teste/retomada)
+    inputs:
+      enviar:
+        description: 'Enviar de verdade (vazio = só mostra o plano)'
+        type: boolean
+        default: false
+
+# permissão mínima: o job só lê o código; os segredos vêm do cofre do repo
+permissions:
+  contents: read
+
+jobs:
+  rotina:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # variáveis de ambiente = segredos do cofre (nunca aparecem no YAML)
+    env:
+      BREVO_SMTP_KEY: ${{ secrets.BREVO_SMTP_KEY }}   # senha de envio (xsmtpsib-)
+      BREVO_SMTP_USER: ${{ secrets.BREVO_SMTP_USER }} # login SMTP
+      BREVO_SMTP_HOST: ${{ secrets.BREVO_SMTP_HOST }} # servidor
+      BREVO_SMTP_PORT: ${{ secrets.BREVO_SMTP_PORT }} # porta
+      PACTO_EMAIL: ${{ secrets.PACTO_EMAIL }}         # login do painel
+      PACTO_SENHA: ${{ secrets.PACTO_SENHA }}         # senha do painel
+    steps:
+      - name: Pegar o código
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # a ferramenta não tem dependência nenhuma (usa só o Node de fábrica)
+
+      - name: Checar segredos do cofre
+        id: cofre
+        # se ainda não houver segredo cadastrado, o job AVISA e passa reto:
+        # nunca falha vermelho por falta de configuração e nunca envia sem chave
+        env:
+          FALTA: ${{ secrets.BREVO_SMTP_KEY == '' || secrets.PACTO_SENHA == '' }}
+        run: |
+          if [ "$FALTA" = "true" ]; then
+            echo "pulado=1" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cofre de segredos ainda vazio — nada foi enviado. Cadastre BREVO_SMTP_KEY/BREVO_SMTP_USER/BREVO_SMTP_HOST/BREVO_SMTP_PORT/PACTO_EMAIL/PACTO_SENHA em Settings → Secrets and variables → Actions."
+          else
+            echo "pulado=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rotina (o que venceu neste gatilho)
+        if: steps.cofre.outputs.pulado == '0'
+        run: |
+          set -euo pipefail
+          FLAGS="--rotina"
+          # agendamento automático envia; gatilho manual só envia se pedir
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.enviar }}" = "true" ]; then
+            FLAGS="$FLAGS --enviar"
+          fi
+          echo "modo: $FLAGS"
+          node ferramentas/disparo/disparar.js $FLAGS
+
+      # acorda o n8n no Render e dispara a checagem de retorno/alertas.
+      # continue-on-error: se o n8n estiver dormindo/falhando, o envio do dia
+      # NÃO pode ser dado como perdido — ele já saiu aqui.
+      - name: Avisar o n8n (retorno/alertas)
+        if: ${{ steps.cofre.outputs.pulado == '0' && secrets.N8N_WEBHOOK != '' }}
+        continue-on-error: true
+        env:
+          N8N_WEBHOOK: ${{ secrets.N8N_WEBHOOK }}
+        run: |
+          curl -fsS -m 45 -X POST -H 'Content-Type: application/json' \
+            -d '{"origem":"github-actions","gatilho":"${{ github.event_name }}"}' \
+            "$N8N_WEBHOOK" || true
