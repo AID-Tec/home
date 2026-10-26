@@ -1,0 +1,7 @@
+# Segredos do projeto — NUNCA sobir pro Git
+.env
+.env.*
+*.env
+
+# Dependências
+node_modules/

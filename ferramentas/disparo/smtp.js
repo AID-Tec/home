@@ -246,10 +246,13 @@ async function porHost(alvo, o) {
 
 /* ------------------------- público: mandaEmail --------------------------- */
 /* o  = { de:{nome,email}, para:{nome,email}, bcc, replyTo, assunto, texto, html,
-          senha, logins:[...] }                                              */
+          senha, logins:[...], host?, porta? }   (host/porta: do .env, se tiver) */
 async function mandaEmail(o) {
   let ultimo = null;
-  for (const alvo of HOSTS) {
+  const alvos = o.host
+    ? [{ host: o.host, porta: Number(o.porta) || 587, modo: Number(o.porta) === 465 ? 'tls' : 'starttls' }]
+    : HOSTS;
+  for (const alvo of alvos) {
     try {
       const r = await porHost(alvo, o);
       r.host = alvo.host;

@@ -14,7 +14,7 @@ LGPD** e dispara pelo **Brevo** — um a um, com pausa, no horário comercial.
 
 **Transporte (automático, conforme a chave que existe na máquina):**
 
-| Chave em `chaves.env` | Caminho usado |
+| Chave no `.env` | Caminho usado |
 |---|---|
 | `xsmtpsib-…` (SMTP) | servidor `smtp.brevo.com` via `smtp.js` — **é o caso atual** |
 | `xkeysib-…` (API) | API HTTPS `api.brevo.com/v3/smtp/email` (reserva) |
@@ -67,24 +67,32 @@ node ferramentas\disparo\disparar.js --copy email_2 --status email --enviar   # 
 Sem `--enviar` **nada sai**: ele mostra quem entra, quem fica de fora (e por
 quê), o assunto, a prévia do 1º e-mail e quanto faltaria no ritmo.
 
-### Segredos (nunca no código, nunca no Git)
+### Segredos — local central: `.env` na raiz do projeto
 
-Uma vez só:
+**`D:\AIDSoluções\home\.env`** é o lugar único das credenciais do projeto.
+Está no `.gitignore` (regra `*.env`) — o Git nunca sobe. Confira quando quiser:
+
+```
+git check-ignore -v .env     # tem que apontar uma regra do .gitignore
+```
+
+Para gravar/atualizar (mantém o que já existe, só pergunta o que faltar):
 
 ```
 powershell -ExecutionPolicy Bypass -File ferramentas\disparo\guarda_chave.ps1
 ```
 
-Escreve `%LOCALAPPDATA%\aid\chaves.env` (fora do repositório) com
-`BREVO_API_KEY`, `PACTO_EMAIL`, `PACTO_SENHA` e `SMTP_LOGIN`. O que já está
-salvo ele mantém — só pergunta o que faltar. Variável de ambiente do
-terminal tem prioridade sobre o arquivo.
+Ordem de leitura do `disparar.js`: **variável de terminal > `.env` do projeto >
+backup antigo** `%LOCALAPPDATA%\aid\chaves.env` (legado, ignorado enquanto o
+`.env` tiver valor). Copiar segredo pro chat ou pro Git = trocar a chave.
 
-| Variável | O que é |
+| Variável no `.env` | O que é |
 |---|---|
-| `BREVO_API_KEY` | chave do Brevo: `xsmtpsib-` (SMTP, aba SMTP) ou `xkeysib-` (API, aba API Keys) |
-| `SMTP_LOGIN` | login SMTP (aba SMTP, *"Your SMTP login"*) — não é segredo, só serve junto com a chave |
+| `BREVO_SMTP_USER` | login SMTP (aba SMTP, *"Your SMTP login"*) — não é segredo, só serve com a chave |
+| `BREVO_SMTP_KEY` | chave do Brevo: `xsmtpsib-` (SMTP, atual) ou `xkeysib-` (API, reserva) |
+| `BREVO_SMTP_HOST` `BREVO_SMTP_PORT` | servidor de saída (padrão `smtp-relay.brevo.com:587`) |
 | `PACTO_EMAIL` `PACTO_SENHA` | login do painel — o tool LÊ a lista e MARCA o enviado como esse usuário autenticado (o anon não passa do RLS) |
+| `SUPABASE_DB_*` | host/porta/banco/usuário/senha do Postgres (pooler) — dos scripts de conferência |
 
 ### Opções
 

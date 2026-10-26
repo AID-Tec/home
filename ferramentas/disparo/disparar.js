@@ -44,6 +44,7 @@ const PAUSA_MS = 400;      // respiro entre envios (e não estoura a cota)
 const HORA_INI = 8;        // horário comercial CLT: 8h–18h, seg–sex
 const HORA_FIM = 18;
 const EMAIL_DONO = 'aidtecnologiaresolutiva@gmail.com';  /* respostas + cópia BCC */
+const ARQ_ENV = path.join(__dirname, '..', '..', '.env');   /* central do projeto (raiz) */
 const ARQ_CHAVES = process.env.LOCALAPPDATA
   ? path.join(process.env.LOCALAPPDATA, 'aid', 'chaves.env')
   : path.join(process.env.HOME || process.env.USERPROFILE || '.', '.aid', 'chaves.env');
@@ -148,22 +149,32 @@ function leArgs(argv) {
   return o;
 }
 
+/* ordem: variável do terminal > .env do projeto (CENTRAL) > chaves.env antigo
+   (backup em %LOCALAPPDATA%, ignorado enquanto o .env tiver valor) */
 function leChaves() {
   const env = Object.assign({}, process.env);
-  try {
-    const txt = fs.readFileSync(ARQ_CHAVES, 'utf8');
-    txt.split(/\r?\n/).forEach(linha => {
-      const l = linha.trim();
-      if (!l || l[0] === '#') return;
-      const i = l.indexOf('=');
-      if (i < 1) return;
-      const k = l.slice(0, i).trim();
-      let v = l.slice(i + 1).trim();
-      if ((v[0] === '"' && v[v.length - 1] === '"') || (v[0] === "'" && v[v.length - 1] === "'")) v = v.slice(1, -1);
-      /* variável do terminal manda, MAS só se tiver valor — vazio não apaga o arquivo */
-      if (!(k in env) || env[k] === '') env[k] = v;
-    });
-  } catch (e) { /* sem arquivo: só variáveis de ambiente */ }
+  const le = arq => {
+    try {
+      const txt = fs.readFileSync(arq, 'utf8');
+      txt.split(/\r?\n/).forEach(linha => {
+        const l = linha.trim();
+        if (!l || l[0] === '#') return;
+        const i = l.indexOf('=');
+        if (i < 1) return;
+        const k = l.slice(0, i).trim();
+        let v = l.slice(i + 1).trim();
+        if ((v[0] === '"' && v[v.length - 1] === '"') || (v[0] === "'" && v[v.length - 1] === "'")) v = v.slice(1, -1);
+        /* variável do terminal manda, MAS só se tiver valor — vazio não apaga o arquivo */
+        if (!(k in env) || env[k] === '') env[k] = v;
+      });
+    } catch (e) { /* sem arquivo: segue a ordem */ }
+  };
+  le(ARQ_ENV);
+  le(ARQ_CHAVES);
+
+  /* nomes do .env do projeto valem pras variáveis internas do tool */
+  if (!env.BREVO_API_KEY && env.BREVO_SMTP_KEY) env.BREVO_API_KEY = env.BREVO_SMTP_KEY;
+  if (!env.SMTP_LOGIN && env.BREVO_SMTP_USER) env.SMTP_LOGIN = env.BREVO_SMTP_USER;
   return env;
 }
 
@@ -435,7 +446,7 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
       : await mandaEmail({
           de: rem, para: { email: EMAIL_DONO, nome: 'Dyeison' }, bcc: null,
           replyTo: replyTo, assunto: assunto, texto: v.corpo, html: htmlDe(v.corpo),
-          senha: tr.senha, logins: tr.logins
+          senha: tr.senha, logins: tr.logins, host: env.BREVO_SMTP_HOST, porta: env.BREVO_SMTP_PORT
         });
     if (r.ok) {
       console.log('✓ enviado' + (r.detalhe ? ' — ' + r.detalhe : '') + (r.login ? ' · login ' + r.login : ''));
@@ -518,7 +529,7 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
       : await mandaEmail({
           de: remetente, para: { email: p.email, nome: p.nome }, bcc: bcc,
           replyTo: replyTo, assunto: v.assunto, texto: v.corpo, html: htmlDe(v.corpo),
-          senha: tr.senha, logins: tr.logins
+          senha: tr.senha, logins: tr.logins, host: env.BREVO_SMTP_HOST, porta: env.BREVO_SMTP_PORT
         });
     const ag = new Date().toTimeString().slice(0, 8);
 
@@ -593,7 +604,7 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
    xsmtpsib- = chave de SMTP  -> envia pelo servidor de e-mail do Brevo (smtp.js)
    As duas são a MESMA conta em abas diferentes do Brevo; o tool serve pras duas. */
 function resolveTransporte(env) {
-  const chave = env.BREVO_API_KEY || env.SMTP_SENHA || '';
+  const chave = env.BREVO_API_KEY || env.BREVO_SMTP_KEY || env.SMTP_SENHA || '';
   if (!chave) return null;
   if (chave.indexOf('xkeysib') === 0) return { tipo: 'api', chave: chave };
   const logins = env.SMTP_LOGIN ? [env.SMTP_LOGIN] : [EMAIL_DONO, 'dyeison@aidtr.com.br'];
