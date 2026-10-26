@@ -111,6 +111,7 @@
     <li><b>Banco:</b> Supabase (Postgres). Tabelas usadas pelo painel: <span class="k">prospectos</span>, <span class="k">copias</span>, <span class="k">campanhas</span>, <span class="k">selecao_dia</span>, <span class="k">marcacoes</span>, <span class="k">ideias</span> — e <span class="k">envios</span> (histórico: 1 linha por e-mail que saiu, é ela que calcula o D+4/D+9).</li>
     <li><b>Agendador:</b> GitHub Actions (<span class="k">.github/workflows/rotina.yml</span>) — roda a ferramenta 3× por dia útil sem depender de PC ligado ou de ninguém lembrar.</li>
     <li><b>E-mails:</b> Brevo (domínio validado: TXT brevo-code + SPF Brevo e ImprovMX).</li>
+    <li><b>Monitor de retorno:</b> n8n self-hosted no Render (<span class="k">n8n-aid-ebg9.onrender.com</span>) — lê a caixa do dono, corta recusa sozinho e avisa; acordado pelo cron-job.org (5 min) e pela webhook pós-envio (seção 15).</li>
     <li><b>Vídeo aprovado:</b> <span class="k">video_gorjetas_ds.mp4</span> — YouTube não listado <span class="k">youtu.be/hwkvjlP48Ns</span>.</li>
     <li><b>Contato publicado:</b> WhatsApp <span class="k">wa.me/5516999986836</span> (nas páginas públicas).</li>
   </ul>
@@ -320,6 +321,23 @@ node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você
   </ul>
 </div>
 
+<!-- ============================ 15. MONITOR DE RETORNO ============================ -->
+<div class="regua">15 · Monitor de retorno (n8n — corta recusa sozinho)</div>
+<div class="cartao">
+  O n8n self-hosted no Render vigia a caixa do dono (IMAP do Gmail) e age sozinho —
+  é a peça que fecha o "automático de verdade" (ninguém precisa lembrar de nada):
+  <ul>
+    <li><b>Fluxo:</b> gatilho IMAP (não-lidos, marca como lido) → separa remetentes (corta o texto citado) → procura no painel (só <span class="k">status='email'</span>) → cruza e decide → recusa grava <span class="k">status='nao'</span> e avisa; retorno comum só ajusta a faixa e avisa.</li>
+    <li><b>Interrupção automática:</b> "não quero", "sem interesse", "tirar da lista"… marcam <span class="k">nao</span> no banco — e como o <span class="k">--rotina</span> só segue quem está <span class="k">email</span>, a sequência morre na hora, sem ninguém passar pelo painel.</li>
+    <li><b>Faixa por resposta:</b> a hora em que o contato respondeu vira <span class="k">hora_envio</span> (09/15/18) — o próximo e-mail dele sai na faixa em que ele mexe.</li>
+    <li><b>Sem falso positivo:</b> texto citado (&gt;, "On … wrote:", "Em …, escreveu:") é cortado antes da busca, e as cópias <span class="k">email_1</span>/<span class="k">rodape</span> foram conferidas — zero palavra de recusa nelas.</li>
+    <li><b>Alerta pro dono:</b> Gmail SMTP porta 587 (a sonda mostrou que o Render free não conecta na 465 e o Brevo 587 não sai da rede), retry 3× — o banco é gravado <b>antes</b> do alerta, então e-mail caído nunca perde o corte.</li>
+    <li><b>Cofre do n8n:</b> <span class="k">imap-gmail-pacto</span>, <span class="k">gmail-alerta-587</span>, <span class="k">postgres-pacto</span> — só dentro do n8n (criptografado), nunca em página, Git ou chat (a senha é app password do Gmail, não a da conta).</li>
+    <li><b>Acordar:</b> cron-job.org batendo na raiz do Render a cada 5 min + webhook <span class="k">pacto-retorno</span> após cada envio do Actions.</li>
+    <li><b>Testado de ponta a ponta:</b> caminho do alerta (faixa ajustada + aviso) e caminho da recusa (<span class="k">status='nao'</span> gravado + aviso) — sempre com linha temporária, apagada no fim (banco intacto, 477).</li>
+  </ul>
+</div>
+
 <!-- ============================ CHECKLIST ============================ -->
 <div class="regua">Checklist — rotina que não muda</div>
 <div class="cartao" id="checklist">
@@ -331,6 +349,7 @@ node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você
   <div class="check"><input type="checkbox" id="c6"><label for="c6">Credencial nova ou trocada: gravar só no <span class="k">.env</span> da raiz (nunca no Git, chat, página ou print).</label></div>
   <div class="check"><input type="checkbox" id="c7"><label for="c7">Teste de painel: usuário temporário criado antes e <b>apagado depois</b> — só o usuário real permanece.</label></div>
   <div class="check"><input type="checkbox" id="c8"><label for="c8">Antes de publicar página nova: sem AppSheet, sem promessa de imposto, CTA wa.me certo, "colaborador", tokens do DS.</label></div>
+  <div class="check"><input type="checkbox" id="c9"><label for="c9">Recusa recebida: o n8n corta sozinho (<span class="k">status='nao'</span>) e manda alerta na sua caixa — se o alerta não chegar, o corte já rodou; conferir em n8n → Executions.</label></div>
 </div>
 
 <div class="fim"><a href="index.html">← Voltar pro painel</a></div>

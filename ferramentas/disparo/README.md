@@ -81,7 +81,7 @@ Regras do plano (por que estão assim):
 - **interrupção automática**: follow-up só sai de quem continua com
   `status='email'` — decisão do dono (`nao`, `zap`, `ligou`, `demo`,
   `fechou`, `fora`) corta a sequência daquela empresa na hora;
-- `prospectos.hora_envio` (preenchido pelo futuro monitor de retorno)
+- `prospectos.hora_envio` (preenchido pelo monitor de retorno do n8n, abaixo)
   **sobrescreve** a faixa da etapa, pra aquele contato.
 
 ### Quem acorda: GitHub Actions (24/7, sem PC ligado)
@@ -101,6 +101,44 @@ Actions → *Run workflow* (vazio = dry-run; marcado = envia de verdade).
 - **Pós-envio**: o job dá um `curl` na webhook do n8n (acorda o Render e
   roda a checagem de retorno/alertas); se o n8n falhar, o envio **não** é
   dado como perdido (`continue-on-error`).
+
+### Quem vigia os retornos: n8n no Render (automático)
+
+O n8n self-hosted (`n8n-aid-ebg9.onrender.com`) monitora a caixa do dono e
+age sozinho — é ele que faz a **interrupção automática** acontecer sem
+ninguém lembrar:
+
+```
+Gatilho IMAP (INBOX, não-lidos, marca como lido)
+  → Separa remetentes        (extrai o "De:"; corta o texto citado)
+  → Procura no painel        (só quem está com status='email')
+  → Cruza e decide           (procura palavra de recusa, sem acento)
+      ├─ É recusa?  → sim: Grava recusa (status='nao')  → Avisa recusa
+      └─            → não: Ajusta hora (hora_envio)     → Avisa retorno
+```
+
+- **Corte de recusa é automático**: `nao quero`, `sem interesse`,
+  `tirar da lista`, `descadast…` etc. marcam `status='nao'` no banco — e como
+  o `--rotina` só segue quem está `email`, a sequência morre na hora (sem
+  precisar de ninguém no painel);
+- **A hora da resposta vira `hora_envio`** (09/15/18) — o próximo e-mail dele
+  sai na faixa em que ele costuma responder;
+- **Texto citado é cortado** antes da busca (`>`, "On … wrote:", "Em …,
+  escreveu:"): sem isso, o rodapé LGPD do nosso próprio e-mail citado casaria
+  e cortaria gente errada. As cópias `email_1` e `rodape` foram conferidas:
+  zero palavra de recusa;
+- **Alerta pro dono**: texto completo da resposta no e-mail dele. Canal =
+  **SMTP do Gmail na porta 587** (a sonda mostrou que o Render free não
+  conecta na 465 e o Brevo 587 não sai da rede do Render) — com retry 3× no
+  nó; o banco é gravado **antes** do alerta, então falha de e-mail nunca
+  perde o corte;
+- **Segredos do n8n**: só no cofre do próprio n8n (`imap-gmail-pacto`,
+  `gmail-alerta-587`, `postgres-pacto`) — app password do Gmail, nunca a
+  senha da conta;
+- **Render free dorme** ~15 min ocioso: o job do cron-job.org (a cada 5 min,
+  URL raiz) mantém a instância viva, e o gatilho IMAP lê a caixa a cada
+  ~1 min enquanto acordado. O webhook `pacto-retorno` (batida pós-envio do
+  Actions) é o outro acordador.
 
 ## Como roda
 
@@ -187,4 +225,7 @@ backup antigo** `%LOCALAPPDATA%\aid\chaves.env` (legado, ignorado enquanto o
       Actions → `Pacto · rotina de envio`; se cair, rodar `--rotina` na mão
 - [ ] Cofre do Actions preenchido (`BREVO_SMTP_*`, `PACTO_EMAIL`, `PACTO_SENHA`,
       `N8N_WEBHOOK`) — enquanto vazio, o job só avisa e não envia
-- [ ] Chat/agendador do n8n a cada 5 min batendo na webhook (mantém o Render acordado)
+- [ ] Monitor de retorno ativo no n8n (fluxo `Pacto - retorno e alertas`) —
+      recusa vira `status='nao'` sozinha e o alerta cai na sua caixa
+- [ ] Agendador do cron-job.org a cada 5 min batendo na raiz do Render
+      (mantém a instância acordada pro IMAP ler a caixa)
