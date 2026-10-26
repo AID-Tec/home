@@ -49,10 +49,58 @@ não olhou) e **CNPJ inativo** — primeiro ele decide, depois ele recebe.
 
 Poucos por dia = resposta acompanhada, horário comercial respeitado (CLT),
 entregabilidade observada. O limite fica na constante `RITMO_DIA` do
-`disparar.js`: `--limite` acima de 10 é recusado. O contador do dia vive em
-`%LOCALAPPDATA%\aid\ritmo.json` (local, vale mesmo sem estatística do Brevo)
-e o tool sempre para em 10 — repetir o comando no mesmo dia só manda o que
-falta.
+`disparar.js`: `--limite` acima de 10 é recusado. O contador do dia sai do
+**maior** entre três fontes — tabela `envios` no banco (vale no CI, onde não
+existe arquivo local), `%LOCALAPPDATA%\aid\ritmo.json` (reserva local) e a
+estatística do Brevo (só com chave de API) — e o tool sempre para em 10;
+repetir o comando no mesmo dia só manda o que falta.
+
+## Modo `--rotina` e agendamento automático
+
+O modo `--rotina` é o que roda quando **ninguém está olhando**: em vez de
+listar por `--status`, ele pergunta **o que venceu**, lendo o histórico da
+tabela `envios` (1 linha por e-mail que saiu):
+
+```
+node ferramentas\disparo\disparar.js --rotina            # o que venceu AGORA (dry-run)
+node ferramentas\disparo\disparar.js --rotina --enviar   # manda o que venceu
+```
+
+Regras do plano (por que estão assim):
+
+| Etapa | Espera desde o envio anterior | Faixa horária |
+|---|---|---|
+| `email_1` | dia do cadastro | 09:00 |
+| `email_2` | +4 dias | 15:00 |
+| `email_3` | +5 dias (D+9) | 18:00 |
+
+- **Cada gatilho manda tudo que já venceu com faixa ≤ a hora dele** — se um
+  gatilho falhar, o próximo pega; nada se perde, nada duplica;
+- **vencimento sai do histórico**, nunca de `atualizado_em` (que muda com
+  qualquer edição e mentiria a data);
+- **interrupção automática**: follow-up só sai de quem continua com
+  `status='email'` — decisão do dono (`nao`, `zap`, `ligou`, `demo`,
+  `fechou`, `fora`) corta a sequência daquela empresa na hora;
+- `prospectos.hora_envio` (preenchido pelo futuro monitor de retorno)
+  **sobrescreve** a faixa da etapa, pra aquele contato.
+
+### Quem acorda: GitHub Actions (24/7, sem PC ligado)
+
+`.github/workflows/rotina.yml` roda `--rotina --enviar` em **3 horários de
+Brasília** (UTC-3), de segunda a sexta: 09:00 (`0 12 * * 1-5`), 15:00
+(`0 18 * * 1-5`) e 18:00 (`0 21 * * 1-5`). Também dispara na mão pelo
+Actions → *Run workflow* (vazio = dry-run; marcado = envia de verdade).
+
+- **Segredos**: só no cofre do Actions (Settings → Secrets and variables →
+  Actions) — no YAML aparece `${{ secrets.NOME }}`, nunca o valor. Se o cofre
+  estiver vazio, o job **avisa e passa reto** (nunca vermelho, nunca envia sem
+  chave).
+- **Log público**: o repo é público, então a ferramenta liga o **modo sigilo
+  sozinho** (detecta `CI=true`) — no log só `prospecto #id`, nunca e-mail nem
+  nome de prospecto. No seu PC o log continua completo.
+- **Pós-envio**: o job dá um `curl` na webhook do n8n (acorda o Render e
+  roda a checagem de retorno/alertas); se o n8n falhar, o envio **não** é
+  dado como perdido (`continue-on-error`).
 
 ## Como roda
 
@@ -106,6 +154,7 @@ backup antigo** `%LOCALAPPDATA%\aid\chaves.env` (legado, ignorado enquanto o
 | `--de "Nome <e>"` | remetente (padrão: Dyeison — AID Tecnologia <dyeison@aidtr.com.br>) |
 | `--bcc EMAIL` / `--sem-bcc` | troca / desliga a cópia oculta que cai na sua caixa |
 | `--pausa MS` | pausa entre envios (padrão 400 ms) |
+| `--rotina` | decide sozinho o que venceu lendo o histórico `envios` (usa com `--enviar`; é o que o Actions roda) |
 | `--fora-horario` | libera envio fora das 8h–18h seg–sex |
 | `--forcar` | envia copy não aprovada (só teste) |
 
@@ -131,6 +180,11 @@ backup antigo** `%LOCALAPPDATA%\aid\chaves.env` (legado, ignorado enquanto o
 - [x] `node disparar.js --teste` — 1 e-mail cai na sua caixa (chave + domínio ok)
 - [x] `node disparar.js --limite 3 --enviar` — 3 e-mails reais, ver se chegam
 - [x] Conferir no painel: os 3 viraram `email`, saíram do sorteio
-- [ ] Todo dia, 1 por dia: `node disparar.js --enviar` (10/dia, seg–sex 8–18h)
-- [ ] Conferir que as cópias ocultas chegam na sua caixa (BCC)
-- [ ] Em D+4: `--copy email_2 --status email --enviar` (o 2º da sequência)
+- [x] Todo dia, 1 por dia: `node disparar.js --enviar` (10/dia, seg–sex 8–18h)
+- [x] Conferir que as cópias ocultas chegam na sua caixa (BCC)
+- [x] Em D+4: `--copy email_2 --status email --enviar` (o 2º da sequência)
+- [ ] **Agendado no Actions** (9h/15h/18h seg–sex) — conferir o resultado em
+      Actions → `Pacto · rotina de envio`; se cair, rodar `--rotina` na mão
+- [ ] Cofre do Actions preenchido (`BREVO_SMTP_*`, `PACTO_EMAIL`, `PACTO_SENHA`,
+      `N8N_WEBHOOK`) — enquanto vazio, o job só avisa e não envia
+- [ ] Chat/agendador do n8n a cada 5 min batendo na webhook (mantém o Render acordado)

@@ -16,8 +16,13 @@
    - quem ainda está "sem decisão" (fora do segmento/CNPJ inativo que o dono
      não olhou) NÃO recebe: primeiro ele decide na validação.
 
+   Agendamento: o modo --rotina roda 3x/dia no GitHub Actions (9h, 15h e 18h,
+   seg–sex) — quem acorda o envio é o agendador, não ninguém lembrando. Por
+   isso o histórico (tabela envios) mora no BANCO: no CI não existe arquivo
+   local, e é o histórico que diz o que venceu hoje.
+
    Segredos NUNCA no código e NUNCA no Git: vêm do .env CENTRAL na raiz do
-   projeto (gitignorado, regra *.env) — veja guarda_chave.ps1 e README.md.
+   projeto (gitignorado, regra *.env) — ou, no CI, dos Secrets do Actions.
 
    Padrões: dry-run por padrão (nada sai sem --enviar e --limite explícitos),
    cota diária do plano gratuito respeitada (300), pausa entre envios,
@@ -44,6 +49,35 @@ const COTA_TECNICA = 300;   // teto técnico do Brevo (plano gratuito) — nunca
 const PAUSA_MS = 400;      // respiro entre envios (e não estoura a cota)
 const HORA_INI = 8;        // horário comercial CLT: 8h–18h, seg–sex
 const HORA_FIM = 18;
+/* o gatilho das 18h dispara no segundo exato: sem esta tolerância a janela
+   (hora < 18) recusaria o lote da noite inteiro */
+const TOLERANCIA_FIM = 5;  // minutos de folga depois das 18h00
+
+/* Sequência do Pacto Gorjeta (decisão do dono) e a FAIXA de horário de cada
+   etapa — é o que o modo --rotina usa pra decidir o que sai em cada gatilho:
+   09h manda faixa 9 · 15h manda faixas 9 e 15 · 18h manda todas (atraso de um
+   gatilho pega no seguinte, nada se perde). espera = dias DESDE o envio anterior.
+   A coluna prospectos.hora_envio sobrescreve a faixa quando preenchida (é ela
+   que o monitor de resposta vai ajustar por empresa). */
+const SEQUENCIA = [
+  { copy: 'email_1', faixa: 9,  espera: 0, statusOk: ['pendente'] },
+  { copy: 'email_2', faixa: 15, espera: 4, statusOk: ['email'] },
+  { copy: 'email_3', faixa: 18, espera: 5, statusOk: ['email'] }
+];
+
+/* --- sigilo no CI -------------------------------------------------------
+   O repositório é PÚBLICO e o log do GitHub Actions também — nele não pode
+   aparecer e-mail nem nome de prospecto (dado pessoal, LGPD). O Actions
+   exporta CI=true/GITHUB_ACTIONS=true, então o modo sigilo liga SOZINHO lá
+   e continua normal quando você roda no seu PC (sem flag pra esquecer). */
+const SIGILO = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+
+/* como nomear o destinatário no log: no CI só o id (nunca e-mail/nome) */
+function destino(p) {
+  return SIGILO
+    ? ('prospecto #' + (p.id != null ? p.id : '?'))
+    : (p.email + (p.nome ? ' (' + p.nome + ')' : ''));
+}
 const EMAIL_DONO = 'aidtecnologiaresolutiva@gmail.com';  /* respostas + cópia BCC */
 const ARQ_ENV = path.join(__dirname, '..', '..', '.env');   /* central do projeto (raiz) */
 const ARQ_CHAVES = process.env.LOCALAPPDATA
@@ -111,6 +145,7 @@ function leArgs(argv) {
     enviar: false, limite: RITMO_DIA, copy: 'email_1', status: ['pendente'],
     pausa: PAUSA_MS, forcar: false, ajuda: false, foraHorario: false,
     replyto: null, de: null, teste: false,
+    rotina: false, statusManual: false,
     bcc: undefined            /* undefined = usa o padrão (você); null = sem BCC */
   };
   const pega = (i, nome) => {
@@ -125,8 +160,11 @@ function leArgs(argv) {
     else if (a.indexOf('--limite=') === 0) o.limite = parseInt(a.slice(9), 10);
     else if (a === '--copy') o.copy = pega(++i, '--copy');
     else if (a.indexOf('--copy=') === 0) o.copy = a.slice(7);
-    else if (a === '--status') o.status = pega(++i, '--status').split(',').map(s => s.trim()).filter(Boolean);
-    else if (a.indexOf('--status=') === 0) o.status = a.slice(9).split(',').map(s => s.trim()).filter(Boolean);
+    else if (a === '--status') { o.status = pega(++i, '--status').split(',').map(s => s.trim()).filter(Boolean); o.statusManual = true; }
+    else if (a.indexOf('--status=') === 0) { o.status = a.slice(9).split(',').map(s => s.trim()).filter(Boolean); o.statusManual = true; }
+    /* --rotina: o tool decide sozinho o que venceu neste gatilho (9h/15h/18h),
+       lendo a tabela envios. É o modo que roda agendado (GitHub Actions). */
+    else if (a === '--rotina') o.rotina = true;
     else if (a === '--pausa') o.pausa = parseInt(pega(++i, '--pausa'), 10);
     else if (a === '--replyto') o.replyto = pega(++i, '--replyto');
     else if (a === '--bcc') o.bcc = pega(++i, '--bcc');
@@ -147,6 +185,9 @@ function leArgs(argv) {
     process.exit(2);
   }
   if (!o.status.length) o.status = ['pendente'];
+  /* na rotina, o alvo é quem pode receber follow-up (pendente = 1º contato,
+     email = esperando D+4/D+9) — quem mudou de status já saiu do filtro */
+  if (o.rotina && !o.statusManual) o.status = ['pendente', 'email'];
   return o;
 }
 
@@ -273,7 +314,8 @@ function montaLista(rows, statusAlvo) {
   vistos.forEach(x => {
     const tp = tipoDe(x);
     porTipo[tp]++;
-    lista.push({ id: x.id, cnpj: x.cnpj, nome: x.nome || x.razao || '(sem nome)', email: x.email.trim(), tipo: tp });
+    lista.push({ id: x.id, cnpj: x.cnpj, nome: x.nome || x.razao || '(sem nome)', email: x.email.trim(), tipo: tp,
+                 status: x.status || 'pendente', hora_envio: x.hora_envio });
   });
   return { lista: lista, cont: cont, porTipo: porTipo, duplicados: duplicados, linhas: rows.length };
 }
@@ -289,6 +331,105 @@ function montaTexto(copias, chaveCopy, nome) {
   return { assunto: t(c.assunto, nome), corpo: texto, copy: c, temRodape: !!rod };
 }
 
+/* ------------------------- histórico e rotina ---------------------------- */
+/* data local em AAAA-MM-DD (comparar vencimento por dia, não por relógio) */
+function dataLocal(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+    '-' + String(d.getDate()).padStart(2, '0');
+}
+function addDias(iso, dias) {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + dias);
+  return dataLocal(d);
+}
+
+/* histórico de envios (tabela envios) — a única fonte de "quem já recebeu o quê
+   e quando". Sem tabela, a rotina degrada pra lista simples (e avisa). */
+async function leEnvios(cfg, tok) {
+  try {
+    return await rest(cfg, tok, 'envios?select=cnpj,copy,enviado_em&order=enviado_em.asc&limit=10000', 'GET');
+  } catch (e) {
+    console.log('  ALERTA: não li o histórico (envios) — ' + String(e.message).slice(0, 120));
+    return null;
+  }
+}
+
+/* grava a linha do histórico DEPOIS do envio. Falhou aqui = e-mail já saiu mas
+   sem registro — avisa em voz alta, porque é o histórico que calcula o D+4/D+9. */
+async function gravaEnvio(cfg, tok, p, copy) {
+  await rest(cfg, tok, 'envios', 'POST', [{
+    cnpj: p.cnpj, email: p.email, copy: copy, hora: new Date().getHours(),
+    enviado_em: new Date().toISOString()
+  }], { Prefer: 'return=minimal' });
+}
+
+/* ritmo do dia pelo BANCO (vale no GitHub Actions, onde não existe arquivo local;
+   o arquivo local continua como reserva e os dois são comparados pelo maior) */
+async function ritmoBanco(cfg, tok) {
+  try {
+    const ini = new Date(); ini.setHours(0, 0, 0, 0);
+    const r = await rest(cfg, tok, 'envios?select=id&enviado_em=gte.' +
+      encodeURIComponent(ini.toISOString()) + '&limit=10000', 'GET');
+    return (r || []).length;
+  } catch (e) { return 0; }
+}
+
+/* Monta o plano do modo --rotina: pra CADA empresa, qual é o próximo e-mail
+   vencido e se ele cabe na faixa horária deste gatilho.
+   Regras (por que estão assim):
+   - vencimento sai do histórico (envios), nunca de "última atualização" —
+     atualizado_em muda com qualquer edição e mentiria a data;
+   - faixa 9h/15h/18h = o horário ideal daquela etapa; atraso de um gatilho
+     pega no seguinte (18h manda tudo que ficou pendendo);
+   - interrupção automática: follow-up só sai de quem CONTINUA com status
+     'email' — dono marcou 'nao'/'zap'/'ligou' etc. = acabou a sequência;
+   - prospectos.hora_envio sobrescreve a faixa (é o campo que o monitor de
+     resposta ajusta quando a empresa responde numa hora específica). */
+function montaPlano(lista, envios, agora) {
+  const porCnpj = new Map();
+  (envios || []).forEach(e => {
+    if (!porCnpj.has(e.cnpj)) porCnpj.set(e.cnpj, []);
+    porCnpj.get(e.cnpj).push(e);
+  });
+  porCnpj.forEach(l => l.sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em))));
+
+  const hoje = dataLocal(agora);
+  const plano = [];
+  const cont = { primeiro: 0, seguindo: 0, aguardando: 0, faixa_futura: 0, cortado: 0, sem_historico: 0 };
+
+  lista.forEach(x => {
+    const hist = porCnpj.get(x.cnpj) || [];
+    const ultimo = hist[hist.length - 1];
+    let passo, vence;
+
+    if (!ultimo) {
+      if (x.status === 'pendente') { passo = SEQUENCIA[0]; vence = hoje; cont.primeiro++; }
+      else if (x.status === 'email') { cont.sem_historico++; return; }  /* recebeu, mas sem data registrada */
+      else { cont.cortado++; return; }                                   /* dono já decidiu */
+    } else {
+      const i = SEQUENCIA.findIndex(s => s.copy === ultimo.copy);
+      if (i < 0 || i >= SEQUENCIA.length - 1) return;    /* terminou a sequência */
+      passo = SEQUENCIA[i + 1];
+      if (passo.statusOk.indexOf(x.status) < 0) { cont.cortado++; return; }  /* interrompido */
+      vence = addDias(ultimo.enviado_em, passo.espera);
+      if (hoje < vence) { cont.aguardando++; return; }
+      cont.seguindo++;
+    }
+
+    const faixa = Number(x.hora_envio) || passo.faixa;
+    if (faixa > agora.getHours()) { cont.faixa_futura++; return; }
+
+    plano.push({
+      id: x.id, cnpj: x.cnpj, nome: x.nome, email: x.email, tipo: x.tipo,
+      copy: passo.copy, faixa: faixa, vence: vence
+    });
+  });
+
+  /* mais vencido primeiro; dentro do mesmo dia, o que está atrasado há mais */
+  plano.sort((a, b) => a.vence.localeCompare(b.vence) || a.faixa - b.faixa);
+  return { plano: plano, cont: cont };
+}
+
 /* -------------------------------- ajuda --------------------------------- */
 const AJUDA = `
 Disparo automático do Pacto Gorjeta (pelo Brevo — SMTP ou API conforme a chave)
@@ -302,6 +443,15 @@ nesse ritmo — é de propósito: poucos por dia dá pra acompanhar resposta.
   node disparar.js --teste               1 e-mail só pra você (valida a chave)
   node disparar.js --enviar              manda os ${RITMO_DIA} do dia
   node disparar.js --limite 3 --enviar   teste pequeno (antes do bloco do dia)
+  node disparar.js --rotina              o que VENCEU neste gatilho (modo agendado)
+  node disparar.js --rotina --enviar     ← o que o GitHub Actions roda 9h/15h/18h
+
+Modo --rotina (o agendador é quem acorda, ninguém precisa lembrar)
+  A sequência é decidida pelo histórico (tabela envios):
+    email_1 no cadastro → +4 dias email_2 → +5 dias email_3
+  Faixas: 9h manda faixa 9 · 15h manda 9 e 15 · 18h manda tudo (atraso pega
+  no próximo gatilho). Follow-up só sai de quem continua com status 'email':
+  dono marcou "não quer"/"ligou"/etc = sequência cortada na hora.
 
 Opções
   --limite N        quantos envia nesta rodada (padrão e máximo: ${RITMO_DIA})
@@ -344,7 +494,8 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   const agora = new Date();
   const diaSem = agora.getDay();               /* 0=dom 6=sab */
   const hora = agora.getHours();
-  const noHorario = diaSem >= 1 && diaSem <= 5 && hora >= HORA_INI && hora < HORA_FIM;
+  const noHorario = diaSem >= 1 && diaSem <= 5 && hora >= HORA_INI &&
+    (hora < HORA_FIM || (hora === HORA_FIM && agora.getMinutes() <= TOLERANCIA_FIM));
   if (!noHorario && args.enviar && !args.foraHorario && !args.forcar) {
     console.error('Agora são ' + String(hora).padStart(2, '0') + 'h de ' +
       ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][diaSem] +
@@ -359,12 +510,47 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   console.log('painel conectado ✓');
 
   /* --- dados --- */
-  const rows = await rest(cfg, tok, 'prospectos?select=id,cnpj,nome,razao,email,email_marcado,status,situacao,cnae_real,revisado_em&order=cnpj.asc&limit=5000', 'GET');
+  const rows = await rest(cfg, tok, 'prospectos?select=id,cnpj,nome,razao,email,email_marcado,status,situacao,cnae_real,revisado_em,hora_envio&order=cnpj.asc&limit=5000', 'GET');
   const copias = await rest(cfg, tok, 'copias?select=chave,titulo,assunto,corpo,status,quando&order=ordem.asc', 'GET');
   console.log('base: ' + rows.length + ' linhas · copias: ' + copias.length + ' no banco');
 
   /* --- a copy escolhida --- */
   const alvo = montaLista(rows, args.status);
+
+  /* --- modo --rotina: o plano vem do HISTÓRICO (envios), não de flag ---
+     Cada empresa entra com o próximo e-mail vencido e a faixa dela; quem está
+     aguardando vencer ou em faixa de horário futura aparece só como contagem. */
+  if (args.rotina) {
+    const envios = await leEnvios(cfg, tok);
+    const r = montaPlano(alvo.lista, envios, agora);
+    const porCopy = {};
+    r.plano.forEach(x => { porCopy[x.copy] = (porCopy[x.copy] || 0) + 1; });
+    alvo.lista = r.plano;
+    console.log('\n--- modo rotina · gatilho das ' + String(agora.getHours()).padStart(2, '0') + 'h ---');
+    console.log('  vencidos pra enviar .... ' + r.plano.length +
+      (r.plano.length ? ' (' + Object.keys(porCopy).map(k => k + ': ' + porCopy[k]).join(' · ') + ')' : ''));
+    console.log('  aguardando vencer ...... ' + r.cont.aguardando);
+    console.log('  faixa de horário ainda pra hoje: ' + r.cont.faixa_futura +
+      ' · sequência cortada (dono decidiu): ' + r.cont.cortado);
+    if (r.cont.sem_historico) {
+      console.log('  sem data de envio ...... ' + r.cont.sem_historico +
+        ' (status=email sem histórico — não recebe follow-up até ter data)');
+    }
+    /* as copies que este gatilho pode usar precisam estar aprovadas */
+    for (const k of Object.keys(porCopy)) {
+      const cp = copias.find(x => x.chave === k);
+      if (!cp) { console.error('Não achei a copy "' + k + '" no banco.'); process.exit(2); }
+      if (cp.status !== 'aprovado' && !args.forcar) {
+        console.error('A copy "' + k + '" está como "' + cp.status + '" (não aprovada) — aprove em pacto/copy.html.');
+        process.exit(2);
+      }
+      if (!String(cp.assunto || '').trim()) {
+        console.error('A copy "' + k + '" não tem assunto (é de WhatsApp?) — não sai por e-mail.');
+        process.exit(2);
+      }
+    }
+  }
+
   const previa = montaTexto(copias, args.copy, alvo.lista.length ? alvo.lista[0].nome : null);
   if (!previa) {
     console.error('Não achei a copy "' + args.copy + '" no banco. Chaves: ' +
@@ -412,18 +598,31 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   console.log('  cópia oculta (BCC) pra você: ' + (bcc || 'desligada (--sem-bcc)'));
 
   if (!alvo.lista.length) {
+    if (args.rotina) {
+      console.log('\nNada vencido neste gatilho. A sequência é a mesma de sempre:');
+      console.log('  email_1 (dia do cadastro) → +4 dias email_2 → +5 dias email_3.');
+      console.log('  Quem está aguardando volta a aparecer no gatilho do dia certo.');
+      return;
+    }
     console.log('\nNinguém na fila com --status ' + args.status.join(',') + '. Nada a fazer.');
     return;
   }
 
   /* --- prévia do primeiro (dry-run mostra como fica de verdade) --- */
   const p0 = alvo.lista[0];
-  const v0 = montaTexto(copias, args.copy, p0.nome);
+  const v0 = montaTexto(copias, p0.copy || args.copy, p0.nome);
   console.log('\n--- prévia do 1º ---');
-  console.log('  para: ' + p0.email + '  (' + p0.nome + ')');
-  console.log('  assunto: ' + v0.assunto);
-  console.log('  texto (3 primeiras linhas):');
-  v0.corpo.split('\n').slice(0, 3).forEach(l => console.log('    ' + l));
+  if (SIGILO) {
+    /* corpo/endereço só no seu PC: aqui o log é público */
+    console.log('  para: ' + destino(p0) + (p0.copy ? ' · copy ' + p0.copy : ''));
+    console.log('  assunto: ' + v0.assunto);
+    console.log('  (texto oculto no CI — rode a ferramenta localmente pra ver a prévia)');
+  } else {
+    console.log('  para: ' + p0.email + '  (' + p0.nome + ')' + (p0.copy ? ' · copy ' + p0.copy : ''));
+    console.log('  assunto: ' + v0.assunto);
+    console.log('  texto (3 primeiras linhas):');
+    v0.corpo.split('\n').slice(0, 3).forEach(l => console.log('    ' + l));
+  }
 
   /* --- --teste: 1 e-mail só pra você — valida chave + domínio + entrega,
          sem tocar na lista e sem marcar nada no painel --- */
@@ -485,9 +684,11 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
     console.error('(a chave fica só na sua máquina, fora do Git)');
     process.exit(2);
   }
-  /* ritmo do dia: contador local (vale sempre) + estatística do Brevo (se API) */
+  /* ritmo do dia: banco (vale no CI/Actions) + contador local (reserva) +
+     estatística do Brevo (só se o transporte for API) — pega o MAIOR */
   const jaApi = (tr.tipo === 'api') ? ((await enviadosHoje(tr.chave)) || 0) : 0;
-  const jaHoje = Math.max(leRitmo(), jaApi);
+  const jaBanco = await ritmoBanco(cfg, tok);
+  const jaHoje = Math.max(leRitmo(), jaApi, jaBanco);
   console.log('\nJá enviados hoje: ' + jaHoje + ' de ' + RITMO_DIA + ' (ritmo do projeto)');
   if (jaHoje >= RITMO_DIA) {
     console.error('Ritmo de hoje já cumprido (' + jaHoje + ' de ' + RITMO_DIA + ').');
@@ -515,7 +716,8 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
 
   for (let i = 0; i < fila.length; i++) {
     const p = fila[i];
-    const v = montaTexto(copias, args.copy, p.nome);
+    const chaveCopy = p.copy || args.copy;     /* na rotina cada item tem a própria copy */
+    const v = montaTexto(copias, chaveCopy, p.nome);
     const pacote = {
       sender: remetente,
       to: [{ email: p.email, name: p.nome }],
@@ -544,18 +746,25 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
           { status: 'email', atualizado_em: new Date().toISOString() },
           { Prefer: 'return=minimal' });
       } catch (e) {
-        console.log('  [' + (i + 1) + '/' + fila.length + '] ' + p.email +
+        console.log('  [' + (i + 1) + '/' + fila.length + '] ' + destino(p) +
           ' · enviado, MAS NÃO MARCOU NO BANCO: ' + e.message);
         console.log('    -> confira a linha ' + p.cnpj + ' antes de rodar de novo (senão repete)');
       }
-      console.log('  [' + (i + 1) + '/' + fila.length + '] ' + ag + ' ✓ ' +
-        p.email + ' (' + p.nome + ')');
+      /* histórico: é ele que calcula o D+4/D+9 e o ritmo do dia no CI.
+         Sem esta linha a próxima etapa nunca vence pra essa empresa. */
+      try {
+        await gravaEnvio(cfg, tok, p, chaveCopy);
+      } catch (e) {
+        console.log('  !! ' + destino(p) + ' saiu, MAS SEM HISTÓRICO (envios): ' + e.message);
+        console.log('     -> grave manualmente, senão o follow-up D+4 não vence pra ele');
+      }
+      console.log('  [' + (i + 1) + '/' + fila.length + '] ' + ag + ' ✓ ' + destino(p));
     } else {
       const motivo = (r.j && r.j.message) ? r.j.message
                    : (r.detalhe || r.txt || '(sem detalhe)');
       const codigo = r.status || r.codigo || 0;
       falhas.push({ p: p, status: codigo, motivo: motivo });
-      console.log('  [' + (i + 1) + '/' + fila.length + '] ✗ ' + p.email +
+      console.log('  [' + (i + 1) + '/' + fila.length + '] ✗ ' + destino(p) +
         ' -> ' + codigo + ' ' + String(motivo).slice(0, 160));
       if (r.tipo === 'auth') {
         console.log('\nA chave não passou na autenticação do servidor de e-mail.');
@@ -594,7 +803,7 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
     console.log('  · o placar do passo 4 do painel enxerga quem foi marcado.');
   }
   if (falhas.length) console.log('\nFalhas (não marcadas, vão de novo na próxima):');
-  falhas.forEach(f => console.log('  ' + f.p.email + ' — ' + f.status + ' ' + String(f.motivo).slice(0, 120)));
+  falhas.forEach(f => console.log('  ' + destino(f.p) + ' — ' + f.status + ' ' + String(f.motivo).slice(0, 120)));
 })().catch(e => {
   console.error('\nERRO: ' + e.message);
   process.exit(1);

@@ -108,7 +108,8 @@
   <ul>
     <li><b>Repo único:</b> <span class="k">AID-Tec/home</span> — raiz institucional, <span class="k">/gorjetas/</span> é a página do produto, <span class="k">/pacto/</span> é o painel.</li>
     <li><b>Publicação:</b> GitHub Pages, ramo <span class="k">main</span> na raiz; domínio <span class="k">aidtr.com.br</span> (www redireciona pra raiz, HTTPS ativo).</li>
-    <li><b>Banco:</b> Supabase (Postgres). Tabelas usadas pelo painel: <span class="k">prospectos</span>, <span class="k">copias</span>, <span class="k">campanhas</span>, <span class="k">selecao_dia</span>, <span class="k">marcacoes</span>, <span class="k">ideias</span>.</li>
+    <li><b>Banco:</b> Supabase (Postgres). Tabelas usadas pelo painel: <span class="k">prospectos</span>, <span class="k">copias</span>, <span class="k">campanhas</span>, <span class="k">selecao_dia</span>, <span class="k">marcacoes</span>, <span class="k">ideias</span> — e <span class="k">envios</span> (histórico: 1 linha por e-mail que saiu, é ela que calcula o D+4/D+9).</li>
+    <li><b>Agendador:</b> GitHub Actions (<span class="k">.github/workflows/rotina.yml</span>) — roda a ferramenta 3× por dia útil sem depender de PC ligado ou de ninguém lembrar.</li>
     <li><b>E-mails:</b> Brevo (domínio validado: TXT brevo-code + SPF Brevo e ImprovMX).</li>
     <li><b>Vídeo aprovado:</b> <span class="k">video_gorjetas_ds.mp4</span> — YouTube não listado <span class="k">youtu.be/hwkvjlP48Ns</span>.</li>
     <li><b>Contato publicado:</b> WhatsApp <span class="k">wa.me/5516999986836</span> (nas páginas públicas).</li>
@@ -189,14 +190,16 @@
 <div class="regua">6 · Sequência de contato (decisão do dono)</div>
 <div class="cartao">
   <table class="tab">
-    <tr><th>Quando</th><th>Canal</th><th>Copy</th></tr>
-    <tr><td>D+1</td><td>e-mail</td><td><span class="k">email_1</span> — gancho + pergunta fácil</td></tr>
-    <tr><td>D+4</td><td>e-mail</td><td><span class="k">email_2</span> — autoridade + risco</td></tr>
-    <tr><td>D+6</td><td>WhatsApp</td><td><span class="k">whatsapp_1</span> — reforço</td></tr>
-    <tr><td>D+9</td><td>e-mail</td><td><span class="k">email_3</span> — despedida com saída fácil</td></tr>
+    <tr><th>Quando</th><th>Faixa (automática)</th><th>Canal</th><th>Copy</th></tr>
+    <tr><td>Dia do cadastro</td><td>09:00</td><td>e-mail</td><td><span class="k">email_1</span> — gancho + pergunta fácil</td></tr>
+    <tr><td>D+4</td><td>15:00</td><td>e-mail</td><td><span class="k">email_2</span> — autoridade + risco</td></tr>
+    <tr><td>D+6</td><td>—</td><td>WhatsApp</td><td><span class="k">whatsapp_1</span> — reforço (na mão, pelo painel)</td></tr>
+    <tr><td>D+9</td><td>18:00</td><td>e-mail</td><td><span class="k">email_3</span> — despedida com saída fácil</td></tr>
   </table>
   <ul>
     <li><b>Ordem decidida: e-mail primeiro, WhatsApp segundo, ligação = último recurso.</b></li>
+    <li><b>Quem decide o horário é a ferramenta.</b> Cada etapa tem sua faixa (9h / 15h / 18h) e o gatilho das 9h manda tudo que já venceu; se um gatilho falhar, o próximo pega — <b>nada se perde</b>.</li>
+    <li><b>Interrupção automática:</b> follow-up só sai de quem continua com status <span class="k">email</span>. Dono marcou <span class="k">nao</span>/<span class="k">zap</span>/<span class="k">ligou</span>/<span class="k">demo</span>/<span class="k">fechou</span> = a sequência daquela empresa corta na hora.</li>
     <li><b>Colaborador não dispara nada</b> — quem dispara é a ferramenta; quem responde é o dono.</li>
     <li>Tudo que sai é <b>copy aprovada no banco</b>; nada é montado à mão.</li>
   </ul>
@@ -207,10 +210,15 @@
 <div class="cartao">
   <ul>
     <li><b>10 e-mails por dia</b> — ritmo decidido pelo dono. Não é limite técnico, é cadência de prospecção.</li>
-    <li><b>Segunda a sexta, das 8h às 18h.</b> Fora disso a ferramenta recusa (existe flag só pra emergência, não é rotina).</li>
+    <li><b>Segunda a sexta, das 8h às 18h.</b> Fora disso a ferramenta recusa (tolerância de 5 min às 18h00 pro gatilho da noite; flag só pra emergência, não é rotina).</li>
     <li>A cota técnica do plano gratuito do Brevo (300/dia) é <b>teto, nunca meta</b> — não se usa como referência.</li>
-    <li>Contador diário em <span class="k">%LOCALAPPDATA%\aid\ritmo.json</span>: rodar de novo no mesmo dia só manda o que falta; 10 é o máximo, a ferramenta recusa mais.</li>
-    <li><b>Retomável:</b> cada envio marca a linha na hora; se parar no meio, quem já saiu não repete.</li>
+    <li><b>Contador diário vem do banco</b> (tabela <span class="k">envios</span>, maior entre banco/contador local/Brevo): rodar de novo no mesmo dia só manda o que falta; 10 é o máximo, a ferramenta recusa mais.</li>
+    <li><b>Agendamento automático (GitHub Actions, 3× por dia útil):</b>
+      <br>· <b>09:00</b> — 1º contato + tudo atrasado · <b>15:00</b> — D+4 · <b>18:00</b> — D+9 + pendências
+      <br>· roda <span class="k">--rotina --enviar</span>, decide sozinho o que venceu pelo histórico;
+      <br>· segredos só no cofre do Actions (Settings → Secrets), nunca no YAML;
+      <br>· log do Actions é público (repo público) → a ferramenta liga <b>modo sigilo sozinho</b>: no log só <span class="k">prospecto #id</span>, nunca e-mail nem nome.</li>
+    <li><b>Retomável:</b> cada envio marca a linha na hora e grava no histórico; se parar no meio, quem já saiu não repete.</li>
   </ul>
 </div>
 
@@ -254,6 +262,8 @@
     <li>Ordem de leitura da ferramenta: <b>variável de terminal &gt; .env do projeto &gt; legado</b> no LOCALAPPDATA.</li>
     <li><span class="nao">Nunca</span>: credencial em código, em Git, em página, em print ou no chat. Passou por esses lugares? <b>Troca a chave.</b></li>
     <li>Credencial nova de outro serviço: mesma regra — grava no <span class="k">.env</span>, comentário com o que é, valor nunca no repositório.</li>
+    <li><b>Cofre do GitHub Actions:</b> os segredos do envio automático moram em Settings → Secrets and variables → Actions do repo, injetados como variáveis de ambiente — o YAML só referencia <span class="k">${{ secrets.NOME }}</span>.</li>
+    <li><b>Credencial do n8n:</b> só dentro do cofre de credenciais do próprio n8n (criptografado) — nunca em <span class="k">.env</span>, fluxo exportado, Git ou chat.</li>
   </ul>
 </div>
 
@@ -298,12 +308,13 @@
 <div class="regua">14 · Operação diária (comandos que valem)</div>
 <div class="cartao">
   <span class="cod">node ferramentas\disparo\disparar.js                       # dry-run: só o plano (sempre por aqui)
-node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você (valida credencial)
-node ferramentas\disparo\disparar.js --enviar           # os 10 do dia (seg-sex, 8h-18h)
-node ferramentas\disparo\disparar.js --copy email_2 --status email --enviar   # D+4
-node ferramentas\disparo\disparar.js --copy email_3 --status email --enviar   # D+9</span>
+node ferramentas\disparo\disparar.js --rotina            # o que VENCEU neste gatilho (modo agendado)
+node ferramentas\disparo\disparar.js --rotina --enviar   # ← o que o GitHub Actions roda 9h/15h/18h
+node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você (valida credencial)</span>
   <ul>
+    <li><b>O dia já sai sozinho:</b> 3 gatilhos no Actions (09h/15h/18h, seg–sex) — ninguém precisa rodar nada. Conferir em Actions → <span class="k">Pacto · rotina de envio</span>.</li>
     <li>Sem <span class="k">--enviar</span> nada sai — ele mostra quem entra, quem fica de fora (e por quê), assunto, prévia e ritmo do dia.</li>
+    <li>Se um gatilho falhar/atrasar: <b>nada se perde</b> — o próximo pega os vencidos (o plano sai do histórico <span class="k">envios</span>, não de memória de ninguém).</li>
     <li>Depois de mandar: conferir no painel que virou <span class="k">email</span> e que a cópia oculta caiu na caixa do dono.</li>
     <li>WhatsApp (D+6): pelo painel, texto pré-preenchido da copy <span class="k">whatsapp_1</span> — o dono dispara na mão, 1 por 1.</li>
   </ul>
@@ -312,9 +323,9 @@ node ferramentas\disparo\disparar.js --copy email_3 --status email --enviar   # 
 <!-- ============================ CHECKLIST ============================ -->
 <div class="regua">Checklist — rotina que não muda</div>
 <div class="cartao" id="checklist">
-  <div class="check"><input type="checkbox" id="c1"><label for="c1">Todo dia útil: dry-run primeiro, conferir contagem e prévia, depois <span class="k">--enviar</span> (máx. 10, 8h–18h).</label></div>
+  <div class="check"><input type="checkbox" id="c1"><label for="c1">O envio do dia sai sozinho pelo Actions (9h/15h/18h). Conferir o resultado em Actions → <span class="k">Pacto · rotina de envio</span> — se falhar, rodar <span class="k">--rotina</span> na mão.</label></div>
   <div class="check"><input type="checkbox" id="c2"><label for="c2">Conferir que as cópias ocultas (BCC) chegam na caixa do dono depois de cada envio.</label></div>
-  <div class="check"><input type="checkbox" id="c3"><label for="c3">D+4 e D+9: rodar com a copy certa e <span class="k">--status email</span>.</label></div>
+  <div class="check"><input type="checkbox" id="c3"><label for="c3">D+4 e D+9: o agendador já manda (15h e 18h) — o histórico vem da tabela <span class="k">envios</span>; empresa com decisão do dono some da sequência sozinha.</label></div>
   <div class="check"><input type="checkbox" id="c4"><label for="c4">Empresa que não é do escopo: marcar "fora do escopo" (aba Campanha ou validação) — some de tudo.</label></div>
   <div class="check"><input type="checkbox" id="c5"><label for="c5">Copy nova: escrever, <b>aprovar</b>, e só então usar no envio; rodapé LGPD sempre anexado.</label></div>
   <div class="check"><input type="checkbox" id="c6"><label for="c6">Credencial nova ou trocada: gravar só no <span class="k">.env</span> da raiz (nunca no Git, chat, página ou print).</label></div>
