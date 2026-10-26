@@ -88,11 +88,15 @@ jobs:
       # continue-on-error: se o n8n estiver dormindo/falhando, o envio do dia
       # NÃO pode ser dado como perdido — ele já saiu aqui.
       - name: Avisar o n8n (retorno/alertas)
-        if: ${{ steps.cofre.outputs.pulado == '0' && secrets.N8N_WEBHOOK != '' }}
+        if: ${{ steps.cofre.outputs.pulado == '0' }}
         continue-on-error: true
         env:
           N8N_WEBHOOK: ${{ secrets.N8N_WEBHOOK }}
         run: |
+          if [ -z "$N8N_WEBHOOK" ]; then
+            echo 'N8N_WEBHOOK não configurado — pulando.'
+            exit 0
+          fi
           curl -fsS -m 45 -X POST -H 'Content-Type: application/json' \
             -d '{"origem":"github-actions","gatilho":"${{ github.event_name }}"}' \
             "$N8N_WEBHOOK" || true
