@@ -2,6 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<!--
+  ==========================================================================
+  pacto/validacao.html — "Validar base": a tela onde o dono DECIDE quem entra.
+
+  Por que existe: o varredor traz o CNPJ como ele está hoje (situação na
+  Receita via BrasilAPI, CNAE real, categoria do Maps) e isso é dado, não
+  opinião. Alguém precisa dizer "isto é restaurante" ou "fora do escopo" —
+  e essa decisão é o que destrava o passo 1 do fluxo e libera o envio.
+
+  Regra que ela carrega: enquanto não há decisão a linha continua 'pendente'
+  e NÃO recebe e-mail (primeiro o dono decide, depois ele entra na fila);
+  CNPJ baixado/inapto/suspenso vira 'fora' na hora. Os campos originais
+  'cnae' e 'segmento' da planilha nunca são sobrescritos — o segmento real é
+  'cnae_real' + 'categoria_maps', e a planilha antiga fica como histórico.
+  ==========================================================================
+  -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Validar base — atividade real por CNPJ</title>
 <style>
@@ -161,9 +177,25 @@
 <script src="vendor/supabase.js"></script>
 <script src="app.js"></script>
 <script>
+/* ==========================================================================
+   Validar base — o dono decide, empresa por empresa, quem é do escopo.
+
+   O que essa tela faz: filtra a base pelo problema (fora do segmento /
+   CNPJ inativo / comércio vizinho), põe os SEM DECISÃO primeiro e grava a
+   decisão na hora (status + revisado_em).
+   Por que revisado_em existe: é a prova de que o dono OLHOU — é ela que
+   fecha o passo 1 do fluxo do painel e o botão "Terminei" (regra idêntica
+   nos três lugares: pintar(), btnTerminei e index.html desenharFluxo()).
+
+   Filtros (chips): 'fora' = default (o que a Receita diz que não é comida),
+   'ina' = situação ≠ ATIVA, 'vizinho' = comida que não é restaurante,
+   'tudo' = base inteira.
+   ========================================================================== */
 let sb = null;
 let BASE = [];
 let FILTRO = 'fora';
+/* CÓDIGO MORTO (p/ remoção): só incrementada em decide(), nunca lida —
+   nenhum texto da tela usa a contagem (o total sai do filtro em pintar()). */
 let DECIDIDAS = 0;
 
 /* CNAE de comida PRÓXIMO do alvo (comércio/indústria alimentar): não é
@@ -180,11 +212,18 @@ const CLASSES_VIZINHAS = {
   '10':'indústria de alimentos', '11':'indústria de bebidas'
 };
 
+/* CÓDIGO MORTO (p/ remoção): classeDe() não é chamada em lugar nenhum —
+   a classificação real é tipoDe() abaixo (que olha cnae_real, não o cnae
+   da planilha). Mantida só como histórico do critério por 4 dígitos. */
 function classeDe(cnae){
   if (!cnae) return '?';
   return String(cnae).replace(/\D/g,'').slice(0,4);
 }
 
+/* Classificação de segmento pelo CNAE REAL (Receita): 55/56 = alimentação
+   → 'ok' · CLASSES_VIZINHAS (comércio/indústria de comida) → 'vizinho' ·
+   resto → 'fora'. Mesma regra de tipoDe() no index.html e no disparar.js —
+   mudar aqui é mudar nos 3 (a régua é: nunca travar comércio vizinho). */
 function tipoDe(it){
   const c = String(it.cnae_real || '').replace(/\D/g,'');
   if (!c) return 'sem_dado';
@@ -194,6 +233,9 @@ function tipoDe(it){
   return 'fora';
 }
 
+/* CNPJ inativo = qualquer situação diferente de ATIVA (baixado, inapto,
+   suspenso). VAZIO não conta como inativo: situação desconhecida não é
+   prova de problema — o dono decide vendo o cartão. */
 function inaDe(it){
   const s = (it.situacao || '').toUpperCase();
   return s && s !== 'ATIVA';
@@ -211,6 +253,9 @@ const situ = s => {
 
 const linkTel = t => { const d = String(t||'').replace(/\D/g,''); return d.length >= 10 ? 'tel:+55'+d : null; };
 
+/* --- redesenha: aplica filtro, ordena (sem decisão primeiro) e monta ----
+   A ordenação é o coração da tela: quem o dono ainda não olhou vem no
+   topo, então o trabalho sempre aparece no lugar certo sem procurar. */
 function pintar(){
   const filtro = FILTRO;
   const itens = BASE.filter(function(it){
@@ -298,6 +343,11 @@ function pintar(){
   document.getElementById('titulo').textContent = base.replace(/ · \d+ ainda sem decisão/, '') + extra;
 }
 
+/* --- grava a decisão do dono (manter ou tirar) -------------------------
+   UPDATE só por cnpj (chave única) e atualização otimista da tela:
+   pinta na hora e, se o banco recusar, o botão vira "tentar de novo"
+   (o card volta ao estado anterior só no próximo pintar(), porque it.status
+   só é alterado no then de sucesso). */
 function decide(it, novo, btn){
   if (btn) { btn.disabled = true; btn.textContent = 'salvando…'; }
   const agora = new Date().toISOString();
@@ -351,6 +401,9 @@ document.getElementById('btnTerminei').addEventListener('click', function(){
   }
 });
 
+/* --- boot: só desenha depois do login (AID.entrar devolve a sessão) ----
+   select não inclui 'cnae'/'segmento' originais de propósito: a tela classifica
+   por cnae_real (Receita), que é o dado de verdade. */
 AID.entrar().then(function(sess){
   if (!sess) return;
   sb = AID.sb;

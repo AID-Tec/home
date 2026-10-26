@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<!--
+  ==========================================================================
+  pacto/definicoes.html — Definições do projeto: a FONTE DA VERDADE do Pacto
+  Gorjeta (página não navega, é documento).
+
+  Por que existe: as regras de negócio (sequência de contato, ritmo de 10
+  e-mails/dia, cópias aprovadas, LGPD, preço fechado, vocabulário de status)
+  precisam viver num lugar só — se página e ferramenta divergirem, vale o que
+  está escrito aqui, e a correção é discutida antes de mudar código.
+
+  Regra que ela carrega: NÃO contém credencial nenhuma (segredo fica no .env
+  da raiz, fora do Git) e é a régua de qualquer página nova: sem link de
+  AppSheet, sem promessa de imposto, CTA wa.me/5516999986836, "colaborador"
+  (termo oficial para quem atende), tokens do Design System AID.
+  ==========================================================================
+  -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Definições do projeto — Pacto Gorjeta</title>
+<style>
+  :root{
+    /* AID Design System v1.0.0 — tokens, nenhum hex inventado */
+    --azul:#182A69;        /* navy-500 */
+    --azul2:#2E3699;       /* indigo-500 */
+    --azul3:#20266B;       /* indigo-700 */
+    --fundo:#F9F9F9; --card:#FFFFFF; --borda:#E4E4E4;
+    --texto:#1C1C1C; --cinza:#6E6E6E;
+    --verde:#1E9E5A; --amarelo:#a86a00; --roxo:#4509AE; --vermelho:#b3261e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Montserrat','Segoe UI',Arial,sans-serif;
+    background:var(--fundo); color:var(--texto); font-size:16px; line-height:1.5;
+    padding-bottom:56px;
+  }
+  a{color:var(--azul2)}
+
+  header{
+    position:sticky; top:0; z-index:50; background:var(--azul); color:#fff;
+    padding:10px 14px; box-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+  .h1{font-size:17px; font-weight:800; letter-spacing:.2px}
+  .frase{font-size:11.5px; opacity:.75; margin-top:2px; line-height:1.35}
+
+  .aviso{margin:12px; padding:10px 12px; border-radius:9px; font-size:13.5px; line-height:1.55}
+  .aviso.azul{background:#eef1fb; border-left:4px solid var(--azul2)}
+  .aviso.verde{background:#e6f4ec; border-left:4px solid var(--verde)}
+
+  .regua{
+    margin:22px 12px 8px; font-size:11px; text-transform:uppercase;
+    letter-spacing:1px; color:var(--azul2); font-weight:800;
+  }
+  .cartao{
+    background:var(--card); border:1px solid var(--borda); border-radius:10px;
+    margin:0 12px 10px; padding:13px 14px; font-size:14.5px; line-height:1.6;
+  }
+  .cartao b{font-weight:800}
+  .cartao ul{margin:6px 0 0; padding-left:19px}
+  .cartao li{margin:3px 0}
+  .cartao .k{
+    display:inline-block; background:var(--fundo); border:1px solid var(--borda);
+    border-radius:5px; padding:1px 6px; font-size:12.5px; font-weight:700;
+    font-family:Consolas,'Courier New',monospace;
+  }
+  .ok{color:var(--verde); font-weight:800}
+  .nao{color:var(--vermelho); font-weight:800}
+  .tab{width:100%; border-collapse:collapse; font-size:13.5px; margin-top:8px}
+  .tab th,.tab td{border:1px solid var(--borda); padding:6px 8px; text-align:left; vertical-align:top}
+  .tab th{background:var(--fundo); font-weight:800; font-size:12px; text-transform:uppercase; letter-spacing:.4px}
+  .cod{
+    display:block; background:#0f1430; color:#e8eef5; border-radius:8px;
+    padding:9px 11px; font-size:12.5px; line-height:1.6; overflow-x:auto;
+    font-family:Consolas,'Courier New',monospace; margin-top:8px; white-space:pre;
+  }
+
+  .check{display:flex; gap:9px; align-items:flex-start; padding:8px 0; border-bottom:1px dashed var(--borda); font-size:14px}
+  .check:last-child{border-bottom:0}
+  .check input{margin-top:3px; width:17px; height:17px; accent-color:var(--verde); flex:none}
+  .check label{cursor:pointer}
+  .check.feito label{color:var(--cinza); text-decoration:line-through}
+
+  .fim{text-align:center; font-size:13px; margin:18px 12px 8px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h1">📖 Definições do projeto</div>
+  <div class="frase">Fonte da verdade do Pacto Gorjeta — quando tiver dúvida, vale o que está escrito aqui.</div>
+</header>
+
+<div class="aviso azul">
+  Este documento reúne <b>todas as decisões fechadas</b> do projeto: regras do painel,
+  do envio, LGPD, preço, vocabulário e operação. Ele <b>não contém credencial nenhuma</b>
+  (segredo fica no <span class="k">.env</span> da raiz, fora do Git). Se algum dia algo
+  contradizer este página, <b>este documento manda</b> — e a correção é discutida antes de mudar.
+</div>
+
+<!-- ============================ 1. PROJETO ============================ -->
+<div class="regua">1 · Projeto e infraestrutura</div>
+<div class="cartao">
+  <b>Pacto Gorjeta</b> — produto da AID Tecnologia para restaurantes controlarem o rateio
+  de gorjeta (Lei 13.419) sem planilha.
+  <ul>
+    <li><b>Repo único:</b> <span class="k">AID-Tec/home</span> — raiz institucional, <span class="k">/gorjetas/</span> é a página do produto, <span class="k">/pacto/</span> é o painel.</li>
+    <li><b>Publicação:</b> GitHub Pages, ramo <span class="k">main</span> na raiz; domínio <span class="k">aidtr.com.br</span> (www redireciona pra raiz, HTTPS ativo).</li>
+    <li><b>Banco:</b> Supabase (Postgres). Tabelas usadas pelo painel: <span class="k">prospectos</span>, <span class="k">copias</span>, <span class="k">campanhas</span>, <span class="k">selecao_dia</span>, <span class="k">marcacoes</span>, <span class="k">ideias</span>.</li>
+    <li><b>E-mails:</b> Brevo (domínio validado: TXT brevo-code + SPF Brevo e ImprovMX).</li>
+    <li><b>Vídeo aprovado:</b> <span class="k">video_gorjetas_ds.mp4</span> — YouTube não listado <span class="k">youtu.be/hwkvjlP48Ns</span>.</li>
+    <li><b>Contato publicado:</b> WhatsApp <span class="k">wa.me/5516999986836</span> (nas páginas públicas).</li>
+  </ul>
+</div>
+
+<!-- ============================ 2. PAINEIS ============================ -->
+<div class="regua">2 · O painel é o hub operacional</div>
+<div class="cartao">
+  <ul>
+    <li>O painel <span class="k">/pacto/</span> é o <b>centro de operação</b> de tudo: base, validação, copies, campanha, contato e fluxo guiado.</li>
+    <li>O <b>único padrão que vale pra todos os projetos futuros</b> é o padrão de conteúdo (as regras desta página) — o resto é contexto deste produto.</li>
+    <li><b>Login:</b> só o usuário real é permanente. Usuário de teste é temporário: cria antes do teste, <b>apaga depois</b> — nunca sobra conta de teste.</li>
+    <li><b>Contestação:</b> o dono pode marcar qualquer empresa como <b>fora do escopo</b> (aba Campanha ou cartão da validação); grava <span class="k">status='fora'</span> e some da painel, da lista e do envio.</li>
+    <li>Passos concluídos ficam <b>verdes e somente leitura</b> (só "ver"); passos futuros ficam visíveis e clicáveis — <b>nada trava por ordem</b>.</li>
+  </ul>
+</div>
+
+<!-- ============================ 3. STATUS ============================ -->
+<div class="regua">3 · Vocabulário de status (fechado — 8 valores)</div>
+<div class="cartao">
+  <table class="tab">
+    <tr><th>Status</th><th>Significado</th><th>Quem muda</th></tr>
+    <tr><td><span class="k">pendente</span></td><td>Na fila, nunca contactado</td><td>estado inicial / devolução pra lista</td></tr>
+    <tr><td><span class="k">email</span></td><td>Recebeu e-mail</td><td>ferramenta de disparo, na hora do envio</td></tr>
+    <tr><td><span class="k">zap</span></td><td>Recebeu WhatsApp</td><td>dono, ao enviar o zap aprovado</td></tr>
+    <tr><td><span class="k">ligou</span></td><td>Ligação feita</td><td>dono</td></tr>
+    <tr><td><span class="k">demo</span></td><td>Demonstração marcada</td><td>dono</td></tr>
+    <tr><td><span class="k">nao</span></td><td>Recusou</td><td>dono</td></tr>
+    <tr><td><span class="k">fora</span></td><td>Fora do escopo (contestado) ou CNPJ baixado</td><td>dono / automático na eliminação</td></tr>
+    <tr><td><span class="k">fechou</span></td><td>Virou cliente</td><td>dono</td></tr>
+  </table>
+  <ul>
+    <li>Valor fora dessa lista <b>não existe</b> — nem no painel, nem no banco (o CHECK do banco obriga).</li>
+    <li><b>Sorteio diário só pega <span class="k">pendente</span></b> — quem recebeu e-mail nunca é sorteado de novo.</li>
+    <li>O painel <b>não busca nem desenha</b> linha <span class="k">fora</span>.</li>
+    <li>Os campos <span class="k">cnae</span> e <span class="k">segmento</span> originais <b>nunca são sobrescritos</b>; o segmento real de verdade é <span class="k">cnae_real</span> (BrasilAPI) + <span class="k">categoria_maps</span>.</li>
+  </ul>
+</div>
+
+<!-- ============================ 4. FLUXO ============================ -->
+<div class="regua">4 · Fluxo guiado de 4 passos (critérios exatos)</div>
+<div class="cartao">
+  <table class="tab">
+    <tr><th>#</th><th>Passo</th><th>Quando fecha (verde)</th></tr>
+    <tr><td>1</td><td>Validar a base</td><td>nenhuma linha <b>sem decisão</b> = <span class="k">pendente</span> + sem <span class="k">revisado_em</span> + (fora do segmento <b>ou</b> CNPJ inativo)</td></tr>
+    <tr><td>2</td><td>Aprovar as copies</td><td>100% das copies com <span class="k">status='aprovado'</span></td></tr>
+    <tr><td>3</td><td>Gerar a lista</td><td>tabela <span class="k">campanhas</span> com pelo menos 1 linha</td></tr>
+    <tr><td>4</td><td>Operar hoje</td><td>sorteio do dia com <b>≥ 2</b> contatados hoje (status ∉ pendente, fora) — mesmo critério do placar "Hoje"</td></tr>
+  </table>
+  <ul>
+    <li>Verde = concluído, abre em modo <b>"ver"</b> (leitura).</li>
+    <li>Futuros ficam clicáveis: dá pra pular etapa; a ordem é o caminho mais curto, não uma trava.</li>
+    <li>Se uma conferência falhar (sem conexão), o passo mostra "não consegui conferir" — <b>não quebra a página</b>.</li>
+  </ul>
+</div>
+
+<!-- ============================ 5. LISTA ============================ -->
+<div class="regua">5 · Regra da lista de e-mails</div>
+<div class="cartao">
+  <b>Regra base (aba Campanha = fila do disparo):</b>
+  <ul>
+    <li>tem e-mail válido;</li>
+    <li>não é contador (<span class="k">email_marcado != 'contador'</span>);</li>
+    <li>não está <span class="k">fora</span> do escopo;</li>
+    <li>1 por e-mail (minúsculo, sem repetir).</li>
+  </ul>
+  <b>Rede de segurança da ferramenta</b> (por que o envio pode ser um pouco menor que a aba Campanha):
+  <ul>
+    <li>quem ainda está <b>sem decisão</b> na validação não recebe — <b>primeiro o dono decide, depois ele recebe</b>;</li>
+    <li><b>CNPJ inativo</b> (baixado/inapto/suspenso) não recebe;</li>
+    <li>o envio padrão só tira quem está <span class="k">pendente</span> (o D+4 tira de <span class="k">email</span>).</li>
+  </ul>
+  <span class="cod">conferir a fila:  node ferramentas\disparo\disparar.js        (dry-run, nada sai)</span>
+</div>
+
+<!-- ============================ 6. SEQUENCIA ============================ -->
+<div class="regua">6 · Sequência de contato (decisão do dono)</div>
+<div class="cartao">
+  <table class="tab">
+    <tr><th>Quando</th><th>Canal</th><th>Copy</th></tr>
+    <tr><td>D+1</td><td>e-mail</td><td><span class="k">email_1</span> — gancho + pergunta fácil</td></tr>
+    <tr><td>D+4</td><td>e-mail</td><td><span class="k">email_2</span> — autoridade + risco</td></tr>
+    <tr><td>D+6</td><td>WhatsApp</td><td><span class="k">whatsapp_1</span> — reforço</td></tr>
+    <tr><td>D+9</td><td>e-mail</td><td><span class="k">email_3</span> — despedida com saída fácil</td></tr>
+  </table>
+  <ul>
+    <li><b>Ordem decidida: e-mail primeiro, WhatsApp segundo, ligação = último recurso.</b></li>
+    <li><b>Colaborador não dispara nada</b> — quem dispara é a ferramenta; quem responde é o dono.</li>
+    <li>Tudo que sai é <b>copy aprovada no banco</b>; nada é montado à mão.</li>
+  </ul>
+</div>
+
+<!-- ============================ 7. RITMO ============================ -->
+<div class="regua">7 · Ritmo e horário (CLT)</div>
+<div class="cartao">
+  <ul>
+    <li><b>10 e-mails por dia</b> — ritmo decidido pelo dono. Não é limite técnico, é cadência de prospecção.</li>
+    <li><b>Segunda a sexta, das 8h às 18h.</b> Fora disso a ferramenta recusa (existe flag só pra emergência, não é rotina).</li>
+    <li>A cota técnica do plano gratuito do Brevo (300/dia) é <b>teto, nunca meta</b> — não se usa como referência.</li>
+    <li>Contador diário em <span class="k">%LOCALAPPDATA%\aid\ritmo.json</span>: rodar de novo no mesmo dia só manda o que falta; 10 é o máximo, a ferramenta recusa mais.</li>
+    <li><b>Retomável:</b> cada envio marca a linha na hora; se parar no meio, quem já saiu não repete.</li>
+  </ul>
+</div>
+
+<!-- ============================ 8. COPIAS ============================ -->
+<div class="regua">8 · Copies (5 no banco, todas aprovadas)</div>
+<div class="cartao">
+  <table class="tab">
+    <tr><th>Chave</th><th>Quando</th><th>Título</th></tr>
+    <tr><td><span class="k">email_1</span></td><td>D+1</td><td>Gancho + pergunta fácil</td></tr>
+    <tr><td><span class="k">email_2</span></td><td>D+4</td><td>Autoridade + risco sem ameaça</td></tr>
+    <tr><td><span class="k">whatsapp_1</span></td><td>D+6</td><td>WhatsApp — reforço</td></tr>
+    <tr><td><span class="k">email_3</span></td><td>D+9</td><td>Despedida com saída fácil</td></tr>
+    <tr><td><span class="k">rodape</span></td><td>sempre</td><td>Rodapé LGPD — anexado a todo e-mail</td></tr>
+  </table>
+  <ul>
+    <li>Só sai copy com <span class="k">status='aprovado'</span> (fora isso, a ferramenta recusa — há flag só pra teste).</li>
+    <li><b>Copy nova:</b> escrever na aba Copy, aprovar, e só então usar no envio.</li>
+    <li>O rodapé LGPD é <b>obrigatório e automático</b> — se faltar, o envio não sai.</li>
+  </ul>
+</div>
+
+<!-- ============================ 9. LGPD ============================ -->
+<div class="regua">9 · LGPD (as que importam)</div>
+<div class="cartao">
+  <ul>
+    <li><b>Origem lícita:</b> cadastro público da Receita / canal público da própria empresa, contexto profissional — LGPD Art. 7º, IX.</li>
+    <li><b>Proibido:</b> lista comprada ou vazada (LGPD Art. 42 e seguintes). Nunca entra.</li>
+    <li><b>Rodapé LGPD em todo e-mail</b> (copy <span class="k">rodape</span>) — com forma de sair da lista.</li>
+    <li><b>Registro de todo envio:</b> cópia oculta (BCC) pra <span class="k">aidtecnologiaresolutiva@gmail.com</span> — só no envelope, nunca aparece pro destinatário. Pode mudar com <span class="k">--bcc</span> ou desligar com <span class="k">--sem-bcc</span>.</li>
+    <li><b>Respostas caem no dono</b> (reply-to do dono); remetente no domínio autenticado do projeto.</li>
+    <li>Horário comercial respeitado (CLT) também é regra de bom comportamento, não só de lei.</li>
+  </ul>
+</div>
+
+<!-- ============================ 10. SEGREDOS ============================ -->
+<div class="regua">10 · Segredos — local central</div>
+<div class="cartao">
+  <ul>
+    <li><b>Local único:</b> <span class="k">.env</span> na raiz do projeto. Está no <span class="k">.gitignore</span> (regra <span class="k">*.env</span>) — o Git nunca sobe. Conferir: <span class="k">git check-ignore -v .env</span>.</li>
+    <li>Guarda: <span class="k">powershell -ExecutionPolicy Bypass -File ferramentas\disparo\guarda_chave.ps1</span> (mantém o que já existe, só pergunta o que falta).</li>
+    <li>Ordem de leitura da ferramenta: <b>variável de terminal &gt; .env do projeto &gt; legado</b> no LOCALAPPDATA.</li>
+    <li><span class="nao">Nunca</span>: credencial em código, em Git, em página, em print ou no chat. Passou por esses lugares? <b>Troca a chave.</b></li>
+    <li>Credencial nova de outro serviço: mesma regra — grava no <span class="k">.env</span>, comentário com o que é, valor nunca no repositório.</li>
+  </ul>
+</div>
+
+<!-- ============================ 11. PRECO ============================ -->
+<div class="regua">11 · Preço (fechado)</div>
+<div class="cartao">
+  <ul>
+    <li><b>Implantação: R$ 997,00</b> — pagamento único.</li>
+    <li><b>Mensalidade: R$ 57,99/mês.</b></li>
+    <li><span class="nao">Nunca</span> R$ 150 — esse valor não existe em lugar nenhum do projeto.</li>
+    <li>Preço só aparece onde a página do produto mostra a oferta; o roteiro de venda ainda não fecha preço (decisão do dono).</li>
+  </ul>
+</div>
+
+<!-- ============================ 12. PUBLICAS ============================ -->
+<div class="regua">12 · Regras das páginas públicas</div>
+<div class="cartao">
+  Público = raiz institucional + <span class="k">/gorjetas/</span>. Vale para qualquer página nova:
+  <ul>
+    <li><span class="nao">Sem link de AppSheet</span> — o demo só existe dentro do painel logado (roteiro de ligação), nunca numa página pública;</li>
+    <li><span class="nao">Sem promessa de economia de imposto</span> (o assunto aparece só como risco/objeção, nunca como promessa de retorno);</li>
+    <li>CTA de WhatsApp sempre <span class="k">wa.me/5516999986836</span>;</li>
+    <li>Português do Brasil (<span class="k">lang="pt-BR"</span>), sem "AppSheet"/link de sistema de terceiro;</li>
+    <li><b>"colaborador"</b> — <span class="nao">nunca</span> "garçom";</li>
+    <li><span class="nao">Nunca</span> "garimpo"/"garimpar" — o termo é <b>colaborador</b>, e prospecção é <b>prospecção</b>;</li>
+    <li>Design System AID: <span class="k">assets/aid.css</span>, tokens do DS, <b>nenhum hex inventado</b>.</li>
+  </ul>
+</div>
+
+<!-- ============================ 13. BASE ============================ -->
+<div class="regua">13 · Base de dados (o que é lixo e o que não é)</div>
+<div class="cartao">
+  <ul>
+    <li><b>CNPJ baixado/inapto/suspenso = lixo</b> → vira <span class="k">fora</span> na hora; não aparece nem no painel.</li>
+    <li>Colunas <span class="k">cnae</span>/<span class="k">segmento</span> da planilha original são <b>desatualizadas por definição</b> — não se usa pra decidir segmento; o real é <span class="k">cnae_real</span> + <span class="k">categoria_maps</span>.</li>
+    <li>Segmento: 55/56 = restaurante · classes vizinhas (mercearia, açougue, bebidas…) = <b>vizinho</b> · o resto = fora — e o dono decide em <b>Validar base</b>.</li>
+    <li>Varredor de novos prospects: <span class="k">ferramentas/varredor</span> (binário do gosom, sem Docker; o modo de e-mail do gosom é reprovado e não se usa).</li>
+  </ul>
+</div>
+
+<!-- ============================ 14. OPERACAO ============================ -->
+<div class="regua">14 · Operação diária (comandos que valem)</div>
+<div class="cartao">
+  <span class="cod">node ferramentas\disparo\disparar.js                       # dry-run: só o plano (sempre por aqui)
+node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você (valida credencial)
+node ferramentas\disparo\disparar.js --enviar           # os 10 do dia (seg-sex, 8h-18h)
+node ferramentas\disparo\disparar.js --copy email_2 --status email --enviar   # D+4
+node ferramentas\disparo\disparar.js --copy email_3 --status email --enviar   # D+9</span>
+  <ul>
+    <li>Sem <span class="k">--enviar</span> nada sai — ele mostra quem entra, quem fica de fora (e por quê), assunto, prévia e ritmo do dia.</li>
+    <li>Depois de mandar: conferir no painel que virou <span class="k">email</span> e que a cópia oculta caiu na caixa do dono.</li>
+    <li>WhatsApp (D+6): pelo painel, texto pré-preenchido da copy <span class="k">whatsapp_1</span> — o dono dispara na mão, 1 por 1.</li>
+  </ul>
+</div>
+
+<!-- ============================ CHECKLIST ============================ -->
+<div class="regua">Checklist — rotina que não muda</div>
+<div class="cartao" id="checklist">
+  <div class="check"><input type="checkbox" id="c1"><label for="c1">Todo dia útil: dry-run primeiro, conferir contagem e prévia, depois <span class="k">--enviar</span> (máx. 10, 8h–18h).</label></div>
+  <div class="check"><input type="checkbox" id="c2"><label for="c2">Conferir que as cópias ocultas (BCC) chegam na caixa do dono depois de cada envio.</label></div>
+  <div class="check"><input type="checkbox" id="c3"><label for="c3">D+4 e D+9: rodar com a copy certa e <span class="k">--status email</span>.</label></div>
+  <div class="check"><input type="checkbox" id="c4"><label for="c4">Empresa que não é do escopo: marcar "fora do escopo" (aba Campanha ou validação) — some de tudo.</label></div>
+  <div class="check"><input type="checkbox" id="c5"><label for="c5">Copy nova: escrever, <b>aprovar</b>, e só então usar no envio; rodapé LGPD sempre anexado.</label></div>
+  <div class="check"><input type="checkbox" id="c6"><label for="c6">Credencial nova ou trocada: gravar só no <span class="k">.env</span> da raiz (nunca no Git, chat, página ou print).</label></div>
+  <div class="check"><input type="checkbox" id="c7"><label for="c7">Teste de painel: usuário temporário criado antes e <b>apagado depois</b> — só o usuário real permanece.</label></div>
+  <div class="check"><input type="checkbox" id="c8"><label for="c8">Antes de publicar página nova: sem AppSheet, sem promessa de imposto, CTA wa.me certo, "colaborador", tokens do DS.</label></div>
+</div>
+
+<div class="fim"><a href="index.html">← Voltar pro painel</a></div>
+
+<script>
+/* checklist persiste no aparelho (mesmo mecanismo das outras páginas do painel) */
+/* ==========================================================================
+   Checklist das Definições — persistência LOCAL, por aparelho.
+
+   Por que localStorage e não banco: o checklist é a rotina de quem opera
+   (dry-run primeiro, BCC conferido, credencial só no .env…), não é dado do
+   projeto — o dono marca no computador dele e não precisa de conta nem de
+   rede. Consequência assumida: NÃO sincroniza entre máquinas.
+
+   Regras embutidas aqui:
+   - chave versionada ('pacto_definicoes_v1'): se o formato mudar, uma chave
+     nova começa limpa em vez de herdar JSON antigo de outro formato;
+   - tudo dentro de try/catch: Safari em navegação privada e cota cheia
+     lançam em get/setItem — o checklist tem que continuar marcando na tela
+     mesmo sem conseguir gravar;
+   - o traço riscado (classe 'feito') é derivado do checked, nunca salvo
+     separado — não há como ter um e sem o outro.
+   ========================================================================== */
+(function(){
+  var CHAVE = 'pacto_definicoes_v1';
+  var salvo = {};
+  try { salvo = JSON.parse(localStorage.getItem(CHAVE) || '{}'); } catch(e) {}
+  var boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  boxes.forEach(function(b){
+    if (salvo[b.id]) { b.checked = true; b.closest('.check').classList.add('feito'); }
+    b.addEventListener('change', function(){
+      salvo[b.id] = b.checked;
+      b.closest('.check').classList.toggle('feito', b.checked);
+      try { localStorage.setItem(CHAVE, JSON.stringify(salvo)); } catch(e) {}
+    });
+  });
+})();
+</script>
+</body>
+</html>

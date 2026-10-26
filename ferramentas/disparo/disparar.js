@@ -1,22 +1,23 @@
 #!/usr/env node
 'use strict';
 /* ==========================================================================
-   disparar.js — dispara a sequência APROVADA do Pacto Gorjeta pela API do Brevo.
+   disparar.js — dispara a sequência APROVADA do Pacto Gorjeta pelo Brevo
+   (transporte automático: chave SMTP fala com o servidor; chave de API usa a API).
 
    Por que assim (e não "montar no Brevo à mão"):
    - o texto que sai é o que está APROVADO no banco (tabela copias), não uma
      cópia colada num e-mail de campanha e esquecida depois;
    - a lista é a MESMA regra da aba Campanha (tem e-mail · não é contador ·
-     não está fora do escopo · 1 por e-mail) — painel e envio nunca divergem;
+     não está fora do escopo · 1 por e-mail) + rede de segurança: quem está
+     sem decisão na validação e CNPJ inativo não recebe (ver README);
    - cada envio marca a linha como status='email' na hora, então o sorteio
      diário (que só pega quem está 'pendente') NUNCA volta a mandar pra quem
      já recebeu, e o placar do passo 4 enxerga o contato;
    - quem ainda está "sem decisão" (fora do segmento/CNPJ inativo que o dono
      não olhou) NÃO recebe: primeiro ele decide na validação.
 
-   Segredos NUNCA no código e NUNCA no Git: a chave do Brevo e a senha do
-   painel vêm de variável de ambiente ou de %LOCALAPPDATA%\aid\chaves.env
-   (fora do repositório) — veja guarda_chave.ps1 e README.md.
+   Segredos NUNCA no código e NUNCA no Git: vêm do .env CENTRAL na raiz do
+   projeto (gitignorado, regra *.env) — veja guarda_chave.ps1 e README.md.
 
    Padrões: dry-run por padrão (nada sai sem --enviar e --limite explícitos),
    cota diária do plano gratuito respeitada (300), pausa entre envios,
@@ -290,7 +291,7 @@ function montaTexto(copias, chaveCopy, nome) {
 
 /* -------------------------------- ajuda --------------------------------- */
 const AJUDA = `
-Disparo automático do Pacto Gorjeta (API do Brevo)
+Disparo automático do Pacto Gorjeta (pelo Brevo — SMTP ou API conforme a chave)
 
 Ritmo do projeto: ${RITMO_DIA} e-mails por dia, em horário comercial
 (seg–sex, 8h–18h). A lista atual leva ~${Math.ceil(242 / RITMO_DIA)} dias

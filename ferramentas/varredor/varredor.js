@@ -26,6 +26,10 @@ const CFG = {
   tabela:    process.env.TABELA || 'prospectos',
   colNome:   process.env.COL_NOME || 'nome',
   colCidade: process.env.COL_CIDADE || null,   // se vazio, usa --base
+  /* conc = quantos trabalhadores varrem ao mesmo tempo. 2 porque quase todo
+     o tempo de cada varredura é ESPERA (HTTP + 1,5s de intervalo entre
+     fontes): dobrar os processos quase dobra o ritmo, e 3+ já cai no
+     bloqueio anti-bot das buscas. Detalhe em Promise.all. */
   conc:      parseInt(process.env.CONC || '2', 10),
   espera:    parseInt(process.env.ESPERA || '1500', 10),
   cidade:    ARGS.base || process.env.CIDADE || 'Franca SP'
@@ -111,6 +115,15 @@ function extrai(texto, urls) {
   return out;
 }
 
+/* --- zap aceitável --------------------------------------------------------
+   Só grava celular de comércio na cidade varrida: 11 dígitos, DDD 16
+   (Franca/SP) e nono dígito '9' — fixo/comercial não recebe zap e um DDD
+   diferente que apareceu na página de terceiro é número de OUTRA cidade
+   (o varredor roda por cidade, então DDD é o filtro de procedência).
+   O '55' de país só sai quando sobram 12 dígitos: tirar sempre apagaria o
+   DDD 55 (Rio Grande do Sul) de um número nacional de 10 dígitos.
+   Devolve null quando o número não passa no filtro: a linha fica sem
+   zap_web — melhor sem zap do que zap de outra cidade na ficha. */
 function zapBom(dig) {
   const d = String(dig).replace(/\D/g, '');
   const loc = d.length === 12 && d.startsWith('55') ? d.slice(2) : d;
@@ -268,7 +281,22 @@ async function varreEmpresa(row) {
   for (const [n, t] of novos)
     if (!tem.has(n)) { await c.query(`alter table ${CFG.tabela} add column ${n} ${t}`); console.log('coluna criada:', n); }
 
+  /* CÓDIGO MORTO (p/ remoção): cidadeFiltro é calculada e NUNCA é lida — os
+     dois ramos do ternário dão '' (o filtro por coluna de cidade nunca foi
+     implementado). É inofensiva, mas sugere um filtro que não existe: a
+     cidade só entra na busca de texto, via CFG.cidade. */
   const cidadeFiltro = CFG.colCidade ? '' : '';
+
+  /* Re-scan de 90 dias: 'web_em' é a data da última varredura e o WHERE pega
+     só quem nunca varreu ou varreu há mais de 3 meses. Por que 90 e não
+     "sempre" nem "toda rodada":
+       - canal publicado MUDA (número trocado, site novo, Instagram outro) e
+         dado velho é exatamente o defeito que este varredor existe pra corrigir;
+       - 90 dias é o ponto em que o custo de busca compensa: a cada ciclo a
+         fila encolhe e revarrer tudo toda semana gastaria cota de busca à
+         toa, sem ganho de qualidade;
+       - 'web_em' é gravado POR LINHA, o que torna a rodada RETOMÁVEL: parou
+         no meio, rodar de novo pega só o que falta. */
   const pend = await c.query(`
     select *, ${CFG.colNome} as nome from ${CFG.tabela}
     where status <> 'fora'
@@ -280,6 +308,10 @@ async function varreEmpresa(row) {
   const fila = pend.rows.slice();
   let feitos = 0, zaps = 0, zapsAlta = 0, mails = 0, sites = 0, instas = 0, semNada = 0;
 
+  /* Trabalhador: consome a fila até esvaziar. Exceção não derruba a rodada —
+     varreEmpresa já devolve null, e null conta como "sem nada": a linha NÃO é
+     atualizada (web_em continua valendo a rodada anterior), então ela volta
+     na próxima execução em vez de ficar marcada como varrida sem ter sido. */
   async function trabalhar() {
     for (;;) {
       const row = fila.shift();
@@ -287,6 +319,13 @@ async function varreEmpresa(row) {
       let d = null;
       try { d = await varreEmpresa(row); } catch (e) { d = null; }
       if (d) {
+        /* coalesce($n, coluna): só grava se o valor NOVO veio preenchido —
+           fonte que não achou nada NÃO apaga canal já confirmado antes (se o
+           DDG bloquear desta vez, o zap_web bom continua lá). E é UPDATE por
+           id, nunca INSERT: a rodada não cria linha nova, por isso não tem
+           como duplicar empresa/CNPJ — o dedupe é por construção, não por
+           SELECT. web_em = now() marca que a linha foi coberta neste ciclo
+           (é o que some ela do WHERE dos 90 dias). */
         await c.query(`
           update ${CFG.tabela} set
             zap_web     = coalesce($2, zap_web),
@@ -310,6 +349,12 @@ async function varreEmpresa(row) {
         console.log(`${feitos}/${pend.rowCount} zap:${zaps}(alta ${zapsAlta}) mail:${mails} site:${sites} insta:${instas} semnada:${semNada}`);
     }
   }
+  /* Concorrência = CFG.conc (padrão 2) trabalhadores sobre a MESMA fila.
+     Por que 2: quase todo o tempo é espera (HTTP de até 25s + 1,5s entre
+     fontes), então dobrar os processos quase dobra o ritmo — 3+ começa a
+     cair no bloqueio anti-bot das buscas e não ganha quase nada. fila.shift()
+     é seguro porque só corre um por vez no event loop, e as escrita passam
+     por um único Client do pg, que já serializa as queries. */
   await Promise.all(Array.from({ length: CFG.conc }, trabalhar));
 
   const r = await c.query(`

@@ -2,9 +2,26 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<!--
+  ==========================================================================
+  pacto/index.html — PAINEL operacional do Pacto Gorjeta (o hub do produto).
+
+  Por que existe: é o centro de operação de tudo — login, placar do dia,
+  sorteio dos 2 e-mails, base com os cartões das empresas e o fluxo guiado de
+  4 passos (validar → aprovar copies → gerar lista → operar hoje). Uma única
+  tela onde o dono vê o estado do processo sem abrir banco nem planilha.
+
+  Regra que ela carrega: nada trava por ordem — passo concluído fica verde em
+  modo "só ver", futuro fica clicável. Sorteio só pega status 'pendente';
+  linha 'fora' nem é desenhada. Tudo é leitura/escrita no Supabase pelo
+  app.js (sem estado local não salvo), e o WhatsApp do cartão é o canal
+  público da empresa (wa.me/5516999986836 só no CTA geral).
+  ==========================================================================
+  -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pacto Gorjeta — 14 dias</title>
 <style>
+  /* ---------------- tokens do Design System AID ---------------- */
   :root{
     /* AID Design System v1.0.0 — tokens do assets/aid.css. Nenhum hex inventado. */
     --azul:#182A69;        /* navy-500 — topo */
@@ -23,6 +40,10 @@
     --r-sm:4px; --r-md:8px; --r-lg:16px;
     --sombra-sm:0 1px 2px rgba(28,28,28,.08);
   }
+  /* ---------------- base: reset, tipografia, corpo ----------------
+     O tap-highlight transparente não é enfeite: sem ele o Android pinta um
+     retângulo cinza em TODO toque, e numa tela cheia de botão isso parece
+     defeito de renderização. */
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{
@@ -32,6 +53,7 @@
   }
   a{color:var(--azul2)}
 
+  /* ---------------- cabeçalho fixo + placar + ações ---------------- */
   header{
     position:sticky; top:0; z-index:50; background:var(--azul); color:#fff;
     padding:10px 14px; box-shadow:0 2px 8px rgba(0,0,0,.25);
@@ -57,6 +79,7 @@
   }
   .navsec a:active{background:rgba(255,255,255,.28)}
 
+  /* ---------------- caixas acordeão (passos, msgs, demo) ---------------- */
   .caixa{background:var(--card); border:1px solid var(--borda); border-radius:10px; margin:12px; overflow:hidden}
   .caixa > .topo{
     display:flex; justify-content:space-between; align-items:center;
@@ -85,6 +108,10 @@
     text-decoration:none; font-weight:800; padding:13px; border-radius:9px; margin-top:16px;
   }
 
+  /* ---------------- prévia da copy + botão copiar ----------------
+     É o texto que SAI de fato (o mesmo que o disparo usa): mostrar aqui evita
+     o dono reescrever à mão o que já está aprovado no banco. white-space:
+     pre-line no .msgtxt porque a copy é escrita com quebras de linha reais. */
   .msgbox{border:1px solid var(--borda); border-radius:9px; margin-top:11px; overflow:hidden; background:#fff}
   .msgrot{
     font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; font-weight:800;
@@ -99,6 +126,10 @@
   .copiar:active{background:#e8eef5}
   .copiar.ok{background:#e0f5ea; color:var(--verde)}
 
+  /* ---------------- busca e filtros (barra fixa sob o topo) ----------------
+     z-index 40 < 50 do header: os filtros colam embaixo do cabeçalho, nunca
+     por cima dele — dois elementos fixos brigando é o jeito clássico de a
+     barra de status/tab virar inalcançável no celular. */
   .ferramentas{position:sticky; top:0; z-index:40; background:var(--fundo); padding:10px 12px 8px}
   .busca{
     width:100%; padding:13px 14px; font-size:16px; border:1px solid var(--borda);
@@ -114,6 +145,11 @@
   .chip.ativo{background:var(--azul); color:#fff; border-color:var(--azul)}
   .contador{font-size:12.5px; color:var(--cinza); margin-top:7px; padding-left:2px}
 
+  /* ---------------- lista: cartão + cores de status ----------------
+     Ponto colorido e etiqueta são o MESMO status em dois formatos — quem
+     varre a lista lê o ponto, quem para num cartão lê a etiqueta. As cores
+     são fixas por status (roxo=zap, indigo=e-mail, vermelho=não, cinza=fora)
+     porque o dono decide pelo olhar, sem precisar abrir o cartão. */
   .lista{padding:0 12px}
   .cartao{
     background:var(--card); border:1px solid var(--borda); border-radius:10px;
@@ -142,6 +178,11 @@
   .seta2{color:#aab4c2; font-size:13px; flex-shrink:0; transition:transform .2s}
   .cartao.aberto .seta2{transform:rotate(90deg)}
 
+  /* ---------------- detalhe do cartão + ações de status ----------------
+     O detalhe é o formulário de operação: 1 toque = mudança de status, e
+     'ac.sel' deixa visível qual opção está ativa (o dono precisa conferir o
+     que acabou de marcar sem abrir o banco). 'fora' é botão largo separado
+     de propósito — é a única decisão que some a empresa da fila inteira. */
   .detalhe{display:none; border-top:1px solid var(--borda); padding:13px}
   .cartao.aberto .detalhe{display:block}
   .linha{font-size:13px; color:var(--cinza); margin-bottom:4px}
@@ -199,6 +240,10 @@
   }
   .obs:focus{outline:2px solid var(--azul2); border-color:transparent}
 
+  /* ---------------- barra de status fixa (rodapé) ----------------
+     z-index 60 (acima do topo e dos filtros) e sempre no rodapé: é a única
+     mensagem que precisa ser vista em qualquer rolagem — "salvo", "erro" ou
+     "tudo salvo" — porque nenhuma ação aqui tem confirmação na tela. */
   .sync{
     position:fixed; bottom:0; left:0; right:0; padding:9px 14px;
     font-size:12.5px; text-align:center; z-index:60;
@@ -278,6 +323,7 @@
     <button class="btn transp" id="btnVerHoje">Ver hoje</button>
   </div>
   <div class="navsec">
+    <a href="definicoes.html">📖 Definições</a>
     <a href="contato.html">📞 Como contatar</a>
     <a href="validacao.html">🎯 Validar base</a>
     <a href="campanha.html">📧 Campanha de e-mails</a>
@@ -438,6 +484,11 @@ Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostr
 
 <script src="vendor/supabase.js"></script>
 <script>
+/* Cliente Supabase desta página — mesmo par (URL + chave anon) do
+   pacto/app.js. A anon é pública por design: quem protege os dados é o
+   RLS no banco. O index é a página-mãe e tem gate de login próprio
+   (mais abaixo), por isso ele cria o client aqui em vez de depender do
+   AID.entrar das outras páginas. */
 const SB_URL = 'https://uewqkwmzpmnpebdsldto.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVld3Frd216cG1ucGViZHNsZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NjExMDgsImV4cCI6MjEwODMzNzEwOH0.wXPqKO5hkU2FqH3wDPRimoHWprI7NAWX5odknhX6bvY';
 const sb = supabase.createClient(SB_URL, SB_KEY);
@@ -599,6 +650,9 @@ async function gravaHoje(){
 }
 
 /* ---------- estado de cada prospecto ---------- */
+/* status confiável: só aceita valor do vocabulário fechado (STATUS_ACEITOS);
+   qualquer coisa estranha no ESTADO local volta como 'pendente' — assim um
+   estado corrompido nunca conta como "já contactado". */
 function st(id){ const x = ESTADO[id]; return (x && x.s && STATUS_ACEITOS.indexOf(x.s)>=0) ? x.s : 'pendente'; }
 function obsOf(id){ const x = ESTADO[id]; return (x && x.o) ? x.o : ''; }
 function diaOf(id){ const x = ESTADO[id]; return (x && x.d) ? x.d : ''; }
@@ -641,7 +695,11 @@ function linkMail(nome, email){
     '&body=' + encodeURIComponent(textoEmail(nome));
 }
 
-/* ---------- salvar ---------- */
+/* ---------- salvar ----------
+   Fila offline: salvar() só enfileira e redesenha; enviar() drena a fila.
+   Assim o clique responde na hora mesmo sem internet, e nada se perde
+   (estado local ESTADO é a verdade até o banco confirmar). */
+
 function salvar(id, s, o, z){
   if (!ESTADO[id]) ESTADO[id] = {};
   if (s !== undefined) ESTADO[id].s = s;
@@ -653,6 +711,11 @@ function salvar(id, s, o, z){
   desenhar();
 }
 
+/* Drena a fila em lote: copia a fila e limpa ANTES de enviar — o que o
+   usuário clicar durante o envio cai na fila nova e vai no próximo lote.
+   Falhou? Devolve o lote inteiro no início da fila (ordem preservada) e
+   tenta de novo em 8s — a barra vira vermelha dizendo "guardado no
+   aparelho". Sucesso = mostra hora e recalcula os contadores do topo. */
 function enviar(){
   if (!fila.length) return;
   const lote = fila.slice();
@@ -730,6 +793,10 @@ function desenharFluxo(){
   let hj = 0;
   hojeIds.forEach(function(id){ const s = st(id); if (s !== 'pendente' && s !== 'fora') hj++; });
 
+  /* gatilhos dos passos 2, 3 e 4 (o 1 foi calculado acima):
+     2 = todas as copies aprovadas (mesma conta do resumo da aba Copy);
+     3 = pelo menos 1 lista salva em 'campanhas' (foi gerada de verdade);
+     4 = ≥ 2 dos sorteados de hoje já contatados (status saiu de pendente). */
   const p2ok = FLUXO.copias > 0 && FLUXO.copiasApr === FLUXO.copias;
   const p3ok = FLUXO.campanhas > 0;
   const p4ok = hj >= 2;
@@ -828,6 +895,11 @@ const CLASSES_VIZINHAS = {
   '4691':'atacador geral', '4693':'atacado de materiais de construção',
   '10':'indústria de alimentos', '11':'indústria de bebidas'
 };
+/* Classificação de segmento pelo CNAE REAL da Receita (não pelo nome):
+   55/56 = restaurante/alimentação → 'ok' · classes vizinhas (mercearia,
+   açougue, bebidas, atacado de alimentos…) → 'vizinho' (nunca travou o
+   fluxo) · resto → 'fora'. É a mesma regra do passo 1 do fluxo, da
+   validação e da ferramenta de disparo (disparar.js tipoDe). */
 function tipoDe(it){
   const c = String(it.cnae_real || '').replace(/\D/g,'');
   if (!c) return 'sem_dado';
@@ -836,6 +908,9 @@ function tipoDe(it){
   if (CLASSES_VIZINHAS[pre] || CLASSES_VIZINHAS[pre3] || CLASSES_VIZINHAS[pre2]) return 'vizinho';
   return 'fora';
 }
+/* CÓDIGO MORTO (p/ remoção): CAT_ALVO nunca é lida em lugar nenhum —
+   classificação real é por CNAE em tipoDe() acima. Mantida só como
+   histórico do critério por nome de atividade. */
 const CAT_ALVO = /restaur|self.?service|churrasc|steak|pizz|sushi|lanch|pastel|hamburg|dog|acai|cafe|cafeteria|padari|confeit|docer|sorveter|bar\b|pub|cantina|buffet|esfiha|kebab|marmit|comida|gastronom|trattoria|parrilla|bistr|cozinha|delivery/i;
 
 /* ---------- desenho ---------- */
@@ -1011,6 +1086,13 @@ function sincronizarChips(){
   });
 }
 
+/* ---------- sorteio do dia ----------
+   Regra: sorteia 2 que estejam 'pendente' (nunca quem já recebeu e-mail)
+   e que ainda NÃO foram sorteados hoje (hojeIds = selecao_dia do dia).
+   Depois força o filtro 'hoje' e persiste o sorteio — é essa seleção que
+   o placar "Hoje" e o passo 4 do fluxo contam. Se faltar pendente novo,
+   sorteia só o que sobrar (a lista de hoje nunca mente: mostra quantos
+   realmente saíram). */
 document.getElementById('btnSortear').onclick = function(){
   const pendentes = LISTA.filter(function(x){ return st(x.id) === 'pendente'; });
   const sobra = pendentes.filter(function(x){ return hojeIds.indexOf(x.id) < 0; });
@@ -1093,6 +1175,8 @@ async function boot(){
     setSync('erro ao carregar: ' + (e.message || e), true);
   }
 }
+/* rede de segurança da fila offline: se a conexão voltar sem o usuário
+   clicar em nada, drena o que ficou pendente (8s é o retry do erro). */
 setInterval(function(){ if (fila.length) enviar(); }, 5000);
 boot();
 </script>

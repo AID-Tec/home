@@ -1,6 +1,14 @@
 /* AID — login compartilhado das páginas do pacto.
    Uso: AID.entrar().then(sess => { if (!sess) return; ... })
-   A chave abaixo é a anon (pública por design). O que protege os dados é o RLS no banco. */
+   A chave abaixo é a anon (pública por design). O que protege os dados é o RLS no banco.
+
+   Padrão do módulo (IIFE: nada vaza pro global além de window.AID):
+   - entrar() é a porta única de entrada: devolve a sessão se já existir,
+     senão mostra o gate e FICA DEVENDO a sessão (Promise) até o login —
+     assim toda página espera o login sem poluir o código de cada página;
+   - quem já está logado nunca vê o gate de novo (getSession resolve);
+   - `window.__aidPendente` guarda o resolve da promise pendente;
+     `aid:login` (CustomEvent) avisa quem quiser reagir sem usar a promise. */
 (function () {
   var SB_URL = 'https://uewqkwmzpmnpebdsldto.supabase.co';
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVld3Frd216cG1ucGViZHNsZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NjExMDgsImV4cCI6MjEwODMzNzEwOH0.wXPqKO5hkU2FqH3wDPRimoHWprI7NAWX5odknhX6bvY';
@@ -8,6 +16,8 @@
   var sb = null;
   try { sb = supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.error('supabase-js nao carregou', e); }
 
+  /* HTML do gate (string, injetado uma vez só). Estilo inline de propósito:
+     a página pode carregar sem CSS e o gate ainda precisa ficar utilizável. */
   var HTML =
     '<div id="loginGate" style="position:fixed;inset:0;z-index:9999;background:#0f1430;display:flex;align-items:center;justify-content:center;padding:20px">' +
       '<div style="width:100%;max-width:370px;background:#fff;border-radius:18px;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)">' +
@@ -22,6 +32,10 @@
       '</div>' +
     '</div>';
 
+  /* Monta o gate uma única vez (guard por getElementById — reabrir não
+     duplica) e liga o submit. No sucesso: esconde o gate, mostra os botões
+     de conta, dispara 'aid:login' e resolve a promise pendente (se houver).
+     O botão fica desabilitado durante o request pra não mandar 2 logins. */
   function abrirGate() {
     if (document.getElementById('loginGate')) return;
     var wrap = document.createElement('div');
@@ -48,6 +62,9 @@
     });
   }
 
+  /* Botões flutuantes "Trocar senha / Sair" (canto inferior direito).
+     Guard por id: se a página já criou, não cria outro. Sair = signOut +
+     reload — recarregar é o jeito mais limpo de voltar pro gate limpo. */
   function botoes() {
     if (document.getElementById('aidConta')) return;
     var d = document.createElement('div');
@@ -63,6 +80,8 @@
     document.getElementById('aidSenha').onclick = trocarSenha;
   }
 
+  /* Troca a senha do usuário logado (GoTrue exige mínimo de 6).
+     prompt/alert de propósito: recurso raro, não vale uma tela própria. */
   function trocarSenha() {
     var p = window.prompt('Nova senha (minimo 6 caracteres):');
     if (!p) return;
@@ -72,6 +91,11 @@
     });
   }
 
+  /* Porta de entrada de todas as páginas:
+     1) sessão já existe (login anterior no mesmo navegador) → resolve na hora;
+     2) não existe → guarda o resolve em __aidPendente e abre o gate.
+     Enquanto o usuário não logar, a promise fica pendente — as páginas
+     chamam AID.entrar().then(...) e só começam a trabalhar com sessão. */
   async function entrar() {
     var s = await sb.auth.getSession();
     if (s.data && s.data.session) { botoes(); return s.data.session; }

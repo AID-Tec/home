@@ -38,6 +38,12 @@ const CFG = {
     'C:\\Users\\Dyeison\\AppData\\Local\\Temp\\opencode\\gmaps'
 };
 
+/* Normalização: o Maps e a base escrevem o MESMO dado de formas diferentes,
+   e casar exige texto idêntico. normTel tira tudo que não é dígito e corta o
+   55 de país só quando sobra mais que 11 — mesma lógica do varredor: um
+   telefone de 10 dígitos com DDD 55 (Rio Grande do Sul) não pode perder o
+   DDD achando que é código do país. nomeNorm tira acento, caixa e pontuação
+   porque "São João Lanches" no Maps chega como "Sao Joao Lanches" na base. */
 const normTel = t => {
   let d = String(t || '').replace(/\D/g, '');
   if (d.startsWith('55') && d.length > 11) d = d.slice(2);
@@ -88,6 +94,10 @@ const c = new Client({
   console.log(`pendentes: ${pend.rowCount} | cidade: ${CFG.cidade}`);
   if (!pend.rowCount) { await c.end(); return; }
 
+  /* Pipeline em 4 etapas: (1) escreve as consultas "nome" + cidade numa
+     lista pro motor; (2) roda o gosom, que busca no Google Maps e grava JSON
+     Lines; (3) casa cada linha devolvida com a base — telefone primeiro, nome
+     depois; (4) grava categoria/nota/site ao lado do cadastro. */
   // 1) gera as consultas — nome + cidade, aspas pra prender o nome inteiro
   fs.mkdirSync(CFG.pasta, { recursive: true });
   const arqIn = path.join(CFG.pasta, 'consulta_padrao.txt');
@@ -96,7 +106,20 @@ const c = new Client({
     pend.rows.map(r => `"${r.nome}" ${CFG.cidade}`).join('\n'), 'utf8');
   if (fs.existsSync(arqOut)) fs.unlinkSync(arqOut);
 
+  /* Etapa 2 — execução SÍNCRONA: o arquivo de saída só existe quando o motor
+     termina, então não há o que fazer enquanto ele roda. -exit-on-inactivity 5m
+     é a trava que impede processo pendurado pra sempre numa consulta sem
+     resultado; DISABLE_TELEMETRY desliga o relatório do gosom. O catch NÃO
+     aborta: se o motor cair no meio, as linhas já gravadas continuam boas e o
+     cruzamento usa o que houver. */
   console.log('rodando o motor do Google Maps (pode levar varios minutos)…');
+  /* CÓDIGO MORTO (p/ remoção): o flag '-email' (na lista de args abaixo, na
+     mesma linha do -lang) contradiz o cabeçalho deste arquivo e o README —
+     ele manda o gosom coletar e-mail, e o cabeçalho registra que o modo de e-mail foi REPROVADO no teste (1/20 e
+     era rastro de rastreio do Wix), então não entra na ponte. Confirmação de
+     que é morto: a leitura da saída abaixo só usa title, phone, category,
+     reviews e web_site — nenhum campo de e-mail é lido, ou seja, o motor
+     trabalha pra nada. Remover '-email' dos args não muda resultado nenhum. */
   const args = ['-input', arqIn, '-results', arqOut, '-json',
     '-depth', String(ARGS.profundidade), '-c', String(ARGS.conc),
     '-lang', 'pt', '-email', '-exit-on-inactivity', '5m'];
@@ -105,8 +128,14 @@ const c = new Client({
   } catch (e) {
     console.log('motor saiu com erro (vamos usar o que gravou):', e.message);
   }
+  /* Sem arquivo de saída não há nada pra cruzar (o motor nem começou a
+     gravar) — aí aborta; diferente do catch acima, que segue com o parcial. */
   if (!fs.existsSync(arqOut)) { console.log('motor nao gerou saida'); process.exit(1); }
 
+  /* Saída do gosom é JSON Lines (um objeto por linha), não array: parse linha
+     a linha e descarta o que não fechar. Por quê: o motor pode ser
+     interrompido (-exit-on-inactivity) e a última linha sai cortada — uma
+     linha inválida não pode derrubar as N mil que já estão boas. */
   const linhas = fs.readFileSync(arqOut, 'utf8').split('\n')
     .filter(Boolean).map(l => { try { return JSON.parse(l); } catch (e) { return null; } })
     .filter(Boolean);
@@ -130,6 +159,13 @@ const c = new Client({
     if (!r) {
       const nm = nomeNorm(m.title);
       r = porNome.get(nm);
+      /* Última tentativa: match por SUBSTRING — é aqui que o erro mora.
+         "bar do zé" casa com "bar do zé & filhos"; um nome curto casa com
+         qualquer linha que o contenha; e o laço quebra no PRIMEIRO parcial,
+         que é a ordem do SELECT (por id), não o candidato mais parecido. Ou
+         seja: este passo troca segurança por alcance — só roda quando telefone e
+         nome exato falharam, e é por isso que o dono confere o casamento na
+         validação (ali o telefone é o árbitro, não o nome). */
       if (!r) for (const [k, v] of porNome) if (k && nm && (k.includes(nm) || nm.includes(k))) { r = v; break; }
     }
     if (!r) { if (!t) semTel++; continue; }
@@ -140,6 +176,14 @@ const c = new Client({
     const aval = m.review_count != null ? parseInt(m.review_count, 10) : null;
     const site = m.web_site || null;
 
+    /* Duas direções de coalesce, de propósito:
+       - categoria_maps/nota/avaliacoes/site_maps usam coalesce($n, coluna):
+         o que o Maps diz HOJE prevalece — é a leitura mais nova do canal;
+       - site e fonte_canal usam coalesce(coluna, $n): quem já tem valor
+         mantém — o site declarado pela empresa não é substituído por link de
+         rodapé do Maps, e a PRIMEIRA fonte que encheu fica registrada.
+       maps_em = now() é a data do re-scan (mesma janela de 90 dias do
+       varredor), o que torna a ponte retomável. */
     await c.query(`
       update ${CFG.tabela} set
         categoria_maps   = coalesce($2, categoria_maps),

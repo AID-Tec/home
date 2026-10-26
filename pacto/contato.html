@@ -2,6 +2,23 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<!--
+  ==========================================================================
+  pacto/contato.html — "Como contatar": a ordem certa dos canais + checklist
+  do dia com barra de progresso.
+
+  Por que existe: a base já traz e-mail, telefone e WhatsApp de cada empresa
+  (o varredor garantiu); o que decide o resultado é a SEQUÊNCIA, não o dado.
+  A página não envia nada — ela só ensina a ordem e guarda o que o dono já
+  cumpriu (tabela 'marcacoes').
+
+  Regra que ela carrega: e-mail primeiro (canal declarado pela empresa),
+  WhatsApp depois (só se a EMPRESA publicou o número), Instagram/Facebook só
+  pra achar o canal certo, ligação no fixo = ÚLTIMO recurso (janela de ouro
+  14h–16h, nunca no pico do almoço). Zap do D+6 sai com a copy aprovada
+  'whatsapp_1'; CTA público sempre wa.me/5516999986836.
+  ==========================================================================
+  -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Como contatar — AID</title>
 <style>
@@ -228,16 +245,46 @@
 <script src="vendor/supabase.js"></script>
 <script src="app.js"></script>
 <script>
+/* ==========================================================================
+   Checklist de contato — a página que ensina a ORDEM e guarda o que já foi
+   cumprido.
 
-let sb = null;
-let ITENS = [];
+   Regra de negócio central (a mesma das Definições, seção 6):
+       1. e-mail primeiro  → canal declarado pela empresa, não interrompe
+       2. WhatsApp depois  → só se a EMPRESA publicou o número
+       3. Instagram/Facebook do RESTAURANTE → só pra achar o canal certo
+       4. ligação no fixo   → ÚLTIMO recurso (janela de ouro 14h–16h)
+   O zap do D+6 sai com a copy aprovada 'whatsapp_1' e o CTA público é sempre
+   wa.me/5516999986836 — esta página não envia nada, só marca o que já foi.
+
+   Fluxo de dados: os 9 itens têm chave fixa (ids) e moram na tabela
+   'marcacoes' (chave/feito). A página lê, marca e desmarca — o banco é quem
+   decide: se o UPDATE falhar a marcação é DESFEITA na tela, porque não pode
+   ficar mostrando "feito" que não foi salvo.
+   ========================================================================== */
+
+let sb = null;       /* cliente Supabase — só depois do login (AID.entrar) */
+let ITENS = [];      /* cópia local de 'marcacoes': {id, s:'feito'|'pendente'} */
 const ids = ['email_1','zap_1','insta_1','liga_1','nunca_1','reparo_1','reparo_2','hoje_1','hoje_2'];
+/* ordem acima É a ordem das etapas na página (e-mail→zap→insta→ligação→
+   nunca) + os reparos e os 2 e-mails do dia: o total do placar e a largura da
+   barra saem daqui, então item novo = acrescentar nesta lista e no HTML */
 
+/* --- placar do topo ------------------------------------------------------
+   O denominador é a lista fixa 'ids' (9 itens), nunca uma contagem no banco:
+   o resumo é "quantos dos 9 você cumpriu" e a barra é só a proporção, então
+   o topo desenha igual com ou sem rede — o que só o banco decide é quem está
+   marcado (ITENS), não quantos existem. */
 function pintarBarra(){
   const feitos = ITENS.filter(i => i.s === 'feito').length;
   document.getElementById('resumo').textContent = feitos + ' de ' + ids.length + ' marcados';
   document.getElementById('barra').style.width = (100 * feitos / ids.length) + '%';
 }
+/* --- reflete o banco na tela --------------------------------------------
+   Reconstrói o estado a partir de ITENS (mapa por id) e não do clique: a
+   lista vinda do servidor é a única fonte, então um replay desta função
+   sempre devolve a tela ao que está gravado — inclusive depois do rollback
+   de um erro de rede. */
 function aplicar(){
   const mapa = {}; ITENS.forEach(i => mapa[i.id] = i.s);
   ids.forEach(id => {
@@ -250,10 +297,22 @@ function aplicar(){
   });
   pintarBarra();
 }
+/* --- barra de status -----------------------------------------------------
+   ok(): confirmação de "salvo ✓" que volta pra "tudo salvo" sozinha depois de
+   2,5s (o timeout antigo é limpo antes de rearmar, senão mensagens velhas
+   apagariam as novas). erro(): avisa que NÃO salvou — o rollback logo abaixo
+   é quem desfaz a marcação; a frase "tentando de novo" é porque o próprio
+   usuário pode tocar de novo na hora. */
 function ok(){ const s=document.getElementById('sync'); s.className='sync'; s.textContent='salvo ✓';
   clearTimeout(window._t); window._t=setTimeout(()=>{s.textContent='tudo salvo';},2500); }
 function erro(){ const s=document.getElementById('sync'); s.className='sync erro'; s.textContent='não salvei — tentando de novo…'; }
 
+/* --- marcação: otimista com rollback --------------------------------------
+   A caixa riscada aparece NA HORA (sem esperar a rede — esperar faria o dono
+   achar que o toque não contou), mas o servidor manda: se o upsert falhar,
+   desfazemos checked/classe/placar exatamente como estavam. Quem entra no
+   placar é só o que foi aceito pelo banco. O upsert é por 'chave' justamente
+   para o item ser idempotente: marcar duas vezes não cria linha duplicada. */
 document.querySelectorAll('.ok').forEach(box => {
   const c = box.querySelector('input');
   c.addEventListener('change', () => {
@@ -265,6 +324,13 @@ document.querySelectorAll('.ok').forEach(box => {
   });
 });
 
+/* --- copiar número -------------------------------------------------------
+   O botão vive DENTRO da caixa marcável, por isso o stopPropagation: copiar
+   não pode marcar o item como cumprido. O caminho moderno (clipboard API) só
+   funciona em contexto seguro (HTTPS); fora dele — e no fallback do catch —
+   caímos no textarea + execCommand, que ainda é o que roda em HTTP local e em
+   WebView velha. done() roda nos dois caminhos (inclusive no erro): o toque
+   sempre dá retorno, senão o usuário repete a ação achando que não copiou. */
 document.querySelectorAll('.copiar').forEach(b => b.addEventListener('click', e => {
   e.stopPropagation();
   const t = b.dataset.txt;
@@ -274,6 +340,12 @@ document.querySelectorAll('.copiar').forEach(b => b.addEventListener('click', e 
          ta.select(); try { document.execCommand('copy'); } catch(err){} document.body.removeChild(ta); done(); }
 }));
 
+/* --- boot ----------------------------------------------------------------
+   Só depois do login é que existe cliente Supabase (sb) — por isso os
+   listeners acima usam sb dentro do evento e não no carregamento: a página
+   monta a UI antes, e o estado chega depois. 'if (!sess) return;' deixa o
+   gate do AID.entrar cuidar do caso sem sessão; falha de leitura vira a barra
+   vermelha sem quebrar a página (o checklist continua marcável na tela). */
 AID.entrar().then(function(sess){
   if (!sess) return;
   sb = AID.sb;

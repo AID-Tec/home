@@ -2,6 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<!--
+  ==========================================================================
+  pacto/campanha.html — aba "Campanha": monta a LISTA de quem vai receber e
+  guarda a decisão de escopo.
+
+  Por que existe: é a ponte entre a base validada e o envio. O dono vê quem é
+  elegível, contesta ("fora do escopo") o que não é alvo e salva a lista —
+  e o disparar.js lê exatamente esta lista. A tela NÃO envia nada.
+
+  Regra que ela carrega: entra quem tem e-mail válido, não é contador, não
+  está 'fora', 1 linha por e-mail (dedupe). A rede de segurança fica pro
+  envio: quem está sem decisão na validação ou com CNPJ inativo não recebe —
+  primeiro o dono decide, depois ele sai daqui. Cópia que sai é só a
+  aprovada (aba Copy) e o zap do D+6 é o 'whatsapp_1'.
+  ==========================================================================
+  -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Campanha — Pacto Gorjeta</title>
 <style>
@@ -190,9 +206,10 @@
 
 <div class="alerta">
   <b>Sem envio direto.</b> Essa tela só monta e guarda a lista. Quem dispara é
-  <code>ferramentas/disparo</code> (API do Brevo, 10 por dia): ele lê <b>exatamente esta
-  regra</b>, manda a copy aprovada com o rodapé LGPD e marca quem já recebeu — por isso
-  a lista daqui e a fila do disparo nunca divergem.
+  <code>ferramentas/disparo</code> (pelo Brevo, 10 por dia): ele lê <b>exatamente esta
+  regra</b>, manda a copy aprovada com o rodapé LGPD e marca quem já recebeu. A fila dele
+  é esta lista, menos a <b>rede de segurança</b> (quem ainda não tem decisão e CNPJ
+  inativo não recebe — primeiro você decide, depois ele sai daqui).
 </div>
 
 <button class="btn" id="btnGerar" disabled>Gerando lista...</button>
@@ -202,6 +219,22 @@
 <script src="vendor/supabase.js"></script>
 <script src="app.js"></script>
 <script>
+/* ==========================================================================
+   Campanha de e-mails — monta a LISTA e a guarda ('campanhas').
+
+   Esta tela NÃO envia nada (ver aviso "Sem envio direto"): ela só calcula
+   quem é elegível, deixa o dono contestar ("fora do escopo") e salva a
+   lista. Quem dispara é ferramentas/disparo/disparar.js, que executa a
+   MESMA regra escrita em recalcula().
+
+   Estrutura dos dados em memória (3 níveis, de propósito):
+     BASE   = a tabela inteira            → contadores informativos do topo
+     TODOS  = só quem tem e-mail          → tela de contestação (1 por pessoa)
+     LISTA  = elegíveis deduplicados      → o que é salvo e enviado
+
+   Ordem do fluxo: carregar() → pintarCont() + recalcula() → render();
+   contestar() mexe em TODOS/LISTA e recalcula na hora.
+   ========================================================================== */
 let sb = null;
 let LISTA = [];     // prontos pra envio (sem 'fora', sem contador, dedup)
 let TODOS = [];     // todas as linhas com e-mail, pra tela de contestação
@@ -214,6 +247,10 @@ function ok(txt){ const s=document.getElementById('sync'); s.className='sync'; s
 function erro(msg){ const s=document.getElementById('sync'); s.className='sync erro'; s.textContent=msg||'erro ao carregar'; }
 
 /* ---------------- contestações (fora do escopo) ---------------- */
+/* --- tela de contestação (cartão por empresa) --------------------------
+   Render full (a base é pequena). Limite de 400 cartões de propósito:
+   pintar 477 trava celular — quem precisa de mais usa a busca/filtro.
+   Botões ligados DEPOIS do innerHTML (o onclick leva o e-mail no data-*). */
 function pintarCont(){
   const el = document.getElementById('cLista');
   const t = ctermo;
@@ -246,6 +283,12 @@ function pintarCont(){
   }));
 }
 
+/* --- contesta uma empresa: tira da lista OU devolve pra pendente --------
+   Grava por 'dbemail' (o valor ORIGINAL da coluna, com maiúscula/espaço),
+   porque .eq('email', …) compara exato — o e-mail normalizado em minúscula
+   só existe aqui na tela. Toda linha com o mesmo e-mail muda junto (uma
+   pessoa = 1 decisão). Otimista: pinta na hora e DESFAZ no catch se o
+   banco recusar — a tela nunca mente sobre o que foi salvo. */
 async function contestar(email, fora){
   const linhas = TODOS.filter(x => x.email === email);
   if (!linhas.length) return;
@@ -280,6 +323,16 @@ document.getElementById('cFiltros').addEventListener('click', function(e){
 });
 
 /* ---------------- contagens + lista pronta ---------------- */
+/* --- monta a lista final e os números do topo ---------------------------
+   REGRA DA LISTA (a mesma que o disparar.js executa):
+     1) não está 'fora' do escopo (contestado ou CNPJ baixado);
+     2) não é contador (email_marcado === 'contador');
+     3) tem e-mail;
+     4) 1 por e-mail (dedupe: primeiro que aparecer fica com o nome —
+        em caso de colisão, a data "vence" não existe, decide a ordem da
+        query; o e-mail é a chave, não a empresa).
+   Os contadores do topo (com e-mail / contador / sem e-mail / fora) são
+   sobre a BASE toda, e são só informativos — a lista usa o filtro acima. */
 function recalcula(){
   let com_email = 0, contador = 0, sem_email = 0, fora = 0;
   TODOS.forEach(x => { if (x.status === 'fora') fora++; });
@@ -318,6 +371,13 @@ function recalcula(){
           distintos, duplicados, dominios, preview: LISTA.slice(0,25)});
 }
 
+/* --- desenha números, prévia e arma o botão "Gerar lista" ---------------
+   O 350 da barra é o TAMANHO ALVO de mercado da cidade (chumbado aqui como
+   referência visual, não é limite: se a base passar de 350, a barra fica
+   em 100% e o texto diz a verdade dos números). Trocar o alvo = trocar
+   os dois 350 abaixo (barra e texto), sempre juntos.
+   O botão só é armado AQUI (depois do recálculo) — antes disso ele fica
+   desabilitado, então não dá pra salvar uma lista pela metade. */
 function render(d){
   document.getElementById('k-total').textContent = d.total;
   document.getElementById('k-com').textContent = d.com_email;
@@ -349,6 +409,9 @@ function render(d){
     btn.textContent = 'Salvando...';
     try {
       const nome = 'Gorjetas - ' + new Date().toISOString().slice(0,10);
+      /* upsert com onConflict:'nome': 'nome' é a chave única da tabela —
+         salvar 2x vira UPDATE da mesma linha (não cria lista duplicada);
+         se um dia sair uma coluna 'id', trocar a chave aqui e não aqui fora. */
       const r = await sb.from('campanhas').upsert({ nome: nome, produto: 'gorjetas', total: d.distintos, dados: {lista: LISTA}, atualizado_em: new Date().toISOString() }, { onConflict: 'nome' });
       if (r.error) throw r.error;
       ok('lista salva no Pacto ✓');
@@ -361,6 +424,11 @@ function render(d){
   };
 }
 
+/* --- carrega as DUAS visões da base ------------------------------------
+   TODOS = só o que tem e-mail, já normalizado, pra tela de contestação
+   (1 linha por pessoa, com o e-mail original guardado em 'dbemail').
+   BASE = todas as linhas da tabela, porque os contadores do topo
+   ("sem e-mail", "fora") precisam enxergar quem nem tem e-mail. */
 async function carregar(){
   try {
     const r = await sb.from('prospectos').select('id,email,nome,segmento,email_marcado,bairro,status').not('email','is',null);

@@ -33,6 +33,13 @@ const TIMEOUT_CMD = 20000;
 const TIMEOUT_CON = 15000;
 
 /* ----------------------------- utilidades ------------------------------- */
+/* --- cabeçalhos MIME ------------------------------------------------------
+   SMTP é ASCII na camada de cabeçalho: assunto/nome com acento ou emoji
+   precisa de encoded-word (RFC 2047, "=?UTF-8?B?…?="), senão o destinatário
+   vê lixo ou o servidor rejeita. ehAscii é o teste que decide qual dos dois
+   caminhos vale. Em comNome, as aspas e a barra invertida saem do nome antes
+   de montar "Nome" <email>: uma aspa solta fecharia o campo entre aspas antes
+   da hora e quebraria o parse do endereço. */
 const b64 = s => Buffer.from(s, 'utf8').toString('base64');
 const ehAscii = s => /^[\x20-\x7E]+$/.test(s || '');
 
@@ -50,12 +57,26 @@ function quebraBase64(b) {          /* RFC: linhas de 76 chars, CRLF */
   return out.join('\r\n');
 }
 
+/* SMTP devolve respostas MULTIPLINAS ("250-linha" continuando até "250 linha"):
+   o que interessa pro diagnóstico é a última — por isso ultimaLinha. */
 function ultimaLinha(txt) {
   const l = String(txt || '').split('\n');
   return l[l.length - 1] || '';
 }
 
 /* --------------------------- conexão + leitura --------------------------- */
+/* Estado de UMA conversa: buffer de bytes entrando, a única Promise que está
+   esperando resposta (só pode haver um comando em voo, senão as respostas se
+   misturam), e a 1ª falha registrada (morto) — depois de erro de socket não
+   dá pra confiar em nada, então toda chamada seguinte devolve esse mesmo erro.
+   lê em latin1 de propósito: cada byte vira 1 caractere, então os índices do
+   buffer batem com os do socket (em UTF-8 um caractere multibyte bagunçaria
+   o corte por CRLF). O corpo vai em base64, que é ASCII, e cabeçalho MIME
+   também — charset só existe dentro do payload codificado.
+   processa() só fecha a Promise quando a linha final NÃO tem hífen depois do
+   código ("250 " final, e não "250-") — é a regra do RFC 5321 que separa
+   "última linha" de "continuação"; a resposta inteira é acumulada em texto
+   porque o erro exibido pro usuário é uma frase, não um código. */
 function novaConexao() {
   const est = { sock: null, buf: '', espera: null, morto: null };
 
@@ -124,6 +145,11 @@ function novaConexao() {
   };
 }
 
+/* Dois caminhos pro mesmo diálogo: 465 já conecta criptografado (TLS na
+   mão), 587 conecta em claro e sobe o TLS depois (STARTTLS) — por isso o
+   socket é criado com tls ou net conforme o modo e o resto do script é
+   idêntico. O timeout de conexão é separado do TIMEOUT_CMD: sem resposta
+   SMTP não há linha pra esperar, é outro tipo de espera. */
 function conectar(alvo) {
   return new Promise((resolve, rej) => {
     const op = { host: alvo.host, port: alvo.porta, servername: alvo.host };

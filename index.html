@@ -2,6 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<!--
+  ==========================================================================
+  index.html (raiz) — página institucional da AID Tecnologia Resolutiva.
+
+  Por que existe: é a porta de entrada da marca (aidtr.com.br) — o que a
+  empresa faz, os produtos (Controle de Gorjetas, AidCalc, Frota, Time Check),
+  como funciona e o FAQ. Quase todo tráfego chega por aqui, então é a única
+  página que precisa convencer quem NÃO conhece a AID.
+
+  Regra que ela carrega (páginas públicas, ver pacto/definiicoes.html §12):
+  sem link de AppSheet, sem promessa de economia de imposto, CTA de WhatsApp
+  sempre wa.me/5516999986836, "colaborador" para quem atende (termo oficial do
+  projeto), português do Brasil e só tokens do Design System AID (assets/aid.css
+  — nenhum hex inventado).
+  ==========================================================================
+  -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AID · Tecnologia Resolutiva</title>
 <meta name="description" content="Planilhas, aplicativos, sistemas, dashboards, implantações, sites e treinamentos. Soluções tecnológicas resolutivas para pessoas e empresas, com atendimento remoto em todo o Brasil.">
@@ -435,8 +451,19 @@ const trilho = document.getElementById('trilho');
 const slides = [...trilho.children];
 const pontos = [...document.getElementById('pontos').children];
 let atual = 0, timer = null;
+/* Movimento reduzido é decisão do SISTEMA, não do layout: quem ligou a
+   opção de acessibilidade não recebe carrossel rodando sozinho. Por isso
+   tocar() desiste antes de criar o timer — e o mesmo flag desliga o
+   "revelar ao rolar" lá embaixo. */
 const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* --- posiciona o carrossel -----------------------------------------------
+   O índice entra e sai por módulo (os botões mandam atual+1/-1 e o
+   anterior do primeiro vira o último). O translate é em % do PRÓPRIO
+   slide: o trilho é flex com filhos do tamanho da janela, então -100%*k
+   é exatamente a k-ésima tela — não precisa medir pixel nenhum. aria-hidden
+   acompanha porque slide fora de vista não pode receber foco de teclado nem
+   ser lido por leitor de tela. */
 function irPara(i){
   atual = (i + slides.length) % slides.length;
   trilho.style.transform = `translateX(-${atual * 100}%)`;
@@ -459,6 +486,10 @@ hero.addEventListener('mouseenter', parar);
 hero.addEventListener('mouseleave', tocar);
 
 /* gesto no celular */
+/* 50px de deslocamento mínimo é o que separa TOQUE de arrasto — sem esse
+   piso, o leve tremor do dedo ao encostar já viraria troca de slide. O delta
+   vira passo simples (próximo/anterior), não proporcional: o slide ocupa a
+   tela inteira, não vale rolar fracionado. */
 let x0 = null;
 hero.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
 hero.addEventListener('touchend', e => {
@@ -472,6 +503,12 @@ irPara(0);
 tocar();
 
 /* ---------- revelar ao rolar ---------- */
+/* O efeito é EXPANSÃO: quem cair na tela ganha 'vis' e sai da observação
+   (unobserve), senão o observer ficaria contando o mesmo slide pra sempre.
+   Sem IntersectionObserver (navegador velho) ou com movimento reduzido
+   ligado, todos recebem 'vis' de cara — conteúdo invisível é pior que
+   conteúdo sem animação, e a página nunca pode depender do observer pra
+   mostrar texto. */
 const alvos = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window && !reduzido) {
   const obs = new IntersectionObserver((ents) => {

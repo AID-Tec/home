@@ -2,6 +2,20 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<!--
+  ==========================================================================
+  pacto/copy.html — aba "Copy": a página que DESTRAVA o disparo.
+
+  Por que existe: o texto que sai no e-mail é copy aprovada no banco, nunca
+  escrito à mão na hora do envio. Aqui o dono escreve/edita, aprova ou
+  reprova; a ferramenta de disparo só lê o que estiver com status='aprovado'.
+
+  Regra que ela carrega: ciclo de estado pendente → aprovado → (reprovar ou
+  voltar pra pendente), com o rodapé LGPD 'rodape' obrigatório e automático
+  em todo e-mail. As 5 chaves do banco são email_1 (D+1), email_2 (D+4),
+  whatsapp_1 (D+6, zap dispara na mão pelo painel), email_3 (D+9) e rodape.
+  ==========================================================================
+  -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Aprovar as copies — Pacto Gorjeta</title>
 <style>
@@ -106,7 +120,7 @@
 
 <div class="aviso">
   <b>Nada é enviado por aqui.</b> Esta página só guarda a sua decisão.
-  O disparo sai por <code>ferramentas/disparo</code> (API do Brevo, 10 por dia) — ele lê
+  O disparo sai por <code>ferramentas/disparo</code> (pelo Brevo, 10 por dia) — ele lê
   <b>esta</b> copy aprovada, então o que sai daqui é exatamente o que foi mandado.
 </div>
 
@@ -122,11 +136,32 @@
 <script src="vendor/supabase.js"></script>
 <script src="app.js"></script>
 <script>
+/* ==========================================================================
+   Aprovação de copies — a página que DESTRAVA o disparo.
 
-let sb = null;
-let ITENS = [];
-let salvando = false;
+   Regra de negócio central: o disparar.js só envia copy com status='aprovado'
+   (e o rodapé LGPD 'rodape' é obrigatório). Então o ciclo de estado aqui é:
 
+       pendente ──Aprovar──▶ aprovado
+           ▲                    │
+           └──Voltar pra pendente┤
+       reprovado ◀──Reprovar────┘
+
+   Fluxo de dados: tudo vive na tabela 'copias' (Supabase). A página só lê
+   (carregar), redesenha (pintar) e grava o que mudou (salvarTexto/mudar) —
+   nunca há estado local "não salvo": o que você vê é o que está no banco.
+   ========================================================================== */
+
+let sb = null;      /* cliente Supabase — só depois do login (AID.entrar) */
+let ITENS = [];     /* cópia local da tabela 'copias', ordenada por 'ordem' */
+let salvando = false; /* trava de clique duplo durante um UPDATE em voo */
+
+/* --- utilidades de UI ----------------------------------------------------
+   esc(): toda string que entra no innerHTML passa por aqui — sem isso,
+   copy com < ou & quebraria o HTML (e abriria vetor de injeção).
+   ok()/erro(): barra de status no topo; ok() volta pra "tudo salvo" sozinho
+   depois de 2,2s (o timeout é limpo antes de rearmar, senão mensagens
+   antigas apagariam as novas). */
 function esc(s){
   return String(s === undefined || s === null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -143,6 +178,15 @@ function erro(){
   el.className = 'sync erro'; el.textContent = 'não salvei — tente de novo';
 }
 
+/* --- redesenha a lista inteira ------------------------------------------
+   Render é sempre full (ITENS é pequeno — 5 copies — então não vale
+   diff incremental). Cuidados tomados:
+   - o resumo "X de Y aprovadas" é o que o passo 2 do fluxo do painel
+     enxerga (mesma conta: aprovadas === total);
+   - os botões Aprovar/Reprovar/Voltar carregam data-chave/data-st e são
+     ligados depois do innerHTML (não dá pra onclick inline: a chave varia);
+   - textarea/input salvam no 'blur' — não a cada tecla, pra não gerar
+     um UPDATE por letra digitada. */
 function pintar(){
   const lista = document.getElementById('lista');
   if (!ITENS.length){ lista.innerHTML = '<div class="intro">nenhuma copy cadastrada</div>'; return; }
@@ -197,6 +241,9 @@ function itemDe(chave){
   return null;
 }
 
+/* --- grava o TEXTO editado (sem mexer no status) ------------------------
+   Comparação antes de gravar: se nada mudou, não gera UPDATE (evita
+   atualizar atualizado_em à toa e tráfego sem necessidade). */
 async function salvarTexto(chave){
   const it = itemDe(chave);
   if (!it) return;
@@ -218,6 +265,12 @@ async function salvarTexto(chave){
   } catch(e){ erro(); }
 }
 
+/* --- muda o STATUS da copy (aprovar / reprovar / voltar) ----------------
+   Salva texto E status num UPDATE só: clicar em "Aprovar" com campo
+   editado não pode perder a edição.
+   'salvando' impede clique duplo de disparar dois UPDATEs (o 2º cairia
+   com o mesmo conteúdo e piscaria a barra). Em caso de erro a trava
+   também é liberada — senão a página travaria pra sempre. */
 async function mudar(chave, status){
   if (salvando) return;
   salvando = true;
@@ -242,6 +295,8 @@ async function mudar(chave, status){
   salvando = false;
 }
 
+/* --- carrega as copies do banco e pinta --------------------------------
+   Ordem por 'ordem' = a sequência D+1, D+4, D+6, D+9 que a página mostra. */
 async function carregar(){
   try {
     const r = await sb.from('copias').select('*').order('ordem');
@@ -252,6 +307,8 @@ async function carregar(){
   } catch(e){ erro(); }
 }
 
+/* --- boot: espera o login (AID.entrar resolve com a sessão ou null) -----
+   Sem sessão não pinta nada (o gate do AID.entrar já cobre a tela). */
 AID.entrar().then(function(sess){
   if (!sess) return;
   sb = AID.sb;

@@ -2,6 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<!--
+  ==========================================================================
+  pacto/ideias.html — "Ideias estacionadas": caderno de ideias do dono, com
+  data de revisão.
+
+  Por que existe: o Pacto é um ciclo curto (14 dias, 2 e-mails por dia) e uma
+  ideia nova disputa exatamente o tempo que a operação tem. Guardar em 20
+  segundos e REVER depois preserva a ideia sem deixá-la entrar no meio do
+  trabalho — por isso a data padrão é o dia seguinte ao fim do ciclo, nunca
+  "amanhã".
+
+  Regra que ela carrega: ideia só sai da pauta quando o dono clica "Já
+  revisei"; o que está vencido aparece primeiro. Sem login próprio (usa o
+  mesmo Supabase do painel) e nada é enviado por aqui.
+  ==========================================================================
+  -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ideias estacionadas — AID</title>
 <style>
@@ -114,15 +130,41 @@
 <script src="vendor/supabase.js"></script>
 <script src="app.js"></script>
 <script>
+/* ==========================================================================
+   Ideias estacionadas — caderno de ideias com data de revisão.
 
-let sb = null;
-let ITENS = [];
+   Regra de negócio central: guardar custa 20 segundos e NÃO pode competir com
+   a operação do dia, então toda ideia já nasce com "rever em" = hoje + 14 dias
+   (o dia seguinte ao fim do ciclo do Pacto). O que vence aparece primeiro e só
+   sai da pauta quando o dono clica "Já revisei" — revisar é decisão humana,
+   nada aqui muda status sozinho.
 
+   Fluxo de dados: tabela 'ideias' no Supabase. Toda mutação passa por
+   enviar(), que grava e RECARREGA (carregar → pintar): não existe estado
+   local "não salvo", o que você vê é o que está no banco.
+   ========================================================================== */
+
+let sb = null;       /* cliente Supabase — só depois do login (AID.entrar) */
+let ITENS = [];      /* cópia local de 'ideias', ordenada por 'criada' desc */
+
+/* --- datas ----------------------------------------------------------------
+   pad()/brl(): a data vem como 'YYYY-MM-DD' (texto de coluna date) e brl()
+   monta o brasileiro. O 'T12:00:00' não é enfeite: sem ele, new Date() lê
+   como UTC e o horário de Brasília (UTC-3) empurrava a data pra ONTEM —
+   dia 1º aparecia 31/12. hoje(): comparação em string ISO, que ordena
+   cronologicamente (mesmo truque da regra 'vencida'). */
 const pad = n => String(n).padStart(2, '0');
 const brl = s => { if (!s) return 'sem data'; const d = new Date(s + 'T12:00:00');
   return pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear(); };
 const hoje = () => new Date().toISOString().slice(0,10);
 
+/* --- redesenha a lista inteira ------------------------------------------
+   Render full, sem diff: no máximo uma dezena de itens. A ordem é a regra do
+   produto e não o acaso — revisadas no fim, vencidas primeiro, futuras por
+   data (sem data vai pro fim como '9999-12-31', porque ideia sem compromisso
+   não pode encobrir a que está na hora). Os botões são ligados DEPOIS do
+   innerHTML (o id da linha varia, não dá pra onclick inline) e toda string
+   do usuário passa por esc() antes de virar HTML. */
 function pintar(){
   const lista = document.getElementById('lista');
   const ativas = ITENS.filter(i => i.s !== 'revisada');
@@ -157,12 +199,24 @@ function pintar(){
 
   lista.querySelectorAll('.irev').forEach(b => b.addEventListener('click', () => enviar({op:'revisar', id:b.dataset.id})));
 }
+/* --- escape e barra de status ---------------------------------------------
+   esc(): NADA vira innerHTML sem passar por aqui — título/obs são texto do
+   usuário e < ou & quebrariam a lista (e abririam vetor de injeção).
+   ok()/erro(): a mesma barra fixa das outras telas do painel; o timeout é
+   limpo antes de rearmar pra mensagem velha não apagar a nova. */
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 function ok(){ const s=document.getElementById('sync'); s.className='sync'; s.textContent='salvo ✓';
   clearTimeout(window._t); window._t=setTimeout(()=>{s.textContent='tudo salvo';},2500); }
 function erro(){ const s=document.getElementById('sync'); s.className='sync erro'; s.textContent='não salvei — tentando de novo…'; }
 
+/* --- mutar uma ideia ------------------------------------------------------
+   Dois caminhos numa função só: 'revisar' é UPDATE de 1 campo (não apaga
+   nada — a revisada fica guardada, só sai da pauta), o resto é INSERT. Nos
+   dois casos o sucesso recarrega a lista inteira (carregar → pintar) em vez
+   de mexer no item na tela: assim o placar, a ordem e as etiquetas são
+   sempre recalculados pelo mesmo código, sem caso especial pra "a que acabei
+   de criar". Erro só avisa — nada fica pendurado em estado local. */
 function enviar(body){
   const q = (body.op === 'revisar')
     ? sb.from('ideias').update({s:'revisada', atualizado_em: new Date().toISOString()}).eq('id', body.id)
@@ -183,6 +237,12 @@ document.getElementById('titulo').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('btnAdd').click();
 });
 
+/* --- carrega tudo ---------------------------------------------------------
+   Sem filtro e sem paginação: a lista de ideias é pequena e cabe inteira.
+   Ordena por 'criada' desc só pra trazer na ordem de entrada — quem muda a
+   ordem na tela é o pintar() (revisadas/vencidas/futuras). Erro de rede vira
+   barra vermelha e a lista fica como estava, nunca uma tela vazia fingindo
+   "sem ideias". */
 function carregar(){
   return sb.from('ideias').select('*').order('criada', {ascending:false}).then(r => {
     if (r.error) throw r.error;
@@ -198,6 +258,9 @@ function carregar(){
   document.getElementById('data').value =
     d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 })();
+/* Só depois do login existe cliente Supabase (sb) — por isso enviar()/carregar()
+   são chamados a partir daqui e nunca no carregamento da página: sem sessão a
+   tela monta mas não consulta (o gate do AID.entrar já explicou o porquê). */
 AID.entrar().then(function(sess){
   if (!sess) return;
   sb = AID.sb;
