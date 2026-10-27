@@ -47,6 +47,11 @@ const { mandaEmail } = require('./smtp');
 const RITMO_DIA = 10;
 const COTA_TECNICA = 300;   // teto técnico do Brevo (plano gratuito) — nunca sugerido
 const PAUSA_MS = 400;      // respiro entre envios (e não estoura a cota)
+
+/* Horario comercial configuravel: ENABLE_HORARIO=0 desativa a trava CLT.
+   FORCE_FORA_HORARIO=1 forca modo fora-horario (equivale a --fora-horario). */
+const ENABLE_HORARIO = process.env.ENABLE_HORARIO !== '0';
+const FORCE_FORA_HORARIO = process.env.FORCE_FORA_HORARIO === '1';
 const HORA_INI = 8;        // horário comercial CLT: 8h–18h, seg–sex
 const HORA_FIM = 18;
 /* o gatilho das 18h dispara no segundo exato: sem esta tolerância a janela
@@ -494,14 +499,17 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   const agora = new Date();
   const diaSem = agora.getDay();               /* 0=dom 6=sab */
   const hora = agora.getHours();
-  const noHorario = diaSem >= 1 && diaSem <= 5 && hora >= HORA_INI &&
+  if (FORCE_FORA_HORARIO) { args.foraHorario = true; }
+  const noHorario = !ENABLE_HORARIO || diaSem >= 1 && diaSem <= 5 && hora >= HORA_INI &&
     (hora < HORA_FIM || (hora === HORA_FIM && agora.getMinutes() <= TOLERANCIA_FIM));
+  if (!ENABLE_HORARIO) { args.foraHorario = true; }
   if (!noHorario && args.enviar && !args.foraHorario && !args.forcar) {
     console.error('Agora são ' + String(hora).padStart(2, '0') + 'h de ' +
       ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][diaSem] +
-      ' — fora do horário comercial (CLT).');
+      ' - fora do horário comercial (CLT).');
     console.error('Melhor rodar de segunda a sexta, das ' + HORA_INI + 'h às ' + HORA_FIM + 'h.');
     console.error('Se for de propósito: node disparar.js ... --fora-horario');
+    console.error('Ou defina ENABLE_HORARIO=0 / FORCE_FORA_HORARIO=1 para desativar a trava.');
     process.exit(3);
   }
 
