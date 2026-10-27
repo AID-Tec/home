@@ -82,7 +82,7 @@ jobs:
             FLAGS="$FLAGS --enviar"
           fi
           echo "modo: $FLAGS"
-          node ferramentas/disparo/disparar.js $FLAGS
+          node ferramentas/disparo/disparar.js $FLAGS | tee rotina.log
 
       # acorda o n8n no Render e dispara a checagem de retorno/alertas.
       # continue-on-error: se o n8n estiver dormindo/falhando, o envio do dia
@@ -100,3 +100,57 @@ jobs:
           curl -fsS -m 45 -X POST -H 'Content-Type: application/json' \
             -d '{"origem":"github-actions","gatilho":"${{ github.event_name }}"}' \
             "$N8N_WEBHOOK" || true
+
+      # ---------------------------------------------------------------------
+      # Aviso no WhatsApp/Telegram (NOTIFIER) — SEMPRE roda, dê sucesso ou erro.
+      # Mensagem por evento: um aviso para cada execução agendada ou manual.
+      # Nenhum dado de prospecto vai na mensagem (só contagem e link do run).
+      # ---------------------------------------------------------------------
+      - name: Notificar resultado (WhatsApp/Telegram)
+        if: always()
+        continue-on-error: true
+        env:
+          NOTIFIER_URL: ${{ secrets.NOTIFIER_URL }}
+          NOTIFIER_KEY: ${{ secrets.NOTIFIER_KEY }}
+          RESULTADO: ${{ job.status }}
+          GATILHO: ${{ github.event_name }}
+          RUN_NUM: ${{ github.run_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PULADO: ${{ steps.cofre.outputs.pulado }}
+        run: |
+          if [ -z "$NOTIFIER_URL" ]; then
+            echo 'NOTIFIER_URL não configurado — pulando aviso.'
+            exit 0
+          fi
+
+          case "$RESULTADO" in
+            success)   ICONE="✅"; PALAVRA="concluída" ;;
+            failure)   ICONE="❌"; PALAVRA="FALHOU" ;;
+            cancelled) ICONE="⚪"; PALAVRA="cancelada" ;;
+            *)         ICONE="⚠️"; PALAVRA="$RESULTADO" ;;
+          esac
+
+          # resumo da rotina (contagens), quando existir
+          RESUMO=""
+          if [ -f rotina.log ]; then
+            RESUMO=$(grep -m1 'enviados \.\.\.' rotina.log 2>/dev/null | sed 's/^[[:space:]]*//' || true)
+          fi
+          if [ "$PULADO" = "1" ]; then
+            RESUMO="cofre de segredos vazio — nada foi enviado"
+          fi
+
+          MENSAGEM="Gatilho: ${GATILHO} · run #${RUN_NUM}"
+          if [ -n "$RESUMO" ]; then
+            MENSAGEM="${MENSAGEM}\n${RESUMO}"
+          fi
+          MENSAGEM="${MENSAGEM}\n${RUN_URL}"
+
+          BODY=$(node -e '
+            const [titulo, mensagem] = [process.argv[1], process.argv[2].replace(/\\n/g, "\n")];
+            process.stdout.write(JSON.stringify({ fonte: "github-actions", titulo, mensagem }));
+          ' "${ICONE} Pacto · rotina ${PALAVRA}" "$MENSAGEM")
+
+          curl -fsS -m 120 -X POST "$NOTIFIER_URL/notify" \
+            -H 'Content-Type: application/json' \
+            -H "x-notifier-key: $NOTIFIER_KEY" \
+            -d "$BODY" || echo 'aviso não entregue (segue o jogo)'
