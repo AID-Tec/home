@@ -110,6 +110,9 @@ jobs:
         if: always()
         continue-on-error: true
         env:
+          # local (sua maquina, via Tailscale Funnel) = WhatsApp + Telegram
+          NOTIFIER_LOCAL: ${{ secrets.NOTIFIER_LOCAL_URL }}
+          # nuvem (Render) = reserva com Telegram, usada só se o PC estiver off
           NOTIFIER_URL: ${{ secrets.NOTIFIER_URL }}
           NOTIFIER_KEY: ${{ secrets.NOTIFIER_KEY }}
           RESULTADO: ${{ job.status }}
@@ -118,8 +121,8 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           PULADO: ${{ steps.cofre.outputs.pulado }}
         run: |
-          if [ -z "$NOTIFIER_URL" ]; then
-            echo 'NOTIFIER_URL não configurado — pulando aviso.'
+          if [ -z "$NOTIFIER_LOCAL" ] && [ -z "$NOTIFIER_URL" ]; then
+            echo 'Notifier não configurado — pulando aviso.'
             exit 0
           fi
 
@@ -150,7 +153,23 @@ jobs:
             process.stdout.write(JSON.stringify({ fonte: "github-actions", titulo, mensagem }));
           ' "${ICONE} Pacto · rotina ${PALAVRA}" "$MENSAGEM")
 
-          curl -fsS -m 120 -X POST "$NOTIFIER_URL/notify" \
-            -H 'Content-Type: application/json' \
-            -H "x-notifier-key: $NOTIFIER_KEY" \
-            -d "$BODY" || echo 'aviso não entregue (segue o jogo)'
+          # 1) tenta a máquina (WhatsApp + Telegram); 2) se o PC estiver off,
+          #    cai para o Render (Telegram), para nunca ficar sem aviso.
+          ENTREGUE=0
+          if [ -n "$NOTIFIER_LOCAL" ]; then
+            if curl -fsS -m 30 -X POST "$NOTIFIER_LOCAL/notify" \
+              -H 'Content-Type: application/json' \
+              -H "x-notifier-key: $NOTIFIER_KEY" \
+              -d "$BODY"; then
+              ENTREGUE=1
+            else
+              echo 'notifier local indisponível (PC desligado?) — tentando reserva.'
+            fi
+          fi
+
+          if [ "$ENTREGUE" = "0" ] && [ -n "$NOTIFIER_URL" ]; then
+            curl -fsS -m 120 -X POST "$NOTIFIER_URL/notify" \
+              -H 'Content-Type: application/json' \
+              -H "x-notifier-key: $NOTIFIER_KEY" \
+              -d "$BODY" || echo 'aviso não entregue (segue o jogo)'
+          fi
