@@ -6,7 +6,7 @@
   <title>AID — Falar no WhatsApp</title>
   <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="Fale com a AID pelo WhatsApp.">
-  <meta http-equiv="refresh" content="0; url=https://wa.me/5516999986836">
+  <meta http-equiv="refresh" content="0; url=https://api.whatsapp.com/send/?phone=5516999986836&amp;text=Quero+uma+demonstra%C3%A7%C3%A3o+do+sistema+de+gorjetas&amp;type=phone_number&amp;app_absent=0">
   <link rel="icon" href="/favicon.ico">
   <style>
     :root{
@@ -37,11 +37,12 @@
     <div class="marca">AID</div>
     <h1>Abrindo o WhatsApp…</h1>
     <p>Se não abrir automaticamente, toque no botão abaixo.</p>
-    <a class="botao" href="https://wa.me/5516999986836">Abrir WhatsApp</a>
+    <a class="botao" href="https://api.whatsapp.com/send/?phone=5516999986836&amp;text=Quero+uma+demonstra%C3%A7%C3%A3o+do+sistema+de+gorjetas&amp;type=phone_number&amp;app_absent=0">Abrir WhatsApp</a>
     <div class="aviso">Você está sendo direcionado para o atendimento da AID.</div>
   </main>
   <script>
-    window.location.replace("https://wa.me/5516999986836");
+    var DESTINO = "https://api.whatsapp.com/send/?phone=5516999986836&text=Quero+uma+demonstra%C3%A7%C3%A3o+do+sistema+de+gorjetas&type=phone_number&app_absent=0";
+    window.location.replace(DESTINO);
   </script>
 </body>
 </html>
