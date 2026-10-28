@@ -48,15 +48,30 @@ const RITMO_DIA = 10;
 const COTA_TECNICA = 300;   // teto técnico do Brevo (plano gratuito) — nunca sugerido
 const PAUSA_MS = 400;      // respiro entre envios (e não estoura a cota)
 
-/* Horario comercial configuravel: ENABLE_HORARIO=0 desativa a trava CLT.
-   FORCE_FORA_HORARIO=1 forca modo fora-horario (equivale a --fora-horario). */
+/* Horario comercial configuravel: ENABLE_HORARIO=0 desativa a trava.
+   FORCE_FORA_HORARIO=1 forca modo fora-horario (equivale a --fora-horario).
+
+   Janela em HORÁRIO DE BRASÍLIA (decisão do dono, 2026-10-28): 8h às 20h,
+   seg–sex. O runner do GitHub Actions marca em UTC e o PC local marca em
+   Brasília — por isso TODA hora passa por brl(), que formata no fuso
+   America/Sao_Paulo. Antes a lia em UTC: o lote das 18h de Brasília (21h UTC)
+   era barrado toda noite e o das 15h só passava se subisse em 5 minutos. */
+const HORA_INI = 8;        // 08:00 de Brasília
+const HORA_FIM = 20;       // 20:00 de Brasília
+const TOLERANCIA_FIM = 5;  // folga depois das 20h00 (gatilho atrasado)
 const ENABLE_HORARIO = process.env.ENABLE_HORARIO !== '0';
 const FORCE_FORA_HORARIO = process.env.FORCE_FORA_HORARIO === '1';
-const HORA_INI = 8;        // horário comercial CLT: 8h–18h, seg–sex
-const HORA_FIM = 18;
-/* o gatilho das 18h dispara no segundo exato: sem esta tolerância a janela
-   (hora < 18) recusaria o lote da noite inteiro */
-const TOLERANCIA_FIM = 5;  // minutos de folga depois das 18h00
+
+/* relógio de Brasília — funciona igual no runner (UTC) e no PC local */
+const DIA_EN = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+function brl(d) {
+  const p = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo', weekday: 'short',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).formatToParts(d);
+  const v = k => (p.find(x => x.type === k) || {}).value;
+  return { dia: DIA_EN[v('weekday')], hora: Number(v('hour')), minuto: Number(v('minute')) };
+}
 
 /* Sequência do Pacto Gorjeta (decisão do dono) e a FAIXA de horário de cada
    etapa — é o que o modo --rotina usa pra decidir o que sai em cada gatilho:
@@ -363,7 +378,7 @@ async function leEnvios(cfg, tok) {
    sem registro — avisa em voz alta, porque é o histórico que calcula o D+4/D+9. */
 async function gravaEnvio(cfg, tok, p, copy) {
   await rest(cfg, tok, 'envios', 'POST', [{
-    cnpj: p.cnpj, email: p.email, copy: copy, hora: new Date().getHours(),
+    cnpj: p.cnpj, email: p.email, copy: copy, hora: brl(new Date()).hora,
     enviado_em: new Date().toISOString()
   }], { Prefer: 'return=minimal' });
 }
@@ -422,7 +437,7 @@ function montaPlano(lista, envios, agora) {
     }
 
     const faixa = Number(x.hora_envio) || passo.faixa;
-    if (faixa > agora.getHours()) { cont.faixa_futura++; return; }
+    if (faixa > brl(agora).hora) { cont.faixa_futura++; return; }
 
     plano.push({
       id: x.id, cnpj: x.cnpj, nome: x.nome, email: x.email, tipo: x.tipo,
@@ -440,7 +455,7 @@ const AJUDA = `
 Disparo automático do Pacto Gorjeta (pelo Brevo — SMTP ou API conforme a chave)
 
 Ritmo do projeto: ${RITMO_DIA} e-mails por dia, em horário comercial
-(seg–sex, 8h–18h). A lista atual leva ~${Math.ceil(242 / RITMO_DIA)} dias
+(seg–sex, 8h às 20h de Brasília). A lista atual leva ~${Math.ceil(242 / RITMO_DIA)} dias
 nesse ritmo — é de propósito: poucos por dia dá pra acompanhar resposta.
 (O Brevo deixaria ir a ${COTA_TECNICA}/dia de graça; aqui isso nunca é sugerido.)
 
@@ -468,7 +483,7 @@ Opções
   --de "Nome <e>"   remetente (padrão: Dyeison — AID Tecnologia <dyeison@aidtr.com.br>)
   --pausa MS        pausa entre envios (padrão: ${PAUSA_MS} ms)
   --forcar          envia copy sem aprovação
-  --fora-horario    permite enviar fora das 8h–18h de segunda a sexta (CLT)
+  --fora-horario    permite enviar fora das 8h às 20h de Brasília, seg–sex
   --ajuda           este texto
 
 Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
@@ -495,19 +510,20 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
     process.exit(2);
   }
 
-  /* --- aviso de horário comercial (CLT): 8h–18h, seg–sex --- */
+  /* --- trava de horário: seg–sex, 8h às 20h de BRASÍLIA (via brl) --- */
   const agora = new Date();
-  const diaSem = agora.getDay();               /* 0=dom 6=sab */
-  const hora = agora.getHours();
+  const bz = brl(agora);
+  const diaSem = bz.dia;               /* 0=dom 6=sab */
+  const hora = bz.hora;
   if (FORCE_FORA_HORARIO) { args.foraHorario = true; }
   const noHorario = !ENABLE_HORARIO || diaSem >= 1 && diaSem <= 5 && hora >= HORA_INI &&
-    (hora < HORA_FIM || (hora === HORA_FIM && agora.getMinutes() <= TOLERANCIA_FIM));
+    (hora < HORA_FIM || (hora === HORA_FIM && bz.minuto <= TOLERANCIA_FIM));
   if (!ENABLE_HORARIO) { args.foraHorario = true; }
   if (!noHorario && args.enviar && !args.foraHorario && !args.forcar) {
     console.error('Agora são ' + String(hora).padStart(2, '0') + 'h de ' +
       ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][diaSem] +
-      ' - fora do horário comercial (CLT).');
-    console.error('Melhor rodar de segunda a sexta, das ' + HORA_INI + 'h às ' + HORA_FIM + 'h.');
+      ' (horário de Brasília) - fora do horário comercial.');
+    console.error('Melhor rodar de segunda a sexta, das ' + HORA_INI + 'h às ' + HORA_FIM + 'h de Brasília.');
     console.error('Se for de propósito: node disparar.js ... --fora-horario');
     console.error('Ou defina ENABLE_HORARIO=0 / FORCE_FORA_HORARIO=1 para desativar a trava.');
     process.exit(3);
@@ -534,7 +550,7 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
     const porCopy = {};
     r.plano.forEach(x => { porCopy[x.copy] = (porCopy[x.copy] || 0) + 1; });
     alvo.lista = r.plano;
-    console.log('\n--- modo rotina · gatilho das ' + String(agora.getHours()).padStart(2, '0') + 'h ---');
+    console.log('\n--- modo rotina · gatilho das ' + String(bz.hora).padStart(2, '0') + 'h (Brasília) ---');
     console.log('  vencidos pra enviar .... ' + r.plano.length +
       (r.plano.length ? ' (' + Object.keys(porCopy).map(k => k + ': ' + porCopy[k]).join(' · ') + ')' : ''));
     console.log('  aguardando vencer ...... ' + r.cont.aguardando);
@@ -676,7 +692,7 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   if (!args.enviar) {
     const dias = Math.ceil(alvo.lista.length / RITMO_DIA);
     console.log('\n=== DRY RUN: nada foi enviado ===');
-    console.log('Ritmo do projeto: ' + RITMO_DIA + ' e-mails por dia (seg–sex, 8h–18h).');
+    console.log('Ritmo do projeto: ' + RITMO_DIA + ' e-mails por dia (seg–sex, 8h às 20h de Brasília).');
     console.log('  lista inteira levaria ' + plural(dias, 'dia') + ' — ' +
       (alvo.lista.length > RITMO_DIA ? 'é de propósito: poucos por dia, com resposta acompanhada.' : 'de uma vez só.'));
     console.log('  hoje eu mandaria: ' + Math.min(args.limite, alvo.lista.length) + ' (--limite ' + args.limite + ')');
