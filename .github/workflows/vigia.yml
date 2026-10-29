@@ -1,0 +1,103 @@
+# =============================================================================
+# Pacto · VIGIA da rotina (GitHub Actions)
+# =============================================================================
+# Por que existe: o rotina.yml avisa A CADA execução (sucesso ou falha), mas NÃO
+# avisa quando NADA acontece — cron que não dispara, workflow desativado, envio
+# que roda e não sai nada. O dono só descobre olhando o GitHub.
+#
+# Este workflow roda 1x por dia útil, às 20:30 de Brasília (depois do último
+# gatilho das 18h e da tolerância dele), e manda UM aviso no WhatsApp/Telegram
+# com o veredito do dia: gatilhos que dispararam, quantos e-mails saíram e o
+# tamanho da fila. Ferramenta: ferramentas/disparo/vigia.js (só leitura —
+# NUNCA envia e-mail de prospecto).
+#
+# Horário em BRT (UTC-3, sem horário de verão):
+#   20:30 BRT = 23:30 UTC  -> seg–sex (mesmos dias dos gatilhos da rotina)
+#
+# SEGREDOS: só nos Secrets do repositório, injetados como variável de ambiente.
+# Nenhum valor aqui; nenhum no Git. O repo é público e o LOG também — por isso
+# o vigia manda só contagem, nunca e-mail de prospecto.
+# =============================================================================
+name: Pacto · vigia da rotina
+
+on:
+  schedule:
+    - cron: '30 23 * * 1-5'   # 20:30 BRT, seg–sex
+  workflow_dispatch:           # gatilho manual (teste)
+
+# permissão mínima: o vigia LÊ os runs do workflow da rotina (actions:read)
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  vigia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # variáveis de ambiente = segredos do cofre (nunca aparecem no YAML)
+    env:
+      # token do próprio Actions (o vigia consulta a API de runs do repo)
+      GITHUB_TOKEN: ${{ github.token }}
+      PACTO_EMAIL: ${{ secrets.PACTO_EMAIL }}     # login do painel
+      PACTO_SENHA: ${{ secrets.PACTO_SENHA }}     # senha do painel
+      # local (sua máquina, via Tailscale) = WhatsApp + Telegram
+      NOTIFIER_LOCAL_URL: ${{ secrets.NOTIFIER_LOCAL_URL }}
+      # nuvem (Render) = reserva com Telegram, usada só se o PC estiver off
+      NOTIFIER_URL: ${{ secrets.NOTIFIER_URL }}
+      NOTIFIER_KEY: ${{ secrets.NOTIFIER_KEY }}
+    steps:
+      - name: Pegar o código
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # a ferramenta não tem dependência nenhuma (usa só o Node de fábrica)
+
+      - name: Vigiar a rotina do dia
+        id: vigia
+        run: node ferramentas/disparo/vigia.js
+
+      # ---------------------------------------------------------------------
+      # Se o PRÓPRIO vigia quebrar (ex.: painel fora do ar), o aviso de dentro
+      # dele não sai — então este passo avisa o dono assim mesmo. Só em falha:
+      # no sucesso o vigia já avisou sozinho.
+      # ---------------------------------------------------------------------
+      - name: Avisar que o vigia quebrou
+        if: failure()
+        continue-on-error: true
+        env:
+          NOTIFIER_LOCAL_URL: ${{ secrets.NOTIFIER_LOCAL_URL }}
+          NOTIFIER_URL: ${{ secrets.NOTIFIER_URL }}
+          NOTIFIER_KEY: ${{ secrets.NOTIFIER_KEY }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$NOTIFIER_LOCAL_URL" ] && [ -z "$NOTIFIER_URL" ]; then
+            echo 'Notifier não configurado — pulando aviso.'
+            exit 0
+          fi
+          BODY=$(node -e '
+            process.stdout.write(JSON.stringify({
+              fonte: "github-actions",
+              titulo: "🔴 Pacto · vigia QUEBROU",
+              mensagem: "O vigia não conseguiu avaliar a rotina de hoje.\nVeja o log:\n" + process.argv[1]
+            }));
+          ' "$RUN_URL")
+          ENTREGUE=0
+          if [ -n "$NOTIFIER_LOCAL_URL" ]; then
+            if curl -fsS -m 30 -X POST "$NOTIFIER_LOCAL_URL/notify" \
+              -H 'Content-Type: application/json' \
+              -H "x-notifier-key: $NOTIFIER_KEY" \
+              -d "$BODY"; then
+              ENTREGUE=1
+            else
+              echo 'notifier local indisponível (PC desligado?) — tentando reserva.'
+            fi
+          fi
+          if [ "$ENTREGUE" = "0" ] && [ -n "$NOTIFIER_URL" ]; then
+            curl -fsS -m 120 -X POST "$NOTIFIER_URL/notify" \
+              -H 'Content-Type: application/json' \
+              -H "x-notifier-key: $NOTIFIER_KEY" \
+              -d "$BODY" || echo 'aviso não entregue (segue o jogo)'
+          fi
