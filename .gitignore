@@ -5,3 +5,7 @@
 
 # Dependências
 node_modules/
+
+# Segredos avulsos das ferramentas - NUNCA pro Git
+ferramentas/disparo/segredo.md
+ferramentas/**/segredo*
