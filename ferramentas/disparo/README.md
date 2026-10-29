@@ -155,7 +155,7 @@ quê), o assunto, a prévia do 1º e-mail e quanto faltaria no ritmo.
 
 ### Segredos — local central: `.env` na raiz do projeto
 
-**`D:\AIDSoluções\home\.env`** é o lugar único das credenciais do projeto.
+**`D:\AIDSolucoes\home\.env`** é o lugar único das credenciais do projeto.
 Está no `.gitignore` (regra `*.env`) — o Git nunca sobe. Confira quando quiser:
 
 ```
