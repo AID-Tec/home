@@ -1,0 +1,21 @@
+﻿PROMPTS PARA IA GERAR IMAGENS
+
+## SLIDE 1 - CAPA
+Prompt:
+"Crie um carrossel para Instagram voltado a donos de restaurante. Slide 1: fundo branco com destaque em azul #182A69. Texto grande 'TRANSPARÊNCIA EVITA BRIGA POR GORJETA'. Subtexto 'Já teve discussão por divisão de gorjeta no seu restaurante?'. Estilo minimalista, profissional, brasileiro."
+
+## SLIDE 2 - DOR
+Prompt:
+"Mostre uma cena em restaurante mostrando anotação em caderno de papel sobre divisão de gorjeta gerando discussão. Tom realista, sem exagero. Focar na mensagem 'Sem registro claro, tudo vira eu acho'."
+
+## SLIDE 3 - VERDADE
+Prompt:
+"Ambiente de restaurante tranquilo com equipe. Texto: 'Engajamento da equipe começa com clareza. O engajamento da equipe depende da transparência entre o que foi recebido e o que foi repassado.' Use cores da marca AID."
+
+## SLIDE 4 - SOLUÇÃO (MAIS IMPORTANTE)
+Prompt:
+"Foque APENAS na tela de relatório do sistema de controle de gorjetas. Mostrar lista 'POR COLABORADOR' com nomes fictícios e valores. Título 'MOSTRE, NÃO DISCUTA'. Usar dados genéricos rotulados como exemplo. Limpo, legível no celular."
+
+## SLIDE 5 - CTA
+Prompt:
+"Slide final limpo com fundo branco. Texto 'MENOS BRIGA. MAIS CONFIANÇA.' Botão/texto 'Peça uma demonstração: aidtr.com.br/whats'. Sem número de telefone. Usar azul da marca AID."

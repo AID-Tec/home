@@ -1,0 +1,42 @@
+[
+  {
+    "id": "01-transparencia-evita-briga",
+    "titulo": "Transparência evita briga por gorjeta",
+    "tipo": "carrossel",
+    "dor": "Briga por divisão / falta de transparência entre recebido x repassado",
+    "hook": "Já teve discussão por divisão de gorjeta no seu restaurante?",
+    "status": "aguardando-aprovacao",
+    "criado_em": "2026-10-29T00:00:00",
+    "prioridade": 1
+  },
+  {
+    "id": "02-papel-x-comprovado",
+    "titulo": "Papel ou comprovado?",
+    "tipo": "carrossel",
+    "dor": "Falta de registro / prestação de contas",
+    "hook": "Papel ou comprovado?",
+    "status": "fila",
+    "criado_em": "2026-10-29T00:00:00",
+    "prioridade": 2
+  },
+  {
+    "id": "03-contador-pede-lista",
+    "titulo": "Seu contador já te pediu a lista da gorjeta?",
+    "tipo": "carrossel",
+    "dor": "Pressa no fim do mês",
+    "hook": "Seu contador já te pediu a lista da gorjeta?",
+    "status": "fila",
+    "criado_em": "2026-10-29T00:00:00",
+    "prioridade": 3
+  },
+  {
+    "id": "04-transparencia-gera-confianca",
+    "titulo": "Transparência gera confiança",
+    "tipo": "carrossel",
+    "dor": "Clima/engajamento da equipe",
+    "hook": "Engajamento da equipe começa com clareza.",
+    "status": "fila",
+    "criado_em": "2026-10-29T00:00:00",
+    "prioridade": 4
+  }
+]
