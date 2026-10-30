@@ -10,7 +10,7 @@
 :root{
   --azul:#182A69; --azul2:#2E3699; --indigo-50:#F0F1F8; --indigo-100:#E0E1F0;
   --fundo:#F9F9F9; --card:#FFFFFF; --borda:#E4E4E4; --texto:#1C1C1C; --cinza:#6E6E6E;
-  --verde:#1E9E5A; --roxo:#4509AE;
+  --verde:#1E9E5A; --roxo:#4509AE; --vermelho:#b3261e;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;font-family:'Montserrat',system-ui,sans-serif;
@@ -34,29 +34,65 @@ nav a{color:#cfe4f7;text-decoration:none;background:rgba(255,255,255,.12);
 .bloco .topo{padding:14px 16px}
 .bloco .titulo{font-weight:800;font-size:17px;line-height:1.3}
 .bloco .hook{color:var(--cinza);font-size:13px;margin-top:4px}
-.badge{display:inline-block;background:var(--indigo-100);color:var(--azul2);
-  border-radius:999px;padding:3px 10px;font-size:11px;font-weight:800;
-  text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.badge{display:inline-block;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;background:var(--indigo-100);color:var(--azul2)}
 .badge.aprovado{background:#e0f5ea;color:var(--verde)}
+.badge.reprovado{background:#fbe6e5;color:var(--vermelho)}
 .badge.postado{background:#eee6fb;color:var(--roxo)}
 
-/* carrossel de artes: rola na horizontal, cada slide 1 quadrado */
 .arts{display:flex;gap:10px;overflow-x:auto;padding:0 16px 14px;
   scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch}
 .arts img{flex:0 0 auto;width:78vw;max-width:340px;aspect-ratio:1/1;object-fit:cover;
   border-radius:10px;border:1px solid var(--borda);scroll-snap-align:center;
   background:var(--indigo-50)}
-.legenda{padding:0 16px 16px;font-size:13.5px;color:var(--texto);white-space:pre-line;
-  line-height:1.6}
+.legenda{padding:0 16px 16px;font-size:13.5px;white-space:pre-line;line-height:1.6}
 .dica{padding:0 16px 14px;font-size:12px;color:var(--cinza)}
+
+/* decisão */
+.decisao{display:flex;gap:8px;padding:0 16px 8px;flex-wrap:wrap}
+.decisao button{flex:1 1 140px;border:0;border-radius:9px;padding:14px 12px;font-weight:800;
+  font-size:14px;cursor:pointer;font-family:inherit;min-height:48px}
+.btnAprovar{background:var(--verde);color:#fff}
+.btnReprovar{background:#fff;color:var(--vermelho);border:1px solid var(--vermelho)!important}
+.coment{padding:6px 16px 16px}
+.coment textarea{width:100%;min-height:64px;border:1px solid var(--borda);border-radius:8px;
+  padding:10px;font-family:inherit;font-size:14px}
+.status-salvo{padding:0 16px 14px;font-size:12.5px;color:var(--cinza)}
+.status-salvo.erro{color:var(--vermelho);font-weight:700}
 .vazio{text-align:center;color:var(--cinza);padding:44px 16px}
 .rodape{padding:8px 16px 30px;font-size:11.5px;color:var(--cinza);text-align:center}
+
+/* login */
+#gate{position:fixed;inset:0;z-index:9999;background:#0f1430;display:flex;align-items:center;
+  justify-content:center;padding:20px}
+#gate .box{width:100%;max-width:370px;background:#fff;border-radius:18px;padding:26px 24px}
+#gate h2{margin:0;font-size:22px;color:var(--azul)}
+#gate p{font-size:13px;color:#5b6478;margin:6px 0 18px}
+#gate input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #d8dcea;
+  border-radius:10px;font:400 15px Montserrat,system-ui,sans-serif;margin-bottom:10px}
+#gate button{width:100%;padding:14px;border:0;border-radius:10px;background:var(--azul2);
+  color:#fff;font:700 15px Montserrat,system-ui,sans-serif;cursor:pointer}
+#gate .erro{color:#c0392b;font-size:13px;margin-top:10px;min-height:18px}
 </style>
 </head>
 <body>
+
+<div id="gate" style="display:none">
+  <div class="box">
+    <h2>Artes — Pacto</h2>
+    <p>Acesso restrito. Entre pra revisar e aprovar as artes.</p>
+    <form id="formLogin">
+      <input id="loginEmail" type="email" placeholder="E-mail" autocomplete="username" required>
+      <input id="loginSenha" type="password" placeholder="Senha" autocomplete="current-password" required>
+      <button id="btnEntrar" type="submit">Entrar</button>
+      <div id="loginErro" class="erro"></div>
+    </form>
+  </div>
+</div>
+
 <header>
   <h1>Artes — Pacto Gorjeta</h1>
-  <div class="sub">Olhe as artes antes de publicar</div>
+  <div class="sub">Olhe as artes e aprove antes de publicar</div>
   <nav><a href="index.html">← Painel</a></nav>
 </header>
 
@@ -64,50 +100,90 @@ nav a{color:#cfe4f7;text-decoration:none;background:rgba(255,255,255,.12);
   <div class="tabs">
     <button class="tab ativo" data-tab="aguardando">A revisar</button>
     <button class="tab" data-tab="aprovado">Aprovados</button>
+    <button class="tab" data-tab="reprovado">Reprovados</button>
     <button class="tab" data-tab="postado">Postados</button>
   </div>
   <div class="contagem" id="contagem"></div>
-  <div id="lista"></div>
-  <div class="rodape">Fluxo: você olha as artes aqui e me fala “aprovo” ou o ajuste.<br>Movimento as pastas e essa página acompanha.</div>
+  <div id="lista"><div class="vazio">Carregando…</div></div>
+  <div class="rodape">Sua decisão é salva no banco e vira pasta (aprovados / postados).<br>Movimento os arquivos e a página acompanha.</div>
 </main>
 
+<script src="vendor/supabase.js"></script>
 <script>
-const BASE = 'conteudo/manifest.json';
-let ITENS = [];
+const SB_URL = 'https://uewqkwmzpmnpebdsldto.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVld3Frd216cG1ucGViZHNsZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NjExMDgsImV4cCI6MjEwODMzNzEwOH0.wXPqKO5hkU2FqH3wDPRimoHWprI7NAWX5odknhX6bvY';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+const BASE = 'conteudo/';
+let ITENS = [];        // merge: manifesto + decisao do banco
 let aba = 'aguardando';
 
-function esc(s){
-  return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-async function carregar(){
+/* ---------- login ---------- */
+function mostrarGate(v){ document.getElementById('gate').style.display = v ? 'flex' : 'none'; }
+document.getElementById('formLogin').addEventListener('submit', async (ev)=>{
+  ev.preventDefault();
+  const btn = document.getElementById('btnEntrar'), erro = document.getElementById('loginErro');
+  erro.textContent=''; btn.disabled=true; btn.textContent='Entrando…';
+  const r = await sb.auth.signInWithPassword({
+    email: document.getElementById('loginEmail').value.trim(),
+    password: document.getElementById('loginSenha').value
+  });
+  btn.disabled=false; btn.textContent='Entrar';
+  if (r.error){ erro.textContent = 'Não entrou: ' + (r.error.message||'verifique e-mail e senha'); return; }
+  await boot();
+});
+
+/* ---------- carga: manifesto (artes) + banco (decisão) ---------- */
+async function carregarTudo(){
   const el = document.getElementById('lista');
   el.innerHTML = '<div class="vazio">Carregando…</div>';
   try{
-    const r = await fetch(BASE+'?'+Date.now());
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const m = await r.json();
-    ITENS = m.itens || [];
-    const c = m.contagem || {};
+    const [rm, rd] = await Promise.all([
+      fetch(BASE+'manifest.json?'+Date.now()).then(r=>r.json()),
+      sb.from('conteudo_status').select('*')
+    ]);
+    if (rd.error) throw rd.error;
+    const decisao = {};
+    (rd.data||[]).forEach(d=>{ decisao[d.id] = d; });
+
+    const base = (rm.itens||[]).map(i=>{
+      const d = decisao[i.id];
+      return Object.assign({}, i, {
+        status: d ? d.status : i.status,      // banco manda no manifesto
+        comentario: d ? (d.comentario||'') : ''
+      });
+    });
+    ITENS = base;
+    const c = {aguardando:0,aprovado:0,reprovado:0,postado:0};
+    ITENS.forEach(i=>{ if(c[i.status]!==undefined) c[i.status]++; });
     document.getElementById('contagem').textContent =
-      (c.aguardando||0)+' pra revisar · '+(c.aprovado||0)+' aprovado(s) · '+(c.postado||0)+' postado(s)';
+      c.aguardando+' pra revisar · '+c.aprovado+' aprovado(s) · '+c.reprovado+' reprovado(s) · '+c.postado+' postado(s)';
     render();
   }catch(e){
-    el.innerHTML = '<div class="vazio">Não consegui carregar o manifesto.<br><small>'+esc(e.message)+'</small></div>';
+    el.innerHTML = '<div class="vazio">Não consegui carregar.<br><small>'+esc(e.message)+'</small></div>';
   }
 }
 
 function render(){
   const el = document.getElementById('lista');
   const arr = ITENS.filter(i=>i.status===aba);
-  if(!arr.length){
-    el.innerHTML = '<div class="vazio">Nada nesta aba.</div>';
-    return;
-  }
+  if(!arr.length){ el.innerHTML = '<div class="vazio">Nada nesta aba.</div>'; return; }
   el.innerHTML = arr.map(item=>{
     const imgs = (item.arte||[]).map(p=>
-      '<img loading="lazy" src="'+BASE.replace('manifest.json','')+esc(p)+'?'+Date.now()+'" alt="'+esc(item.titulo)+'">'
-    ).join('');
+      '<img loading="lazy" src="'+BASE+esc(p)+'?'+Date.now()+'" alt="'+esc(item.titulo)+'">').join('');
+    const decidido = (item.status==='aprovado'||item.status==='reprovado'||item.status==='postado');
+    const botoes = decidido ? '' : `
+      <div class="decisao">
+        <button class="btnAprovar" onclick='decidir("${item.id}","aprovado")'>✓ Aprovar</button>
+        <button class="btnReprovar" onclick='abrirComent("${item.id}")'>✎ Reprovar</button>
+      </div>
+      <div class="coment" id="coment-${item.id}" style="display:none">
+        <textarea id="ta-${item.id}" placeholder="O que ajustar? Ex: trocar o hook, mudar cor, outro ângulo…"></textarea>
+        <button class="btnReprovar" style="width:100%;margin-top:8px;border-radius:9px;padding:12px" onclick='reprovarComent("${item.id}")'>Enviar reprovação</button>
+      </div>`;
+    const coment = item.comentario ? '<div class="status-salvo">Comentário: '+esc(item.comentario)+'</div>' : '';
     return `
     <article class="bloco">
       <div class="topo">
@@ -115,22 +191,65 @@ function render(){
         <div class="titulo">${esc(item.titulo)}</div>
         ${item.hook?`<div class="hook">${esc(item.hook)}</div>`:''}
       </div>
-      ${item.tem_arte
-        ? `<div class="arts">${imgs}</div><div class="dica">Arrastra pra ver os ${ (item.arte||[]).length } slides →</div>`
-        : `<div class="vazio">Sem arte gerada ainda.</div>`}
+      ${item.tem_arte?`<div class="arts">${imgs}</div><div class="dica">Arrastra pra ver os ${(item.arte||[]).length} slides →</div>`:'<div class="vazio">Sem arte gerada ainda.</div>'}
       ${item.legenda?`<div class="legenda">${esc(item.legenda)}</div>`:''}
+      ${coment}
+      ${botoes}
+      <div class="status-salvo" id="st-${item.id}"></div>
     </article>`;
   }).join('');
 }
 
+/* ---------- decisão (grava no Supabase) ---------- */
+function abrirComent(id){
+  const c = document.getElementById('coment-'+id);
+  if (c) c.style.display = 'block';
+}
+async function decidir(id, status, comentario){
+  const st = document.getElementById('st-'+id);
+  if (st){ st.className='status-salvo'; st.textContent='Salvando…'; }
+  const { data } = await sb.auth.getSession();
+  const uid = data && data.session ? data.session.user.id : null;
+  const r = await sb.from('conteudo_status').upsert({
+    id, status, comentario: comentario||null, decidido_por: uid
+  }, { onConflict: 'id' });
+  if (r.error){
+    if (st){ st.className='status-salvo erro'; st.textContent='Não salvou: '+r.error.message; }
+    return;
+  }
+  const item = ITENS.find(i=>i.id===id);
+  if (item){ item.status = status; item.comentario = comentario||''; }
+  if (st){ st.textContent='✓ Decisão salva'; }
+  // muda pra aba de destino e redesenha
+  aba = status;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('ativo', x.dataset.tab===aba));
+  render();
+  atualizarContagem();
+}
+function reprovarComent(id){
+  const ta = document.getElementById('ta-'+id);
+  decidir(id, 'reprovado', ta ? ta.value.trim() : '');
+}
+function atualizarContagem(){
+  const c = {aguardando:0,aprovado:0,reprovado:0,postado:0};
+  ITENS.forEach(i=>{ if(c[i.status]!==undefined) c[i.status]++; });
+  document.getElementById('contagem').textContent =
+    c.aguardando+' pra revisar · '+c.aprovado+' aprovado(s) · '+c.reprovado+' reprovado(s) · '+c.postado+' postado(s)';
+}
+
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('ativo'));
-  t.classList.add('ativo');
-  aba = t.dataset.tab;
-  render();
+  t.classList.add('ativo'); aba = t.dataset.tab; render();
 }));
 
-carregar();
+/* ---------- boot ---------- */
+async function boot(){
+  const { data } = await sb.auth.getSession();
+  if (!data.session){ mostrarGate(true); return; }
+  mostrarGate(false);
+  await carregarTudo();
+}
+boot();
 </script>
 </body>
 </html>
