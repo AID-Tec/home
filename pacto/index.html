@@ -730,15 +730,16 @@ function enviar(){
         if (x.s !== undefined) patch.status = x.s;
         if (x.o !== undefined) patch.obs = x.o;
         if (x.z !== undefined) patch.zap = x.z;
-        const r = await sb.from('prospectos').update(patch).eq('cnpj', x.id);
+        const r = await sb.from('prospectos').update(patch).eq('cnpj', x.id).select('cnpj');
         if (r.error) throw r.error;
+        if (!r.data || !r.data.length) throw new Error('nada gravado (cnpj ' + x.id + ')');
       }
       const h = new Date();
       setSync('\u2713 salvo \u00e0s ' + String(h.getHours()).padStart(2,'0') + ':' + String(h.getMinutes()).padStart(2,'0'), false);
       contagens();
     } catch(e){
       lote.forEach(function(x){ fila.push(x); });
-      setSync('sem conex\u00e3o \u2014 guardado no aparelho, envia sozinho quando voltar', true);
+      setSync('n\u00e3o foi pro banco (' + (e.message || e) + ') \u2014 guardado no aparelho, tento de novo', true);
       setTimeout(enviar, 8000);
     }
   })();
@@ -1034,6 +1035,12 @@ function desenhar(){
   }
 
   cont.innerHTML = html || vazioMsg();
+  /* reaplica o cartão aberto no nó novo — senão ele fecha sozinho após
+     marcar status (o innerHTML de cima destruiu a classe 'aberto') */
+  if (abertoId){
+    const alvo = cont.querySelector('.cartao[data-id="' + abertoId + '"]');
+    if (alvo) alvo.classList.add('aberto');
+  }
   document.getElementById('contador').textContent =
     visiveis + ' de ' + LISTA.length + ' restaurantes' +
     (filtro !== 'todos' ? ' · filtro: ' + filtro : '');
@@ -1052,7 +1059,16 @@ function botao(id, val, rotulo, atual){
   return '<button class="ac' + sel + '" data-id="' + esc(id) + '" data-v="' + val + '">' + rotulo + '</button>';
 }
 
-function abrir(cab){ cab.parentNode.classList.toggle('aberto'); }
+/* Qual cartão está aberto — o desenhar() troca o innerHTML inteiro, então
+   a classe 'aberto' precisa ser reaplicada no nó NOVO senão o cartão fecha
+   sozinho depois de marcar um status (parecia que "alternava"). */
+let abertoId = null;
+function abrir(cab){
+  const cartao = cab.parentNode;
+  const abrirAgora = !cartao.classList.contains('aberto');
+  cartao.classList.toggle('aberto', abrirAgora);
+  abertoId = abrirAgora ? cartao.dataset.id : null;
+}
 
 function salvarObs(inp){ salvar(inp.dataset.id, undefined, inp.value); }
 function salvarZap(inp){ salvar(inp.dataset.id, undefined, undefined, inp.value); }
@@ -1063,9 +1079,10 @@ document.getElementById('lista').addEventListener('click', function(e){
   if (!b) return;
   e.stopPropagation();
   const id = b.dataset.id, val = b.dataset.v;
+  /* marca o cartão aberto ANTES do salvar() redesenhar — assim o desenhar()
+     reaplica 'aberto' no nó novo e o cartão não fecha sozinho */
+  abertoId = id;
   salvar(id, st(id) === val ? 'pendente' : val);
-  const cartao = b.closest('.cartao');
-  if (cartao) cartao.classList.add('aberto');
 });
 
 document.getElementById('filtros').addEventListener('click', function(e){
