@@ -54,6 +54,7 @@ nav a{color:#cfe4f7;text-decoration:none;background:rgba(255,255,255,.12);
   font-size:14px;cursor:pointer;font-family:inherit;min-height:48px}
 .btnAprovar{background:var(--verde);color:#fff}
 .btnReprovar{background:#fff;color:var(--vermelho);border:1px solid var(--vermelho)!important}
+.btnVoltar{background:#fff;color:var(--cinza);border:1px solid var(--borda)!important;font-weight:700!important}
 .coment{padding:6px 16px 16px}
 .coment textarea{width:100%;min-height:64px;border:1px solid var(--borda);border-radius:8px;
   padding:10px;font-family:inherit;font-size:14px}
@@ -174,7 +175,13 @@ function render(){
     const imgs = (item.arte||[]).map(p=>
       '<img loading="lazy" src="'+BASE+esc(p)+'?'+Date.now()+'" alt="'+esc(item.titulo)+'">').join('');
     const decidido = (item.status==='aprovado'||item.status==='reprovado'||item.status==='postado');
-    const botoes = decidido ? '' : `
+    /* decidido ganha um "voltar" — sem isso, um clique errado travava o
+       conteúdo pra sempre (não tinha como desfazer). Voltar manda pro
+       banco 'aguardando' e o script de sincronização devolve a pasta. */
+    const botoes = decidido ? `
+      <div class="decisao">
+        <button class="btnVoltar" onclick='decidir("${item.id}","aguardando")'>↩ Voltar pra revisar</button>
+      </div>` : `
       <div class="decisao">
         <button class="btnAprovar" onclick='decidir("${item.id}","aprovado")'>✓ Aprovar</button>
         <button class="btnReprovar" onclick='abrirComent("${item.id}")'>✎ Reprovar</button>
