@@ -1,0 +1,3 @@
+﻿SLIDE 1: 'Seu contador já te pediu a lista da gorjeta?' 
+SLIDE 4: Mostrar APENAS relatório POR COLABORADOR com valores exemplo
+SLIDE 5: aidtr.com.br/whats
