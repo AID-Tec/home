@@ -187,14 +187,18 @@
   .cartao.aberto .detalhe{display:block}
   .linha{font-size:13px; color:var(--cinza); margin-bottom:4px}
   .linha b{color:var(--texto); font-weight:600}
-  .acoes{display:flex; gap:7px; flex-wrap:wrap; margin-top:12px}
+  /* acoes: grade de 2 colunas no celular — 3 por linha em texto 12.5px
+     espremia rótulo longo em 2-3 linhas e virava mancha ilegível. Agora
+     cada botão tem largura de verdade, fonte 14px e alvo de toque 48px. */
+  .acoes{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px}
   .ac{
-    flex:1 1 30%; border:1px solid var(--borda); background:#f7f9fb; border-radius:8px;
-    padding:11px 6px; font-size:12.5px; font-weight:700; cursor:pointer;
-    text-align:center; font-family:inherit; color:var(--texto); min-width:88px;
+    border:1px solid var(--borda); background:#f7f9fb; border-radius:9px;
+    padding:13px 10px; font-size:14px; font-weight:700; cursor:pointer;
+    text-align:center; font-family:inherit; color:var(--texto);
+    line-height:1.3; min-height:48px;
   }
   .ac.sel{background:var(--azul); color:#fff; border-color:var(--azul)}
-  .ac.acfora{flex:1 1 100%; background:#fff; color:var(--cinza); border-style:dashed}
+  .ac.acfora{grid-column:1 / -1; background:#fff; color:var(--cinza); border-style:dashed}
   .ac.acfora.sel{background:#5b6478; color:#fff; border-style:solid; border-color:#5b6478}
   .faixafora{
     background:#eef1f5; border-left:4px solid #8a94a6; color:#4d5666;
