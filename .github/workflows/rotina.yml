@@ -74,7 +74,12 @@ jobs:
           fi
 
       - name: Rotina (o que venceu neste gatilho)
+        id: rotina
         if: steps.cofre.outputs.pulado == '0'
+        # A ferramenta usa 3 pra "nada a fazer" (ritmo do dia cumprido ou
+        # fora da janela comercial) — isso NÃO é falha. Sem este tratamento
+        # o passo morria vermelho e o aviso mandava "FALHOU" pro dono sem
+        # motivo, escondendo erro de verdade atrás de alarme falso.
         run: |
           set -euo pipefail
           FLAGS="--rotina"
@@ -83,7 +88,17 @@ jobs:
             FLAGS="$FLAGS --enviar"
           fi
           echo "modo: $FLAGS"
+          set +e
           node ferramentas/disparo/disparar.js $FLAGS | tee rotina.log
+          COD=${PIPESTATUS[0]:-1}
+          set -e
+          if [ "$COD" = "3" ]; then
+            echo "::notice::Nada a mandar neste gatilho (ritmo cumprido ou fora da janela) — não é falha."
+            echo "nada=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "nada=0" >> "$GITHUB_OUTPUT"
+          exit "${COD:-1}"
 
       # acorda o n8n no Render e dispara a checagem de retorno/alertas.
       # continue-on-error: se o n8n estiver dormindo/falhando, o envio do dia
@@ -121,6 +136,7 @@ jobs:
           RUN_NUM: ${{ github.run_number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           PULADO: ${{ steps.cofre.outputs.pulado }}
+          NADA: ${{ steps.rotina.outputs.nada }}
         run: |
           if [ -z "$NOTIFIER_LOCAL" ] && [ -z "$NOTIFIER_URL" ]; then
             echo 'Notifier não configurado — pulando aviso.'
@@ -141,6 +157,14 @@ jobs:
           fi
           if [ "$PULADO" = "1" ]; then
             RESUMO="cofre de segredos vazio — nada foi enviado"
+          fi
+
+          # saiu 3 = "nada a fazer": conta como sucesso, mas o aviso diz o que
+          # aconteceu de verdade em vez de gritar FALHOU ou "concluída".
+          if [ "$NADA" = "1" ]; then
+            ICONE="➖"
+            PALAVRA="nada a mandar"
+            RESUMO="ritmo do dia cumprido ou fora da janela — não é falha"
           fi
 
           MENSAGEM="Gatilho: ${GATILHO} · run #${RUN_NUM}"
