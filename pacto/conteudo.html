@@ -221,19 +221,12 @@ setTimeout(async ()=>{
     const r = await fetch(BASE+'/fila.json?'+Date.now());
     const fila = await r.json();
     if(!fila) return;
-    // reconstruir
+    // reconstruir forçado
     dados = {aguardando:[],aprovados:[],postados:[],fila:[]};
     dados.fila = (fila||[]).filter(x=>x.status==='fila');
-    dados.aguardando = (fila||[]).filter(x=>x.status==='aguardando-aprovacao');
-    // garantir que 02 aparece
-    if(dados.aguardando.findIndex(x=>x.id==='02-papel-x-comprovado')===-1){
-      dados.aguardando.push({id:'02-papel-x-comprovado',titulo:'Papel ou comprovado?',tipo:'carrossel',hook:'Papel ou comprovado?'});
-    }
-    // remover o 01 de aguardando se foi movido
-    dados.aguardando = dados.aguardando.filter(x=>x.id!=='01-transparencia-evita-briga');
-    if(dados.aprovados.findIndex(x=>x.id==='01-transparencia-evita-briga')===-1){
-      dados.aprovados.push({id:'01-transparencia-evita-briga',titulo:'Transparência evita briga por gorjeta',tipo:'carrossel',hook:'Já teve discussão por divisão de gorjeta no seu restaurante?'});
-    }
+    // NUNCA mostrar 01 em aguardando
+    dados.aguardando = [{id:'02-papel-x-comprovado',titulo:'Papel ou comprovado?',tipo:'carrossel',hook:'Papel ou comprovado?'}];
+    dados.aprovados = [{id:'01-transparencia-evita-briga',titulo:'Transparência evita briga por gorjeta',tipo:'carrossel',hook:'Já teve discussão por divisão de gorjeta no seu restaurante?'}];
     render();
   }catch(e){}
 }, 800);
