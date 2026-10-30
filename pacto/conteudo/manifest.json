@@ -1,33 +1,33 @@
 {
-  "gerado_em": "2026-10-30T10:15:50",
+  "gerado_em": "2026-10-30T17:57:52",
   "itens": [
     {
       "id": "02-papel-x-comprovado",
       "titulo": "Papel ou comprovado?",
-      "status": "aguardando",
+      "status": "aprovado",
       "hook": "Papel ou comprovado?",
       "legenda": "Papel ou comprovado?\n\nTodo mês a mesma correria pra somar a gorjeta no fim.\n\nE se alguém pedir pra comprovar quanto cada colaborador recebeu?\n\nCom o controle de gorjetas da AID, o relatório sai por colaborador, por turno e por dia. Pronto pra entregar.\n\nMenos correria. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
       "arte": [
-        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_01.png",
-        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_02.png",
-        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_03.png",
-        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_04.png",
-        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_05.png"
+        "aprovados/02-papel-x-comprovado/arte/slide_01.png",
+        "aprovados/02-papel-x-comprovado/arte/slide_02.png",
+        "aprovados/02-papel-x-comprovado/arte/slide_03.png",
+        "aprovados/02-papel-x-comprovado/arte/slide_04.png",
+        "aprovados/02-papel-x-comprovado/arte/slide_05.png"
       ],
       "tem_arte": true
     },
     {
       "id": "03-contador-pede-lista",
       "titulo": "Seu contador já te pediu a lista da gorjeta?",
-      "status": "aguardando",
+      "status": "aprovado",
       "hook": "Seu contador já te pediu a lista da gorjeta?",
       "legenda": "Seu contador já te pediu a lista da gorjeta?\n\nTodo mês a mesma correria pra separar e somar por colaborador?\n\nCom o controle de gorjetas da AID, o relatório sai por colaborador, por turno e por dia. Pronto pra entregar ao contador.\n\nMenos correria. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
       "arte": [
-        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_01.png",
-        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_02.png",
-        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_03.png",
-        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_04.png",
-        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_05.png"
+        "aprovados/03-contador-pede-lista/arte/slide_01.png",
+        "aprovados/03-contador-pede-lista/arte/slide_02.png",
+        "aprovados/03-contador-pede-lista/arte/slide_03.png",
+        "aprovados/03-contador-pede-lista/arte/slide_04.png",
+        "aprovados/03-contador-pede-lista/arte/slide_05.png"
       ],
       "tem_arte": true
     },
@@ -48,8 +48,8 @@
     }
   ],
   "contagem": {
-    "aguardando": 2,
-    "aprovado": 0,
+    "aguardando": 0,
+    "aprovado": 2,
     "postado": 1
   }
 }
