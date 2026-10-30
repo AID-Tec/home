@@ -1,0 +1,55 @@
+{
+  "gerado_em": "2026-10-30T07:25:41",
+  "itens": [
+    {
+      "id": "02-papel-x-comprovado",
+      "titulo": "Papel ou comprovado?",
+      "status": "aguardando",
+      "hook": "Papel ou comprovado?",
+      "legenda": "Papel ou comprovado?\n\nTodo mês a mesma correria pra somar a gorjeta no fim.\n\nE se alguém pedir pra comprovar quanto cada colaborador recebeu?\n\nCom o controle de gorjetas da AID, o relatório sai por colaborador, por turno e por dia. Pronto pra entregar.\n\nMenos correria. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_01.png",
+        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_02.png",
+        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_03.png",
+        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_04.png",
+        "aguardando-aprovacao/02-papel-x-comprovado/arte/slide_05.png"
+      ],
+      "tem_arte": true
+    },
+    {
+      "id": "03-contador-pede-lista",
+      "titulo": "Seu contador já te pediu a lista da gorjeta?",
+      "status": "aguardando",
+      "hook": "Seu contador já te pediu a lista da gorjeta?",
+      "legenda": "Seu contador já te pediu a lista da gorjeta?\n\nTodo mês a mesma correria pra separar e somar por colaborador?\n\nCom o controle de gorjetas da AID, o relatório sai por colaborador, por turno e por dia. Pronto pra entregar ao contador.\n\nMenos correria. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_01.png",
+        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_02.png",
+        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_03.png",
+        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_04.png",
+        "aguardando-aprovacao/03-contador-pede-lista/arte/slide_05.png"
+      ],
+      "tem_arte": true
+    },
+    {
+      "id": "01-transparencia-evita-briga",
+      "titulo": "Transparência evita briga por gorjeta",
+      "status": "postado",
+      "hook": "Briga por gorjeta quase sempre é falta de transparência.",
+      "legenda": "Briga por gorjeta quase sempre é falta de transparência.\n\nQuando cada colaborador sabe exatamente quanto recebeu, não tem espaço pra desconfiança.\n\nTransparência evita discussão, gera confiança e melhora o clima da equipe.\n\nMenos \"eu acho\". Mais comprovado.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "postados/01-transparencia-evita-briga/arte/slide_01.png",
+        "postados/01-transparencia-evita-briga/arte/slide_02.png",
+        "postados/01-transparencia-evita-briga/arte/slide_03.png",
+        "postados/01-transparencia-evita-briga/arte/slide_04.png",
+        "postados/01-transparencia-evita-briga/arte/slide_05.png"
+      ],
+      "tem_arte": true
+    }
+  ],
+  "contagem": {
+    "aguardando": 2,
+    "aprovado": 0,
+    "postado": 1
+  }
+}
