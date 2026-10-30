@@ -96,9 +96,20 @@ async function carregar(){
   try{
     const r = await fetch(BASE+'/fila.json?'+Date.now());
     const fila = await r.json();
-    dados.fila = fila.filter(x=>x.status==='fila');
+    dados.fila = (fila||[]).filter(x=>x.status==='fila');
+    // Preenche aguardando com os itens marcados como aguardando-aprovacao
+    dados.aguardando = (fila||[]).filter(x=>x.status==='aguardando-aprovacao');
   }catch(e){}
-  // Tenta ler pastas
+  // Se não vier do fila.json, adiciona manualmente o primeiro
+  if(dados.aguardando.length === 0){
+    dados.aguardando = [{
+      id: '01-transparencia-evita-briga',
+      titulo: 'Transparência evita briga por gorjeta',
+      tipo: 'carrossel',
+      hook: 'Já teve discussão por divisão de gorjeta no seu restaurante?',
+      status: 'aguardando-aprovacao'
+    }];
+  }
   render();
 }
 function render(){
