@@ -1,0 +1,14 @@
+﻿## SLIDE 1 - CAPA
+Crie carrossel minimalista. Texto 'PAPEL OU COMPROVADO?' fundo branco com detalhe azul.
+
+## SLIDE 2 - ANTES
+Mostrar bloquinho de papel com anotações de gorjeta. Tom realista.
+
+## SLIDE 3 - PERGUNTA
+Texto provocativo 'E se o contador pedir a lista da gorjeta por colaborador?'
+
+## SLIDE 4 - DEPOIS (FOCO)
+Mostrar APENAS tela com relatório POR COLABORADOR. Valores fictícios. Legível celular.
+
+## SLIDE 5 - CTA
+Fundo limpo. Texto 'MENOS CORRE. MAIS COMPROVADO.' + 'aidtr.com.br/whats'
