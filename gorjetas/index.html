@@ -43,17 +43,21 @@
   --indigo-50:#F0F1F8;  --indigo-100:#E0E1F0; --indigo-200:#C0C3E0;
   --indigo-300:#A1A5D1; --indigo-400:#777CBD; --indigo-500:#2E3699;
   --indigo-600:#272E82; --indigo-700:#20266B; --indigo-800:#191E54; --indigo-900:#12163D;
-  --violet-100:#E3DAF3; --violet-200:#C7B5E7; --violet-300:#AB90DB; --violet-500:#4509AE; --violet-700:#30067A;
-  --navy-500:#182A69;   --navy-700:#111D4A;
+  --violet-50:#F2EEF9; --violet-100:#E3DAF3; --violet-200:#C7B5E7; --violet-300:#AB90DB; --violet-400:#865FCA;
+  --violet-500:#4509AE; --violet-600:#3B0894; --violet-700:#30067A; --violet-800:#260560; --violet-900:#1C0446;
+  --navy-50:#EFF0F4; --navy-100:#DCDFE8; --navy-200:#BABFD2; --navy-300:#979FBC; --navy-400:#69759E;
+  --navy-500:#182A69; --navy-600:#142459; --navy-700:#111D4A; --navy-800:#0D173A; --navy-900:#0A112A;
+  --acento-50:#F0F7FD; --acento-100:#DFEEFA; --acento-200:#BFDDF5; --acento-300:#A0CCF0; --acento-400:#75B5EA;
+  --acento-500:#2B8DDE; --acento-600:#2578BD; --acento-700:#1E639B; --acento-800:#184E7A; --acento-900:#113859;
   --n0:#FFFFFF; --n50:#F9F9F9; --n100:#F0F0F0; --n200:#E4E4E4;
-  --n300:#D6D6D6; --n500:#8F8F8F; --n600:#6E6E6E; --n800:#333333; --n900:#1C1C1C; --n950:#121212;
-  --sucesso:#1E9E5A;
+  --n300:#D6D6D6; --n400:#B5B5B5; --n500:#8F8F8F; --n600:#6E6E6E; --n700:#4F4F4F; --n800:#333333; --n900:#1C1C1C; --n950:#121212;
+  --sucesso:#1E9E5A; --erro:#D93025; --atencao:#E8A100; --info:#2B8DDE;
   --texto:var(--n900); --texto-suave:var(--n600); --texto-inverso:var(--n50);
   --fundo:var(--n50); --superficie:var(--n0);
   /* espacamento */
   --xs:4px; --sm:8px; --md:16px; --lg:24px; --xl:32px; --2xl:48px; --3xl:64px; --4xl:96px;
   /* raio e sombra */
-  --r-sm:4px; --r-md:8px; --r-lg:16px; --r-pill:999px;
+  --raio-sm:4px; --raio-md:8px; --raio-lg:16px; --raio-pill:999px;
   --sombra-sm:0 1px 2px rgba(28,28,28,.08);
   --sombra-md:0 4px 12px rgba(28,28,28,.10);
   --sombra-lg:0 12px 32px rgba(28,28,28,.14);
@@ -88,14 +92,14 @@ p{margin:0 0 var(--md)}
   color:var(--violet-500); margin:0 0 var(--md);
   display:flex; align-items:center; gap:12px;
 }
-.olho::before{content:""; width:36px; height:3px; background:currentColor; border-radius:var(--r-pill); flex:none}
+.olho::before{content:""; width:36px; height:3px; background:currentColor; border-radius:var(--raio-pill); flex:none}
 .secao{padding:var(--4xl) 0}
 @media (max-width:640px){ .secao{padding:var(--3xl) 0} }
 
 /* ---------- botoes ---------- */
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  padding:18px 32px; border-radius:var(--r-pill); border:0; cursor:pointer;
+  padding:18px 32px; border-radius:var(--raio-pill); border:0; cursor:pointer;
   font-family:inherit; font-size:20px; font-weight:700; line-height:1.2;
   text-decoration:none; transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
@@ -138,14 +142,14 @@ p{margin:0 0 var(--md)}
 .hero .acoes{display:flex; flex-wrap:wrap; gap:var(--md)}
 
 .video-caixa{
-  background:var(--navy-500); padding:12px; border-radius:var(--r-lg);
+  background:var(--navy-500); padding:12px; border-radius:var(--raio-lg);
   box-shadow:var(--sombra-lg); position:relative;
 }
 .video-caixa::before{ /* faixa violeta na junção */
   content:""; position:absolute; left:-10px; top:24px; bottom:24px; width:6px;
-  background:var(--violet-500); border-radius:var(--r-pill);
+  background:var(--violet-500); border-radius:var(--raio-pill);
 }
-.video-caixa video{width:100%; display:block; border-radius:var(--r-md); background:var(--n950)}
+.video-caixa video{width:100%; display:block; border-radius:var(--raio-md); background:var(--n950)}
 .video-caixa .legenda{
   color:var(--indigo-200); font-size:14px; line-height:1.5;
   margin:10px 4px 2px; text-align:center;
@@ -158,7 +162,7 @@ p{margin:0 0 var(--md)}
 .perguntas{list-style:none; padding:0; margin:0; display:grid; gap:var(--md)}
 .perguntas li{
   background:var(--indigo-50); border-left:4px solid var(--indigo-500);
-  padding:18px 22px; border-radius:0 var(--r-md) var(--r-md) 0;
+  padding:18px 22px; border-radius:0 var(--raio-md) var(--raio-md) 0;
   font-weight:700; font-size:clamp(17px,2vw,20px); color:var(--indigo-700);
 }
 
@@ -166,7 +170,7 @@ p{margin:0 0 var(--md)}
 .cards{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--lg); margin-top:var(--2xl)}
 @media (max-width:900px){ .cards{grid-template-columns:1fr} }
 .card{
-  background:var(--superficie); border:1px solid var(--n200); border-radius:var(--r-lg);
+  background:var(--superficie); border:1px solid var(--n200); border-radius:var(--raio-lg);
   padding:var(--xl); box-shadow:var(--sombra-sm);
   border-top:4px solid var(--indigo-500);
   transition:box-shadow .18s ease, transform .18s ease;
@@ -174,7 +178,7 @@ p{margin:0 0 var(--md)}
 .card:hover{box-shadow:var(--sombra-md); transform:translateY(-3px)}
 .card .num{
   display:inline-flex; align-items:center; justify-content:center;
-  width:42px; height:42px; border-radius:var(--r-pill);
+  width:42px; height:42px; border-radius:var(--raio-pill);
   background:var(--violet-100); color:var(--violet-700);
   font-weight:900; font-size:20px; margin-bottom:var(--md);
 }
@@ -186,7 +190,7 @@ p{margin:0 0 var(--md)}
 @media (max-width:900px){ .demo{grid-template-columns:1fr} }
 .fig-demo{max-width:980px; margin:0}
 .moldura{
-  border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--sombra-lg);
+  border-radius:var(--raio-lg); overflow:hidden; box-shadow:var(--sombra-lg);
   border:1px solid var(--n200); background:var(--n0);
 }
 .fig-demo figcaption{
@@ -205,7 +209,7 @@ p{margin:0 0 var(--md)}
 .passos h2{color:var(--n0)}
 .passos .trilha{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--lg); margin-top:var(--2xl)}
 @media (max-width:900px){ .passos .trilha{grid-template-columns:1fr} }
-.passo{background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); border-radius:var(--r-lg); padding:var(--xl)}
+.passo{background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); border-radius:var(--raio-lg); padding:var(--xl)}
 .passo .num{font-size:44px; font-weight:900; color:var(--violet-300); line-height:1; margin-bottom:var(--md)}
 .passo h4{color:var(--n0); margin-bottom:var(--sm)}
 .passo p{color:var(--indigo-100); margin:0; font-size:18px}
@@ -214,7 +218,7 @@ p{margin:0 0 var(--md)}
 .lista-check{list-style:none; padding:0; margin:var(--xl) 0 0; display:grid; gap:14px}
 .lista-check li{display:flex; gap:14px; align-items:flex-start; font-size:clamp(17px,2vw,20px)}
 .lista-check .tick{
-  flex:none; width:26px; height:26px; border-radius:var(--r-pill); margin-top:3px;
+  flex:none; width:26px; height:26px; border-radius:var(--raio-pill); margin-top:3px;
   background:var(--indigo-50); color:var(--indigo-500);
   display:flex; align-items:center; justify-content:center;
   font-weight:900; font-size:15px; border:2px solid var(--indigo-200);
@@ -230,7 +234,7 @@ p{margin:0 0 var(--md)}
 .preco .grade{display:grid; grid-template-columns:1fr 1fr; gap:var(--lg); margin-top:var(--2xl)}
 @media (max-width:820px){ .preco .grade{grid-template-columns:1fr} }
 .plano{
-  background:var(--superficie); border:1px solid var(--n200); border-radius:var(--r-lg);
+  background:var(--superficie); border:1px solid var(--n200); border-radius:var(--raio-lg);
   padding:var(--xl); box-shadow:var(--sombra-sm);
 }
 .plano.destaque{border:2px solid var(--indigo-500); box-shadow:var(--sombra-md)}
@@ -242,7 +246,7 @@ p{margin:0 0 var(--md)}
 /* ---------- FAQ ---------- */
 .faq{max-width:820px; margin:var(--2xl) auto 0}
 .faq details{
-  background:var(--superficie); border:1px solid var(--n200); border-radius:var(--r-md);
+  background:var(--superficie); border:1px solid var(--n200); border-radius:var(--raio-md);
   padding:20px 24px; margin-bottom:12px;
 }
 .faq details[open]{border-color:var(--indigo-200); box-shadow:var(--sombra-sm)}
@@ -264,7 +268,7 @@ p{margin:0 0 var(--md)}
 @media (max-width:640px){ .rodape .envolve{flex-direction:column; align-items:flex-start} .rodape .dados{text-align:left} }
 
 /* acessibilidade */
-:focus-visible{outline:3px solid var(--violet-500); outline-offset:3px; border-radius:var(--r-sm)}
+:focus-visible{outline:3px solid var(--violet-500); outline-offset:3px; border-radius:var(--raio-sm)}
 @media (prefers-reduced-motion:reduce){ *{transition:none!important; scroll-behavior:auto!important} }
 </style>
 </head>
