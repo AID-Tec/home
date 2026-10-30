@@ -180,11 +180,41 @@ async function ver(id){
 }
 function esc(s){return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
 function fecharModal(){document.getElementById('modal').classList.remove('aberto');}
-function aprovarAtual(){alert('Aprovado. Mova manualmente para conteudo/aprovados/'+atual+' (ou peça pro assistente fazer).');fecharModal();}
-function reprovarAtual(){const c=document.getElementById('comentario').value;alert('Reprovado com comentário: '+(c||'(sem comentário)')+'. Peça pro assistente ajustar.');fecharModal();}
+function aprovarAtual(){
+  // Move para aprovados localmente
+  const idx = dados.aguardando.findIndex(x=>x.id===atual);
+  if(idx >= 0){
+    const item = dados.aguardando.splice(idx,1)[0];
+    item.status = 'aprovado';
+    dados.aprovados.push(item);
+  }
+  alert('Aprovado. Item movido para "Aprovados". Vou gerar o próximo da fila agora.');
+  fecharModal();
+  render();
+  // Mudar aba
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('ativo'));
+  document.querySelectorAll('.tab').forEach(x=>{ if(x.dataset.tab==='aprovados') x.classList.add('ativo'); });
+  aba = 'aprovados';
+  render();
+}
+function reprovarAtual(){
+  const c=document.getElementById('comentario').value;
+  alert('Reprovado com comentário: '+(c||'(sem comentário)')+'. Me fala o ajuste que eu arrumo.');
+  fecharModal();
+}
 function aprovar(id){ver(id);}
 function reprovar(id){ver(id);}
-function mover(id,para){alert('Marcar como '+para+': mova '+id+' para conteudo/'+para+'/');}
+function mover(id,para){
+  if(para==='postados'){
+    const idx = dados.aprovados.findIndex(x=>x.id===id);
+    if(idx>=0){
+      const item = dados.aprovados.splice(idx,1)[0];
+      item.status='postado';
+      dados.postados.push(item);
+      render();
+    }
+  }
+}
 carregar();
 </script>
 </body>
