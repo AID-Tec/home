@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conteúdo Pacto Gorjeta — Aprovação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --azul:#182A69; --azul2:#2E3699; --indigo-50:#F0F1F8; --indigo-100:#E0E1F0; --indigo-200:#C0C3E0;
+  --fundo:#F9F9F9; --card:#FFFFFF; --borda:#E4E4E4; --texto:#1C1C1C; --cinza:#6E6E6E; --verde:#1E9E5A; --laranja:#c0400f; --vermelho:#b3261e; --roxo:#4509AE;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:'Montserrat',system-ui,sans-serif;background:var(--fundo);color:var(--texto);font-size:15px;line-height:1.6}
+header{position:sticky;top:0;background:var(--azul);color:#fff;padding:14px 16px;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+header h1{margin:0;font-size:18px;font-weight:800}
+header .sub{opacity:.8;font-size:12px;margin-top:2px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+nav a{color:#cfe4f7;text-decoration:none;background:rgba(255,255,255,.12);padding:6px 10px;border-radius:6px;font-size:12px;font-weight:700}
+.container{max-width:980px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tab{border:1px solid var(--borda);background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.tab.ativo{background:var(--azul2);color:#fff;border-color:var(--azul2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--borda);border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(28,28,28,.04)}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;gap:12px}
+.card .titulo{font-weight:800;font-size:16px}
+.card .meta{color:var(--cinza);font-size:12px;margin-top:4px}
+.badge{background:var(--indigo-100);color:var(--azul2);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.card .acoes{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 16px}
+.btn{border:0;border-radius:8px;padding:9px 12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+.btn.ver{background:var(--indigo-100);color:var(--azul2)}
+.btn.aprovar{background:var(--verde);color:#fff}
+.btn.reprovar{background:var(--vermelho);color:#fff}
+.btn.mover{background:#f0f0f0;color:var(--texto)}
+.modal{position:fixed;inset:0;background:rgba(15,20,48,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:99}
+.modal.aberto{display:flex}
+.modal-box{background:#fff;width:min(1100px,100%);max-height:90vh;overflow:auto;border-radius:14px;box-shadow:0 40px 80px rgba(0,0,0,.4)}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px;border-bottom:1px solid var(--borda)}
+.modal-head h2{margin:0;font-size:18px}
+.modal-head .fechar{border:0;background:transparent;font-size:22px;cursor:pointer}
+.modal-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;padding:18px}
+.panel{border:1px solid var(--borda);border-radius:10px;overflow:hidden}
+.panel h3{margin:0;background:var(--indigo-50);padding:10px 14px;font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--azul2)}
+.panel .conteudo{padding:14px;white-space:pre-wrap;font-size:14px;line-height:1.7}
+.checklist{display:grid;gap:10px;padding:14px}
+.checklist label{display:flex;align-items:flex-start;gap:10px;font-size:14px}
+textarea{width:100%;min-height:90px;border:1px solid var(--borda);border-radius:8px;padding:10px;font-family:inherit;font-size:14px}
+.rodape-modal{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px}
+.vazio{text-align:center;color:var(--cinza);padding:40px 10px}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+    <div>
+      <h1>Conteúdo Pacto Gorjeta — Aprovação</h1>
+      <div class="sub">Gerado automaticamente em D:\AIDSolucoes\Gestão Gorjeta\conteudo</div>
+    </div>
+    <nav>
+      <a href="index.html">← Voltar ao painel</a>
+      <a href="campanha.html">Campanha de e-mails</a>
+      <a href="ideias.html">Ideias</a>
+    </nav>
+  </div>
+</header>
+<main class="container">
+  <div class="tabs">
+    <button class="tab ativo" data-tab="aguardando">Aguardando aprovação</button>
+    <button class="tab" data-tab="aprovados">Aprovados</button>
+    <button class="tab" data-tab="postados">Postados</button>
+    <button class="tab" data-tab="fila">Fila</button>
+  </div>
+  <div id="lista" class="grid"></div>
+</main>
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h2 id="modal-titulo">Conteúdo</h2>
+        <div class="sub" id="modal-meta"></div>
+      </div>
+      <button class="fechar" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="rodape-modal" id="modal-rodape"></div>
+  </div>
+</div>
+<script>
+const BASE = '../../AIDSolucoes/Gestão Gorjeta/conteudo';
+let dados = {aguardando:[],aprovados:[],postados:[],fila:[]};
+let atual = null, aba = 'aguardando';
+
+async function carregar(){
+  try{
+    const r = await fetch(BASE+'/fila.json?'+Date.now());
+    const fila = await r.json();
+    dados.fila = fila.filter(x=>x.status==='fila');
+  }catch(e){}
+  // Tenta ler pastas
+  render();
+}
+function render(){
+  const el = document.getElementById('lista');
+  const arr = dados[aba] || [];
+  if(arr.length===0){
+    el.innerHTML = '<div class="vazio">Nada aqui ainda.</div>';
+    return;
+  }
+  el.innerHTML = arr.map(item=>`
+    <article class="card">
+      <div class="top">
+        <div>
+          <div class="titulo">${item.titulo||item.id}</div>
+          <div class="meta">${item.tipo||'carrossel'} · ${item.hook||''}</div>
+        </div>
+        <span class="badge">${aba.replace('aguardando','aguardando aprovação')}</span>
+      </div>
+      <div class="acoes">
+        <button class="btn ver" onclick='ver("${item.id}")'>Ver / Revisar</button>
+        ${aba==='aguardando'?`<button class="btn aprovar" onclick='aprovar("${item.id}")'>Aprovar</button><button class="btn reprovar" onclick='reprovar("${item.id}")'>Reprovar</button>`:''}
+        ${aba==='aprovados'?`<button class="btn mover" onclick='mover("${item.id}","postados")'>Marcar como postado</button>`:''}
+      </div>
+    </article>
+  `).join('');
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('ativo'));
+  t.classList.add('ativo');
+  aba = t.dataset.tab;
+  render();
+}));
+async function ver(id){
+  atual = id;
+  document.getElementById('modal-titulo').textContent = id;
+  document.getElementById('modal-meta').textContent = 'Carregando arquivos...';
+  document.getElementById('modal-body').innerHTML = '<div class="vazio">Carregando...</div>';
+  document.getElementById('modal-rodape').innerHTML = '';
+  document.getElementById('modal').classList.add('aberto');
+  // Tenta carregar arquivos
+  try{
+    const [sb, lg, pm] = await Promise.all([
+      fetch(BASE+'/aguardando-aprovacao/'+id+'/storyboard.md').then(r=>r.ok?r.text():'(não encontrado)').catch(e=>'(erro)'),
+      fetch(BASE+'/aguardando-aprovacao/'+id+'/legenda.txt').then(r=>r.ok?r.text():'(não encontrado)').catch(e=>'(erro)'),
+      fetch(BASE+'/aguardando-aprovacao/'+id+'/prompts-ia.txt').then(r=>r.ok?r.text():'(não encontrado)').catch(e=>'(erro)'),
+    ]);
+    document.getElementById('modal-meta').textContent = 'Storyboard + Legenda + Prompts';
+    document.getElementById('modal-body').innerHTML = `
+      <section class="panel"><h3>Storyboard</h3><div class="conteudo">${esc(sb)}</div></section>
+      <section class="panel"><h3>Legenda</h3><div class="conteudo">${esc(lg)}</div></section>
+      <section class="panel"><h3>Prompts IA</h3><div class="conteudo">${esc(pm)}</div></section>
+      <section class="panel"><h3>Checklist para postar</h3><div class="checklist">
+        <label><input type="checkbox"> Gerar/imprimir imagens com IA</label>
+        <label><input type="checkbox"> Montar carrossel no Canva/Meta</label>
+        <label><input type="checkbox"> Colar legenda</label>
+        <label><input type="checkbox"> Usar aidtr.com.br/whats (sem número)</label>
+        <label><input type="checkbox"> Publicar</label>
+      </div></section>
+      <section class="panel" style="grid-column:1/-1"><h3>Comentário para ajustes (se reprovar)</h3><textarea id="comentario" placeholder="O que ajustar? Ex: trocar hook, mudar cor, foco no relatório..."></textarea></section>
+    `;
+    document.getElementById('modal-rodape').innerHTML = `
+      <button class="btn reprovar" onclick='reprovarAtual()'>Reprovar e pedir ajuste</button>
+      <button class="btn aprovar" onclick='aprovarAtual()'>Aprovar</button>
+    `;
+  }catch(e){
+    document.getElementById('modal-body').innerHTML = '<div class="vazio">Erro ao carregar arquivos. Verifique se estão em conteudo/aguardando-aprovacao/'+id+'/</div>';
+  }
+}
+function esc(s){return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
+function fecharModal(){document.getElementById('modal').classList.remove('aberto');}
+function aprovarAtual(){alert('Aprovado. Mova manualmente para conteudo/aprovados/'+atual+' (ou peça pro assistente fazer).');fecharModal();}
+function reprovarAtual(){const c=document.getElementById('comentario').value;alert('Reprovado com comentário: '+(c||'(sem comentário)')+'. Peça pro assistente ajustar.');fecharModal();}
+function aprovar(id){ver(id);}
+function reprovar(id){ver(id);}
+function mover(id,para){alert('Marcar como '+para+': mova '+id+' para conteudo/'+para+'/');}
+carregar();
+</script>
+</body>
+</html>
