@@ -156,9 +156,15 @@
     <div class="kpi"><div class="num" id="k-dup">-</div><div class="lbl">Duplicados removidos</div></div>
     <div class="kpi"><div class="num" id="k-pronto">-</div><div class="lbl">Prontos p/ enviar</div></div>
   </div>
+  <div class="grid" style="margin-top:10px">
+    <div class="kpi"><div class="num" id="k-env">-</div><div class="lbl">Enviados</div></div>
+    <div class="kpi"><div class="num" id="k-falta">-</div><div class="lbl">Faltam</div></div>
+    <div class="kpi"><div class="num" id="k-eta">-</div><div class="lbl">Dias úteis p/ concluir</div></div>
+  </div>
   <div class="nota">
     <b>Regra fixa:</b> tem e-mail · não é <b>contador</b> (<i>email_marcado != 'contador'</i>) ·
-    não está <b>fora do escopo</b> · 1 por e-mail (minúsculo, sem espaços)
+    não está <b>fora do escopo</b> · 1 por e-mail (minúsculo, sem espaços).
+    <b>Enviados/Faltam/Dias úteis</b> contam do histórico <i>envios</i> no ritmo de 10/dia útil.
   </div>
 </div>
 
@@ -239,6 +245,7 @@ let sb = null;
 let LISTA = [];     // prontos pra envio (sem 'fora', sem contador, dedup)
 let TODOS = [];     // todas as linhas com e-mail, pra tela de contestação
 let BASE = [];      // base bruta (toda a tabela)
+let ENVIO_EMAILS = new Set(); // e-mails que JÁ receberam envio (tabela envios)
 let cfiltro = 'todos';
 let ctermo = '';
 
@@ -360,6 +367,13 @@ function recalcula(){
   const distintos = LISTA.length;
   const duplicados = elegiveis.length - distintos;
 
+  /* projeção da campanha: do histórico real (envios), não de promessa.
+     enviados = e-mails distintos que já saíram; faltam = da LISTA atual,
+     quem nunca recebeu; dias úteis = faltam ÷ 10 (ritmo do dono). */
+  const enviados = ENVIO_EMAILS.size;
+  const faltam = LISTA.filter(x => !ENVIO_EMAILS.has(x.email)).length;
+  const dias = faltam > 0 ? Math.ceil(faltam / 10) : 0;
+
   const domMap = new Map();
   LISTA.forEach(x => {
     const d = x.email.split('@')[1] || '';
@@ -368,7 +382,8 @@ function recalcula(){
   const dominios = Array.from(domMap.entries()).map(([dom,qtd])=>({dom,qtd})).sort((a,b)=>b.qtd-a.qtd).slice(0,8);
 
   render({total: BASE.length, com_email, contador, sem_email, fora, elegiveis: elegiveis.length,
-          distintos, duplicados, dominios, preview: LISTA.slice(0,25)});
+          distintos, duplicados, dominios, preview: LISTA.slice(0,25),
+          enviados, faltam, dias});
 }
 
 /* --- desenha números, prévia e arma o botão "Gerar lista" ---------------
@@ -388,6 +403,9 @@ function render(d){
   document.getElementById('k-dist').textContent = d.distintos;
   document.getElementById('k-dup').textContent = d.duplicados;
   document.getElementById('k-pronto').textContent = d.distintos;
+  document.getElementById('k-env').textContent = d.enviados;
+  document.getElementById('k-falta').textContent = d.faltam;
+  document.getElementById('k-eta').textContent = d.dias > 0 ? d.dias : 'ok';
 
   const barra = document.getElementById('barra');
   const pct = d.distintos ? Math.min(100, Math.round(d.distintos * 100 / 350)) : 0;
@@ -438,6 +456,11 @@ async function carregar(){
     const r2 = await sb.from('prospectos').select('id,email');
     if (r2.error) throw r2.error;
     BASE = r2.data || [];
+    // histórico real de envio (para Enviados/Faltam/Dias úteis)
+    const r3 = await sb.from('envios').select('email');
+    if (r3.error) throw r3.error;
+    ENVIO_EMAILS = new Set((r3.data || []).map(x => (x.email||'').trim().toLowerCase())
+      .filter(x => x.indexOf('@') > 0));
     // com e-mail, já normalizado, pra tela de contestação
     TODOS = rows
       .map(x => ({email: (x.email||'').trim().toLowerCase(), dbemail: x.email, nome: x.nome, bairro: x.bairro,
