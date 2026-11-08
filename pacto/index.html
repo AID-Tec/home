@@ -292,6 +292,14 @@
   @media(min-width:720px){
     .lista,.caixa,.ferramentas{max-width:760px; margin-left:auto; margin-right:auto}
   }
+  /* agenda do dia: e-mails da rotina + arte do IG (ter/sex 17h30) */
+  .agenda{display:flex; gap:10px; margin-top:10px}
+  .agenda .ag{flex:1; min-width:0; background:var(--indigo-50); border:1px solid var(--indigo-200);
+              border-radius:10px; padding:10px 12px}
+  .agenda .agt{font:800 10.5px/1 'Montserrat',sans-serif; text-transform:uppercase;
+               letter-spacing:1px; color:var(--azul2)}
+  .agenda .agv{font:800 14px/1.3 'Montserrat',sans-serif; color:var(--azul3); margin-top:5px}
+  .agenda .agd{font-size:11.5px; color:#5a5f7d; margin-top:3px}
 </style>
 </head>
 <body>
@@ -313,18 +321,21 @@
 
 
 <header>
-  <div class="h1">Pacto Gorjeta — 14 dias</div>
+  <div class="h1">Pacto Gorjeta</div>
   <div class="stats">
-    <div class="stat meta"><b id="sHoje">0/2</b><span>Hoje</span></div>
+    <div class="stat meta"><b id="sHoje">0/10</b><span>E-mail hoje</span></div>
     <div class="stat"><b id="sFalou">0</b><span>Falou</span></div>
     <div class="stat"><b id="sEmail">0</b><span>E-mail</span></div>
     <div class="stat"><b id="sZap">0</b><span>Zap</span></div>
     <div class="stat"><b id="sDemo">0</b><span>Demo</span></div>
     <div class="stat fechou"><b id="sFechou">0</b><span>Fechou</span></div>
   </div>
+  <div class="agenda" id="agendaBox">
+    <div class="ag"><div class="agt">E-mails da rotina</div><div class="agv" id="agEmails">—</div><div class="agd" id="agEmailsDet">—</div></div>
+    <div class="ag"><div class="agt">Arte pra postar (17h30)</div><div class="agv" id="agPost">—</div><div class="agd" id="agPostDet">—</div></div>
+  </div>
   <div class="barra">
-    <button class="btn amarelo" id="btnSortear">Sortear 2 de hoje</button>
-    <button class="btn transp" id="btnVerHoje">Ver hoje</button>
+    <button class="btn transp" id="btnVerHoje">Ver e-mail de hoje</button>
   </div>
   <div class="navsec">
     <a href="definicoes.html">📖 Definições</a>
@@ -475,7 +486,7 @@ Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostr
   <div class="filtros" id="filtros">
     <button class="chip ativo" data-f="todos">Todos</button>
     <button class="chip" data-f="pendentes">Pendentes</button>
-    <button class="chip" data-f="hoje">Hoje</button>
+    <button class="chip" data-f="hoje">E-mail hoje</button>
     <button class="chip" data-f="email">E-mail mandado</button>
     <button class="chip" data-f="falou">Já contatou</button>
     <button class="chip" data-f="demo">Demo marcada</button>
@@ -505,7 +516,7 @@ let FLUXO  = {copias:-1, copiasApr:-1, campanhas:-1};
 
 async function carregarDados(){
   /* o lixo (CNPJ baixado/inapto/suspenso, eliminado no banco com status
-     'fora') NEM E' BUSCADO — nao polui lista, sorteio nem contadores */
+     'fora') NEM E' BUSCADO — nao polui lista, contadores nem filtros */
   const r1 = await sb.from('prospectos').select('*').neq('status','fora').order('nome');
   if (r1.error) throw r1.error;
   LISTA = (r1.data || []).map(function(r){
@@ -525,10 +536,15 @@ async function carregarDados(){
     ESTADO[r.cnpj] = {s: r.status, o: r.obs || '', z: r.zap || '', d: r.atualizado_em};
   });
 
-  const r2 = await sb.from('selecao_dia').select('cnpj').eq('dia', hojeStr());
+  /* placar/agenda de hoje = histórico real da rotina (tabela envios).
+     O RLS deixa ler por anon/authenticated; trazemos tudo (a base é
+     pequena) e separamos os do dia em BRT no aparelho. */
+  const r2 = await sb.from('envios').select('cnpj,enviado_em,hora');
   if (r2.error) throw r2.error;
-  hojeIds = (r2.data || []).map(function(r){ return r.cnpj; });
-  gravaHojeLocal();
+  hojeEnvios = (r2.data || []).filter(function(r){
+    return r.enviado_em && new Date(r.enviado_em).toDateString() === new Date().toDateString();
+  });
+  hojeIds = Array.from(new Set(hojeEnvios.map(function(r){ return r.cnpj; })));
 
   /* passos 2 e 3 do fluxo: se falharem, não derruba a página —
      os dois passos só aparecem como "não consegui conferir" */
@@ -544,6 +560,12 @@ async function carregarDados(){
     if (rm.error) throw rm.error;
     FLUXO.campanhas = (rm.data || []).length;
   } catch(e){ FLUXO.campanhas = -1; }
+  try {
+    const rz = await sb.from('conteudo_status').select('id,status');
+    if (rz.error) throw rz.error;
+    CONTEUDO = {};
+    (rz.data || []).forEach(function(r){ CONTEUDO[r.id] = r; });
+  } catch(e){ CONTEUDO = {}; }
 }
 
 // ---- copiar mensagem do zap em 1 toque ----
@@ -592,13 +614,14 @@ const STATUS_ACEITOS = ['pendente','email','zap','ligou','demo','nao','fora','fe
 let filtro = 'todos';
 let termo  = '';
 let fila   = [];
-let hojeIds = [];
+let hojeIds = [];     /* cnpjs que a ROTINA enviou hoje (tabela envios) */
+let hojeEnvios = [];  /* linhas de envios de hoje (cnpj, hora, enviado_em) */
+let CONTEUDO = {};    /* status das artes de IG (conteudo_status) */
 
 function hojeStr(){
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
-const HOJE_KEY = 'pacto_hoje_' + hojeStr();
 
 /* ---------- escapa ---------- */
 function esc(s){
@@ -625,32 +648,56 @@ function linkZap(t, nome){
   return 'https://wa.me/' + numeroCompleto(t) + '?text=' + encodeURIComponent(txt);
 }
 
-/* ---------- selecao de hoje ---------- */
-function limpaHojeAntigo(){
-  Object.keys(localStorage).forEach(function(k){
-    if (k.indexOf('pacto_hoje_') === 0 && k !== HOJE_KEY) localStorage.removeItem(k);
-  });
-}
-function carregaHoje(){
-  limpaHojeAntigo();
-  try { hojeIds = JSON.parse(localStorage.getItem(HOJE_KEY)) || []; }
-  catch(e){ hojeIds = []; }
-  if (!Array.isArray(hojeIds)) hojeIds = [];
-}
-function gravaHojeLocal(){ localStorage.setItem(HOJE_KEY, JSON.stringify(hojeIds)); }
-async function gravaHoje(){
-  gravaHojeLocal();
-  try {
-    const del = await sb.from('selecao_dia').delete().eq('dia', hojeStr());
-    if (del.error) throw del.error;
-    if (hojeIds.length){
-      const ins = await sb.from('selecao_dia').insert(hojeIds.map(function(id){
-        return {dia: hojeStr(), cnpj: id};
-      }));
-      if (ins.error) throw ins.error;
+/* ---------- agenda do dia (rotina + arte IG) ---------- */
+/* Artes postadas terça e sexta às 17h30. O mapa abaixo é a fila oficial —
+   atualizar aqui quando a semana de conteúdo muda. */
+const AGENDA_IG = {
+  2: '04-transparencia-gera-confianca',
+  5: '05-demonstracao-relatorio'
+};
+function renderAgenda(){
+  const diaSem = new Date().getDay();
+  const diaUtil = diaSem >= 1 && diaSem <= 5;
+  const janelasFim = new Date().getHours() > 18 ||
+    (new Date().getHours() === 18 && new Date().getMinutes() >= 5);
+
+  /* e-mails: o que a rotina mandou hoje */
+  const qtd = hojeIds.length;
+  let vE, dE;
+  if (!diaUtil){
+    vE = 'fim de semana — pausa';
+    dE = 'a rotina volta segunda às 9h';
+  } else if (janelasFim){
+    vE = qtd + ' enviados';
+    dE = qtd >= 10 ? 'ritmo do dia batido (10)' : 'janelas 9h/15h/18h concluídas';
+  } else {
+    vE = qtd + ' de 10';
+    dE = 'gatilhos de hoje: 9h · 15h · 18h';
+  }
+  document.getElementById('agEmails').textContent = vE;
+  document.getElementById('agEmailsDet').textContent = dE;
+
+  /* arte: post de hoje pela fila; status vem de conteudo_status (sem linha = aguardando) */
+  const idPost = AGENDA_IG[diaSem];
+  const ag = document.getElementById('agPost');
+  const de = document.getElementById('agPostDet');
+  if (idPost){
+    const cs = CONTEUDO[idPost];
+    const s = cs ? cs.status : 'aguardando';
+    const rotulo = {aguardando:'aguardando aprovação', aprovado:'aprovada',
+                    postado:'postada', reprovado:'reprovada'}[s] || s;
+    ag.textContent = idPost.split('-')[0] + ' — ' + rotulo;
+    de.textContent = diaSem === 2 ? 'terça, 17h30' : 'sexta, 17h30';
+  } else {
+    /* próxima terça (2) ou sexta (5) a partir de amanhã */
+    let prox = null;
+    for (let i = 1; i <= 6 && !prox; i++){
+      const d = (diaSem + i) % 7;
+      if (AGENDA_IG[d]) prox = {d:d, i:i};
     }
-  } catch(e){
-    setSync('selecao do dia nao sincronizou — tente de novo', true);
+    ag.textContent = 'sem postagem hoje';
+    de.textContent = prox ? 'próxima: ' + (prox.d === 2 ? 'terça' : 'sexta') +
+      ' — post ' + AGENDA_IG[prox.d].split('-')[0] : '';
   }
 }
 
@@ -763,10 +810,8 @@ function contagens(){
     if (s && c[s] !== undefined) c[s]++;
     if (['email','zap','ligou','demo','fechou','nao'].indexOf(s) >= 0) c.falou++;
   });
-  let contatadosHoje = 0;
-  hojeIds.forEach(function(id){ const s = st(id); if (s !== 'pendente' && s !== 'fora') contatadosHoje++; });
-
-  document.getElementById('sHoje').textContent    = contatadosHoje + '/2';
+  /* placar "E-mail hoje": e-mails distintos que a ROTINA mandou hoje */
+  document.getElementById('sHoje').textContent    = hojeIds.length + '/10';
   document.getElementById('sFalou').textContent   = c.falou;
   document.getElementById('sEmail').textContent   = c.email;
   document.getElementById('sZap').textContent     = c.zap;
@@ -795,17 +840,22 @@ function desenharFluxo(){
     if (ina || fora) p1++;
   });
 
-  /* passo 4: mesmo critério do placar Hoje (sorteio do dia + status) */
-  let hj = 0;
-  hojeIds.forEach(function(id){ const s = st(id); if (s !== 'pendente' && s !== 'fora') hj++; });
+  /* passo 4: ritmo do dia — e-mails que a ROTINA mandou hoje (tabela envios);
+     no fim de semana nada é devido; depois da última janela (18h05),
+     o dia fecha com o que saiu */
+  const hj = hojeIds.length;
+  const agora = new Date();
+  const diaUtil = agora.getDay() >= 1 && agora.getDay() <= 5;
+  const janelasFim = agora.getHours() > 18 ||
+    (agora.getHours() === 18 && agora.getMinutes() >= 5);
 
   /* gatilhos dos passos 2, 3 e 4 (o 1 foi calculado acima):
      2 = todas as copies aprovadas (mesma conta do resumo da aba Copy);
      3 = pelo menos 1 lista salva em 'campanhas' (foi gerada de verdade);
-     4 = ≥ 2 dos sorteados de hoje já contatados (status saiu de pendente). */
+     4 = ritmo do dia em dia útil (10 e-mails) — ou as janelas já fecharam. */
   const p2ok = FLUXO.copias > 0 && FLUXO.copiasApr === FLUXO.copias;
   const p3ok = FLUXO.campanhas > 0;
-  const p4ok = hj >= 2;
+  const p4ok = !diaUtil || hj >= 10 || janelasFim;
 
   let det1;
   if (p1 === 0) det1 = 'nenhum impedimento — base revisada';
@@ -822,8 +872,11 @@ function desenharFluxo(){
   const det3 = FLUXO.campanhas < 0 ? 'não consegui conferir agora'
              : FLUXO.campanhas === 0 ? 'nenhuma lista gerada ainda'
              : FLUXO.campanhas + ' lista(s) salva(s) no Pacto';
-  const det4 = p4ok ? hj + ' de 2 — pacto de hoje cumprido'
-             : (hojeIds.length ? hj + ' de 2 contatados' : 'sorteie os 2 de hoje');
+  const det4 = hj >= 10 ? hj + ' de 10 — ritmo do dia batido'
+             : !diaUtil ? 'fim de semana — rotina volta segunda às 9h'
+             : janelasFim ? 'janelas do dia concluídas — ' + hj + ' enviados'
+             : (hj ? hj + ' de 10 enviados (gatilhos 9h/15h/18h)'
+                   : 'rotina dispara hoje 9h/15h/18h');
 
   const passos = [
     {ok:p1===0, tit:'Validar a base',     det:det1, href:'validacao.html', cta:'Abrir a validação'},
@@ -846,9 +899,7 @@ function desenharFluxo(){
         ? '<a class="fcta see" href="' + p.href + '">ver</a>'
         : '<a class="fcta see" href="#" onclick="document.getElementById(\'btnVerHoje\').click();return false">ver hoje</a>';
     } else if (!p.href){
-      cta = hojeIds.length
-        ? '<a class="fcta" href="#" onclick="document.getElementById(\'btnVerHoje\').click();return false">Ver os 2 de hoje</a>'
-        : '<a class="fcta" href="#" onclick="document.getElementById(\'btnSortear\').click();return false">Sortear 2 de hoje</a>';
+      cta = '<a class="fcta" href="#" onclick="document.getElementById(\'btnVerHoje\').click();return false">Ver e-mail de hoje</a>';
     } else {
       cta = '<a class="fcta" href="' + p.href + '">' + p.cta + '</a>';
     }
@@ -1052,7 +1103,7 @@ function desenhar(){
 }
 
 function vazioMsg(){
-  if (filtro === 'hoje') return '<div class="vazio">Ninguém sorteado ainda.<br><br>Toque em <b>“Sortear 2 de hoje”</b> l&aacute; em cima.</div>';
+  if (filtro === 'hoje') return '<div class="vazio">Ainda n&atilde;o saiu e-mail hoje.<br><br>A rotina envia nos gatilhos <b>9h &middot; 15h &middot; 18h</b> — sem bot&atilde;o, sem sorteio.</div>';
   if (filtro === 'pendentes') return '<div class="vazio">Nenhum pendente. <b>Terminou!</b></div>';
   if (filtro === 'fechou') return '<div class="vazio">Ainda nenhuma venda fechada.<br>É o objetivo dos 14 dias.</div>';
   return '<div class="vazio">Nenhum restaurante encontrado.<br>Tente outro nome ou bairro.</div>';
@@ -1108,34 +1159,6 @@ function sincronizarChips(){
   });
 }
 
-/* ---------- sorteio do dia ----------
-   Regra: sorteia 2 que estejam 'pendente' (nunca quem já recebeu e-mail)
-   e que ainda NÃO foram sorteados hoje (hojeIds = selecao_dia do dia).
-   Depois força o filtro 'hoje' e persiste o sorteio — é essa seleção que
-   o placar "Hoje" e o passo 4 do fluxo contam. Se faltar pendente novo,
-   sorteia só o que sobrar (a lista de hoje nunca mente: mostra quantos
-   realmente saíram). */
-document.getElementById('btnSortear').onclick = function(){
-  const pendentes = LISTA.filter(function(x){ return st(x.id) === 'pendente'; });
-  const sobra = pendentes.filter(function(x){ return hojeIds.indexOf(x.id) < 0; });
-  const copia = sobra.slice();
-  const sorteados = [];
-  for (let i = 0; i < 2 && copia.length; i++){
-    const k = Math.floor(Math.random() * copia.length);
-    sorteados.push(copia[k].id);
-    copia.splice(k, 1);
-  }
-  sorteados.forEach(function(id){ if (hojeIds.indexOf(id) < 0) hojeIds.push(id); });
-  gravaHoje();
-
-  filtro = 'hoje'; termo = '';
-  document.getElementById('busca').value = '';
-  sincronizarChips();
-  desenhar();
-  setSync('★ ' + sorteados.length + ' da sorte — aba Hoje', false);
-  window.scrollTo({top:0, behavior:'smooth'});
-};
-
 document.getElementById('btnVerHoje').onclick = function(){
   filtro = 'hoje'; sincronizarChips(); desenhar();
   window.scrollTo({top: document.querySelector('.ferramentas').offsetTop - 5, behavior:'smooth'});
@@ -1190,8 +1213,8 @@ async function boot(){
 
     setSync('carregando\u2026', false);
     await carregarDados();
-    carregaHoje();
     desenhar();
+    renderAgenda();
     setSync('conectado \u00b7 ' + LISTA.length + ' restaurantes carregados', false);
   } catch(e){
     setSync('erro ao carregar: ' + (e.message || e), true);

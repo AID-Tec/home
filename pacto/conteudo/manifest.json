@@ -1,6 +1,37 @@
 {
-  "gerado_em": "2026-11-07T21:00:47",
+  "gerado_em": "2026-11-08T07:42:07",
   "itens": [
+    {
+      "id": "05-demonstracao-relatorio",
+      "titulo": "O relatório em 30 segundos",
+      "status": "aguardando",
+      "hook": "Demonstração: o que sai pronto do controle.",
+      "legenda": "O relatório em 30 segundos.\n\nSem copiar pra planilha. Sem conferir na mão.\n\nFecha o dia e o sistema separa por turno e por colaborador — pronto pro contador.\n\nMenos retrabalho. Mais comprovado.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "aguardando/05-demonstracao-relatorio/arte/slide_01.png",
+        "aguardando/05-demonstracao-relatorio/arte/slide_02.png",
+        "aguardando/05-demonstracao-relatorio/arte/slide_03.png",
+        "aguardando/05-demonstracao-relatorio/arte/slide_04.png",
+        "aguardando/05-demonstracao-relatorio/arte/slide_05.png",
+        "aguardando/05-demonstracao-relatorio/arte/slide_06.png"
+      ],
+      "tem_arte": true
+    },
+    {
+      "id": "04-transparencia-gera-confianca",
+      "titulo": "Transparência gera confiança",
+      "status": "aguardando",
+      "hook": "Engajamento da equipe começa com clareza.",
+      "legenda": "Transparência gera confiança.\n\nQuem não sabe o que recebeu desconfia da conta. E desconfiança mina o clima da equipe.\n\nCom o controle de gorjetas da AID, cada colaborador vê o próprio valor — por turno, por dia.\n\nMenos desconfiança. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "aguardando/04-transparencia-gera-confianca/arte/slide_01.png",
+        "aguardando/04-transparencia-gera-confianca/arte/slide_02.png",
+        "aguardando/04-transparencia-gera-confianca/arte/slide_03.png",
+        "aguardando/04-transparencia-gera-confianca/arte/slide_04.png",
+        "aguardando/04-transparencia-gera-confianca/arte/slide_05.png"
+      ],
+      "tem_arte": true
+    },
     {
       "id": "02-papel-x-comprovado",
       "titulo": "Papel ou comprovado?",
@@ -48,7 +79,7 @@
     }
   ],
   "contagem": {
-    "aguardando": 0,
+    "aguardando": 2,
     "aprovado": 0,
     "reprovado": 0,
     "postado": 3

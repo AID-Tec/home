@@ -145,7 +145,8 @@
   </table>
   <ul>
     <li>Valor fora dessa lista <b>não existe</b> — nem no painel, nem no banco (o CHECK do banco obriga).</li>
-    <li><b>Sorteio diário só pega <span class="k">pendente</span></b> — quem recebeu e-mail nunca é sorteado de novo.</li>
+    <li><b>A rotina não repete 1º contato:</b> quem já tem registro em <span class="k">envios</span> (ou status ≠ <span class="k">pendente</span>) sai da fila — quem recebeu e-mail nunca recebe de novo.</li>
+    <li><b>Sorteio manual: fim.</b> O botão "Sortear 2 de hoje" foi <b>removido em 08/11/2026</b> — o que sai no dia decide a ferramenta pela fila + histórico <span class="k">envios</span>; <span class="k">selecao_dia</span> é legado e não se grava mais.</li>
     <li>O painel <b>não busca nem desenha</b> linha <span class="k">fora</span>.</li>
     <li>Os campos <span class="k">cnae</span> e <span class="k">segmento</span> originais <b>nunca são sobrescritos</b>; o segmento real de verdade é <span class="k">cnae_real</span> (BrasilAPI) + <span class="k">categoria_maps</span>.</li>
   </ul>
@@ -159,7 +160,7 @@
     <tr><td>1</td><td>Validar a base</td><td>nenhuma linha <b>sem decisão</b> = <span class="k">pendente</span> + sem <span class="k">revisado_em</span> + (fora do segmento <b>ou</b> CNPJ inativo)</td></tr>
     <tr><td>2</td><td>Aprovar as copies</td><td>100% das copies com <span class="k">status='aprovado'</span></td></tr>
     <tr><td>3</td><td>Gerar a lista</td><td>tabela <span class="k">campanhas</span> com pelo menos 1 linha</td></tr>
-    <tr><td>4</td><td>Operar hoje</td><td>sorteio do dia com <b>≥ 2</b> contatados hoje (status ∉ pendente, fora) — mesmo critério do placar "Hoje"</td></tr>
+    <tr><td>4</td><td>Operar hoje</td><td>ritmo do dia: e-mails de hoje na tabela <span class="k">envios</span> — fecha com <b>10</b> batidos ou quando a última janela do dia já passou (≥ 18h05); mesmo critério do placar "Hoje"</td></tr>
   </table>
   <ul>
     <li>Verde = concluído, abre em modo <b>"ver"</b> (leitura).</li>
@@ -214,6 +215,9 @@
     <li><b>Segunda a sexta, das 8h às 18h.</b> Fora disso a ferramenta recusa (tolerância de 5 min às 18h00 pro gatilho da noite; flag só pra emergência, não é rotina).</li>
     <li>A cota técnica do plano gratuito do Brevo (300/dia) é <b>teto, nunca meta</b> — não se usa como referência.</li>
     <li><b>Contador diário vem do banco</b> (tabela <span class="k">envios</span>, maior entre banco/contador local/Brevo): rodar de novo no mesmo dia só manda o que falta; 10 é o máximo, a ferramenta recusa mais.</li>
+    <li><b>Placar "Hoje" do painel = e-mails de hoje de <span class="k">envios</span></b> (n/10). O antigo "contatados 0/2" (fluxo manual) acabou — em 08/11/2026 o botão "Sortear 2" saiu e <span class="k">selecao_dia</span> ficou fora do fluxo.</li>
+    <li><b>Aba Campanha dá projeção:</b> enviados (e-mails distintos em <span class="k">envios</span>), faltam e dias úteis pra concluir a base (faltam ÷ 10, arredondado pra cima).</li>
+    <li><b>Card "Agenda do dia" no painel:</b> e-mails que a rotina mandou hoje + se há arte aprovada pra postar hoje no IG (terça e sexta, 17h30).</li>
     <li><b>Agendamento automático (GitHub Actions, 3× por dia útil):</b>
       <br>· <b>09:00</b> — 1º contato + tudo atrasado · <b>15:00</b> — D+4 · <b>18:00</b> — D+9 + pendências
       <br>· roda <span class="k">--rotina --enviar</span>, decide sozinho o que venceu pelo histórico;
@@ -335,6 +339,16 @@ node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você
     <li><b>Cofre do n8n:</b> <span class="k">imap-gmail-pacto</span>, <span class="k">gmail-alerta-587</span>, <span class="k">postgres-pacto</span> — só dentro do n8n (criptografado), nunca em página, Git ou chat (a senha é app password do Gmail, não a da conta).</li>
     <li><b>Acordar:</b> cron-job.org batendo na raiz do Render a cada 5 min + webhook <span class="k">pacto-retorno</span> após cada envio do Actions.</li>
     <li><b>Testado de ponta a ponta:</b> caminho do alerta (faixa ajustada + aviso) e caminho da recusa (<span class="k">status='nao'</span> gravado + aviso) — sempre com linha temporária, apagada no fim (banco intacto, 477).</li>
+  </ul>
+</div>
+
+<!-- ============================ 16. DIRECAO ============================ -->
+<div class="regua">16 · Direção (decisões do dono — 08/11/2026)</div>
+<div class="cartao">
+  <ul>
+    <li><b>Multi-região:</b> a campanha vai rodar em regiões novas (Nordeste, Norte). Preparação aceita: campo <span class="k">regiao</span> em <span class="k">prospectos</span>/<span class="k">campanhas</span>/<span class="k">envios</span> (base atual = Franca, marcada retroativa pelo default). Depois: <b>comparar regiões</b> por resultado (envios × falou × fechou) e escalar onde rende mais.</li>
+    <li><b>Projeto gêmeo:</b> outro produto (sem vínculo com gorjeta) rodando em paralelo com <b>estrutura idêntica</b> — rotina de e-mail, cópias aprovadas, fila de conteúdo, agenda IG e painel. A régua é o padrão desta página; banco e pastas separados por projeto.</li>
+    <li>Ideias afins moram na tabela <span class="k">ideias</span> — a mudança de regra entra aqui na página em forma de decisão.</li>
   </ul>
 </div>
 
