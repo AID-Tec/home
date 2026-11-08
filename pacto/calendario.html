@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<!--
+  ==========================================================================
+  pacto/calendario.html — Calendário de publicação (viva, não estática).
+
+  Por que existe: o CALENDARIO.md do repo é a conversa; esta página é a
+  RESPOSTA visível ao dono: quando sai o próximo post, com qual status
+  (do banco, em tempo real) e a cadência que vale. Datas são computadas
+  no aparelho — nada aqui fica velho à mão.
+
+  Regra que ela carrega: 2 posts/semana (terça e sexta, 17h30), realmente
+  postados pelo app enquanto durar a restrição Meta; status vem de
+  conteudo_status (sem linha = aguardando) e a fila da semana é o mapa
+  AGENDA_IG (atualizar o mapa quando a semana de conteúdo muda).
+  ==========================================================================
+  -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calendário — Pacto Gorjeta</title>
+<style>
+  :root{
+    /* AID Design System v1.0.0 — tokens, nenhum hex inventado */
+    --azul:#182A69; --azul2:#2E3699; --azul3:#20266B;
+    --fundo:#F9F9F9; --card:#FFFFFF; --borda:#E4E4E4;
+    --texto:#1C1C1C; --cinza:#6E6E6E;
+    --verde:#1E9E5A; --amarelo:#a86a00; --roxo:#4509AE; --vermelho:#b3261e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:"Montserrat","Segoe UI",Arial,sans-serif;
+       background:var(--fundo); color:var(--texto); font-size:16px; line-height:1.55;
+       padding-bottom:50px}
+  header{position:sticky; top:0; z-index:50; background:var(--azul); color:#fff;
+         padding:12px 14px; box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .marca{font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; opacity:.7}
+  .h1{font-size:18px; font-weight:800; margin-top:2px}
+  .sub{font-size:12px; opacity:.8; margin-top:4px}
+
+  .bloco{background:var(--card); border:1px solid var(--borda); border-radius:10px; margin:12px; overflow:hidden}
+  .btopo{padding:12px 14px; border-bottom:1px solid var(--borda); display:flex; align-items:center; gap:9px}
+  .letra{width:24px; height:24px; border-radius:6px; background:var(--azul); color:#fff;
+         font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0}
+  .bt{font-weight:800; font-size:15px; line-height:1.3}
+  .bf{font-size:11.5px; color:var(--cinza); margin-top:1px}
+  .corpo{padding:10px 14px}
+  ul{margin:8px 0; padding-left:20px}
+  li{margin:6px 0; font-size:14px}
+  .cod{font-family:Consolas,monospace; font-size:12.5px; background:#f2f5f9; color:var(--azul2);
+       padding:8px 10px; border-radius:8px; display:block; margin:8px 0}
+
+  .dia{display:flex; gap:10px; align-items:flex-start; padding:9px 2px; border-bottom:1px dashed var(--borda)}
+  .dia:last-child{border-bottom:0}
+  .dnum{width:46px; flex-shrink:0; text-align:center}
+  .dnum b{display:block; font-size:17px; font-weight:900; color:var(--azul); line-height:1.1}
+  .dnum span{font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--cinza); font-weight:800}
+  .dcorpo{flex:1; min-width:0}
+  .dtit{font-weight:800; font-size:13.5px; line-height:1.3}
+  .ddet{font-size:12px; color:var(--cinza); margin-top:2px}
+  .hoje{background:var(--fundo); border-radius:8px; padding-left:8px; padding-right:8px}
+  .etiqueta{display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase;
+            letter-spacing:.5px; padding:2px 8px; border-radius:99px; margin-left:6px; vertical-align:middle}
+  .et-aguardando{background:#fbf3e2; color:var(--amarelo)}
+  .et-aprovado{background:#ece5fb; color:var(--roxo)}
+  .et-postado{background:#e3f4ea; color:var(--verde)}
+  .et-reprovado{background:#fbe4e2; color:var(--vermelho)}
+  a.fim{display:block; text-align:center; margin:18px 0; color:var(--azul2)}
+
+  .sync{padding:8px 14px; font-size:12.5px; color:var(--cinza)}
+  .sync.erro{color:var(--vermelho); font-weight:700}
+
+  /* bloco A — os números do dia */
+  .gridk{display:grid; grid-template-columns:repeat(3,1fr)}
+  @media (max-width:680px){ .gridk{grid-template-columns:1fr} }
+  .kpi{background:var(--card); padding:14px 10px; text-align:center; border-right:1px solid var(--borda)}
+  .kpi:last-child{border-right:0}
+  .kpi .num{font-size:26px; font-weight:900; color:var(--azul)}
+  .kpi .lbl{font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--cinza); font-weight:800; margin-top:3px}
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">Pacto · operação</div>
+  <div class="h1">Calendário</div>
+  <div class="sub">2 posts por semana · terça e sexta, 17h30</div>
+</header>
+
+<div class="sync" id="sync">carregando…</div>
+
+<!-- A: os números do dia (o que o dono perguntou: e-mails enviados + posts de hoje) -->
+<div class="bloco">
+  <div class="btopo">
+    <div class="letra">A</div>
+    <div><div class="bt">Hoje</div><div class="bf" id="subHoje">—</div></div>
+  </div>
+  <div class="gridk">
+    <div class="kpi"><div class="num" id="k-mail">—</div><div class="lbl">E-mails enviados hoje</div></div>
+    <div class="kpi"><div class="num" id="k-post">—</div><div class="lbl">Posts pra hoje</div></div>
+    <div class="kpi"><div class="num" id="k-sem">—</div><div class="lbl">E-mails na semana</div></div>
+  </div>
+</div>
+
+<!-- A: a semana viva (computada do dia, status do banco) -->
+<div class="bloco">
+  <div class="btopo">
+    <div class="letra">B</div>
+    <div><div class="bt">Próximos dias</div><div class="bf">datas calculadas agora · status em tempo real</div></div>
+  </div>
+  <div class="corpo" id="semana">–</div>
+</div>
+
+<!-- B: mix (o que cada post é) -->
+<div class="bloco">
+  <div class="btopo">
+    <div class="letra">C</div>
+    <div><div class="bt">Mix de conteúdo</div><div class="bf">pra não virar "compre meu sistema"</div></div>
+  </div>
+  <div class="corpo">
+    <ul>
+      <li><b>Educativo / dor do cliente — ~40%</b> (01, 02, 03, 04)</li>
+      <li><b>Demonstração do produto — ~25%</b> (05 abre o balde)</li>
+      <li><b>Prova social — ~20%</b> (a produzir)</li>
+      <li><b>Bastidores / marca — ~10%</b> (a produzir)</li>
+      <li><b>Oferta direta (CTA) — 5–10%</b></li>
+    </ul>
+    <span class="cod">Medir: salvamentos, compartilhamentos, cliques na bio e DMs — mais que curtidas. Dobar no que fizer melhor depois de 4–6 semanas.</span>
+  </div>
+</div>
+
+<!-- C: regras que não mudam -->
+<div class="bloco">
+  <div class="btopo">
+    <div class="letra">D</div>
+    <div><div class="bt">Regras da cadência</div><div class="bf">decisão do dono · 30/10/2026</div></div>
+  </div>
+  <div class="corpo">
+    <ul>
+      <li><b>Terça e sexta, 17h30</b> — hora de pico da noite, antes do jantar (dono de restaurante olha o celular aí).</li>
+      <li><b>Repor na mesma semana:</b> post que falha não acumula — sai no próximo vazio.</li>
+      <li><b>Restrição Meta:</b> enquanto o banner "Restringimos sua empresa de fazer publicidade" existir, <b>zero API e zero impulsionamento</b> — publicação 100% manual pelo celular, no pacote de <i>_revisao/post-XX</i>.</li>
+      <li><b>Nunca publicar arte que o dono não aprovou.</b></li>
+      <li>A conversa detalhada (aprendizados, testes de boost) mora no <b>CALENDARIO.md</b> do repositório — aqui é o painel, lá é a fonte.</li>
+    </ul>
+  </div>
+</div>
+
+<a class="fim" href="index.html">← Voltar pro painel</a>
+
+<script src="vendor/supabase.js"></script>
+<script src="app.js"></script>
+<script>
+/* ==========================================================================
+   Calendário — dados: manifest.json (fila pública) + conteudo_status (banco).
+   A semanada é derivada de AGENDA_IG (mesma mapa do card "Agenda do dia"
+   do index — atualizar as DUAS quando a semana de conteúdo mudar).
+   ========================================================================== */
+const AGENDA_IG = {
+  2: '04-transparencia-gera-confianca',
+  5: '05-demonstracao-relatorio'
+};
+const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+let ITENS = {};      /* id -> {titulo, status do manifest} */
+let STATUS = {};     /* id -> status do banco (postado/aprovado/…) */
+
+function statusDe(id){
+  return (STATUS[id] || (ITENS[id] && ITENS[id].status) || 'aguardando');
+}
+function etiqueta(s){
+  const rot = {aguardando:'aguardando aprovação', aprovado:'aprovado',
+               postado:'postado', reprovado:'reprovado'}[s] || s;
+  return '<span class="etiqueta et-' + esc(s) + '">' + esc(rot) + '</span>';
+}
+function esc(s){
+  return String(s===undefined||s===null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function desenharSemana(){
+  const hoje = new Date();
+  let html = '';
+  /* 10 dias corridos: e-mails de dia útil, pos de ter/sex, pausa no fds */
+  for (let i = 0; i < 10; i++){
+    const d = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + i);
+    const w = d.getDay();
+    const dstr = d.getDate() + ' ' + MES[d.getMonth()];
+    const classe = i === 0 ? 'dia hoje' : 'dia';
+    let tit, det;
+    if (AGENDA_IG[w]){
+      const id = AGENDA_IG[w];
+      tit = '17h30 · Post ' + id.split('-')[0] + ' — ' + esc(ITENS[id] ? ITENS[id].titulo : id) + etiqueta(statusDe(id));
+      det = 'pacote de postagem: <i>conteudo/_revisao/post-' + id.split('-')[0] + '/</i> (manual pelo app enquanto durar a restrição)';
+    } else if (w === 0 || w === 6){
+      tit = 'Fim de semana — pausa';
+      det = 'e-mails da rotina voltam segunda às 9h';
+    } else {
+      tit = 'E-mails da rotina';
+      det = 'gatilhos 9h · 15h · 18h (ritmo 10/dia útil)';
+    }
+    html += '<div class="' + classe + '">' +
+            '<div class="dnum"><b>' + d.getDate() + '</b><span>' + DIAS[w] + (i === 0 ? ' · hoje' : '') + '</span></div>' +
+            '<div class="dcorpo"><div class="dtit">' + tit + '</div><div class="ddet">' + det + '</div></div></div>';
+  }
+  document.getElementById('semana').innerHTML = html;
+}
+
+/* ---------- bloco A: números do dia ---------- */
+function painelHoje(rows){
+  const d = new Date();
+  const hojeStr = d.toDateString();
+  const w = d.getDay();
+  const segunda = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((w + 6) % 7));
+  const deHoje = rows.filter(r => r.enviado_em && new Date(r.enviado_em).toDateString() === hojeStr);
+  const daSemana = rows.filter(r => r.enviado_em && new Date(r.enviado_em) >= segunda);
+  document.getElementById('k-mail').textContent = Array.from(new Set(deHoje.map(r => r.cnpj))).length + '/10';
+  document.getElementById('k-sem').textContent = daSemana.length + (daSemana.length === 1 ? ' envio' : ' envios');
+
+  const idPost = AGENDA_IG[w];
+  const sub = document.getElementById('subHoje');
+  if (w === 0 || w === 6){
+    document.getElementById('k-post').textContent = '0';
+    sub.textContent = 'fim de semana — envio e postagem ficam pausados';
+    return;
+  }
+  if (idPost){
+    document.getElementById('k-post').textContent = '1';
+    sub.innerHTML = 'post ' + idPost.split('-')[0] + ' às 17h30 · ' + etiqueta(statusDe(idPost)) +
+      ' · pacote <i>conteudo/_revisao/post-' + idPost.split('-')[0] + '</i>';
+  } else {
+    document.getElementById('k-post').textContent = '0';
+    /* próximo dia com post, a partir de hoje */
+    let prox = null;
+    for (let i = 0; i < 7 && !prox; i++){
+      const dd = (w + i) % 7;
+      if (AGENDA_IG[dd]) prox = dd;
+    }
+    sub.textContent = 'sem postagem hoje · e-mails nos gatilhos 9h · 15h · 18h' +
+      (prox ? ' · próximo post: ' + DIAS[prox] : '');
+  }
+}
+
+function ok(t){ const s = document.getElementById('sync'); s.className = 'sync'; s.textContent = t || ''; }
+function erro(t){ const s = document.getElementById('sync'); s.className = 'sync erro'; s.textContent = t; }
+
+AID.entrar().then(function(sess){
+  const sb = (window.AID && AID.sb) ? AID.sb : null;
+  if (!sess || !sb){ erro('Faça login no Pacto para ver o calendário'); return; }
+  (async function(){
+    try {
+      /* fila pública (Pages) */
+      const m = await fetch('conteudo/manifest.json?' + Date.now());
+      if (!m.ok) throw new Error('manifest HTTP ' + m.status);
+      const mj = await m.json();
+      ITENS = {};
+      (mj.itens || []).forEach(function(x){ ITENS[x.id] = x; });
+      /* status real (banco, autenticado) */
+      const sz = await sb.from('conteudo_status').select('id,status');
+      if (sz.error) throw sz.error;
+      STATUS = {};
+      (sz.data || []).forEach(function(x){ STATUS[x.id] = x.status; });
+      /* e-mails da rotina (números do dia) */
+      const ev = await sb.from('envios').select('cnpj,enviado_em');
+      if (ev.error) throw ev.error;
+      painelHoje(ev.data || []);
+      desenharSemana();
+      ok('conectado · ' + (mj.itens || []).length + ' conteúdos na fila');
+    } catch(e){
+      erro('não carreguei: ' + (e.message || e));
+    }
+  })();
+});
+</script>
+</body>
+</html>
