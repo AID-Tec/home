@@ -1,5 +1,5 @@
 {
-  "gerado_em": "2026-11-08T08:29:32",
+  "gerado_em": "2026-11-11T10:00:00",
   "itens": [
     {
       "id": "05-demonstracao-relatorio",
@@ -8,27 +8,27 @@
       "hook": "Demonstração: o que sai pronto do controle.",
       "legenda": "O relatório em 30 segundos.\n\nSem copiar pra planilha. Sem conferir na mão.\n\nFecha o dia e o sistema separa por turno e por colaborador — pronto pro contador.\n\nMenos retrabalho. Mais comprovado.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
       "arte": [
-        "aprovados/05-demonstracao-relatorio/arte/slide_01.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_02.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_03.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_04.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_05.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_06.png"
+        "aprovados/05-demonstracao-relatorio/arte/jpg/slide_01.png",
+        "aprovados/05-demonstracao-relatorio/arte/jpg/slide_02.png",
+        "aprovados/05-demonstracao-relatorio/arte/jpg/slide_03.png",
+        "aprovados/05-demonstracao-relatorio/arte/jpg/slide_04.png",
+        "aprovados/05-demonstracao-relatorio/arte/jpg/slide_05.png",
+        "aprovados/05-demonstracao-relatorio/arte/jpg/slide_06.png"
       ],
       "tem_arte": true
     },
     {
       "id": "04-transparencia-gera-confianca",
       "titulo": "Transparência gera confiança",
-      "status": "aprovado",
+      "status": "postado",
       "hook": "Engajamento da equipe começa com clareza.",
       "legenda": "Transparência gera confiança.\n\nQuem não sabe o que recebeu desconfia da conta. E desconfiança mina o clima da equipe.\n\nCom o controle de gorjetas da AID, cada colaborador vê o próprio valor — por turno, por dia.\n\nMenos desconfiança. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
       "arte": [
-        "aprovados/04-transparencia-gera-confianca/arte/slide_01.png",
-        "aprovados/04-transparencia-gera-confianca/arte/slide_02.png",
-        "aprovados/04-transparencia-gera-confianca/arte/slide_03.png",
-        "aprovados/04-transparencia-gera-confianca/arte/slide_04.png",
-        "aprovados/04-transparencia-gera-confianca/arte/slide_05.png"
+        "postados/04-transparencia-gera-confianca/arte/slide_01.png",
+        "postados/04-transparencia-gera-confianca/arte/slide_02.png",
+        "postados/04-transparencia-gera-confianca/arte/slide_03.png",
+        "postados/04-transparencia-gera-confianca/arte/slide_04.png",
+        "postados/04-transparencia-gera-confianca/arte/slide_05.png"
       ],
       "tem_arte": true
     },
@@ -79,7 +79,7 @@
     }
   ],
   "contagem": {
-    "aprovado": 2,
-    "postado": 3
+    "aprovado": 1,
+    "postado": 4
   }
 }
