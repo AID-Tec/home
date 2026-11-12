@@ -1,0 +1,24 @@
+{
+  "post_id": "04-transparencia-gera-confianca",
+  "status": "aprovado",
+  "agendado_para": "2026-11-10T17:30:00-03:00",
+  "metodo": "composio-instagram-graph-api",
+  "autorizacao_dono": "09/11/2026 (noite) — 'publica amanhã, por minha conta e risco'",
+  "fallback": "pacote manual aidtr.com.br/pacto/conteudo/_revisao/post-04/",
+  "validacoes_09_11": {
+    "conexao_composio": "instagram ATIVA (account instagram_smush-puka)",
+    "formato": "JPEG q=90 (convertidas de PNG)",
+    "dimensoes": "1080x1080 (razao 1.0, dentro de 0.8-1.91)",
+    "peso": "72-104 kB por slide (limite 8 MB)",
+    "legenda_chars": 410,
+    "legenda_hashtags": 9
+  },
+  "caption": "Transparência gera confiança.\n\nQuem não sabe o que recebeu desconfia da conta. E desconfiança mina o clima da equipe.\n\nCom o controle de gorjetas da AID, cada colaborador vê o próprio valor — por turno, por dia.\n\nMenos desconfiança. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+  "child_image_urls": [
+    "https://aidtr.com.br/pacto/conteudo/aprovados/04-transparencia-gera-confianca/arte/jpg/slide_01.jpg",
+    "https://aidtr.com.br/pacto/conteudo/aprovados/04-transparencia-gera-confianca/arte/jpg/slide_02.jpg",
+    "https://aidtr.com.br/pacto/conteudo/aprovados/04-transparencia-gera-confianca/arte/jpg/slide_03.jpg",
+    "https://aidtr.com.br/pacto/conteudo/aprovados/04-transparencia-gera-confianca/arte/jpg/slide_04.jpg",
+    "https://aidtr.com.br/pacto/conteudo/aprovados/04-transparencia-gera-confianca/arte/jpg/slide_05.jpg"
+  ]
+}
