@@ -40,11 +40,12 @@ const path = require('path');
 const { mandaEmail } = require('./smtp');
 
 /* ----------------------------- constantes ------------------------------- */
-/* Ritmo do projeto: 10 e-mails por dia. Não é limite técnico — a cota do
-   plano gratuito do Brevo é 300/dia — é ritmo de prospecção: poucos por dia,
-   no horário comercial, com resposta acompanhada. 242 contatos ≈ 25 dias.
-   Quiser mudar o ritmo, mude AQUI (o tool passa a exigir esse máximo). */
-const RITMO_DIA = 10;
+/* Ritmo do projeto: rampa de aceleração (dono, 13/11/2026): 20/dia de
+   13/11 a 17/11; 40/dia a partir de 18/11. Não é limite técnico — a cota do
+   Brevo (plano gratuito) é 300/dia — é cadência: horário comercial,
+   resposta acompanhada. Quiser mudar o ritmo, mude AQUI (o tool passa a
+   exigir esse máximo). */
+const RITMO_DIA = 20;
 const COTA_TECNICA = 300;   // teto técnico do Brevo (plano gratuito) — nunca sugerido
 const PAUSA_MS = 400;      // respiro entre envios (e não estoura a cota)
 

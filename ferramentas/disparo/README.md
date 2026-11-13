@@ -30,7 +30,7 @@ Por que assim, e não "montar campanha à mão no Brevo": o texto aprovado é o
 que sai (não uma cópia colada e esquecida), e **cada envio marca a linha**,
 o que resolve três coisas de uma vez:
 
-- **retomável** — rodou hoje os 10, amanhã os próximos 10 saem sozinhos
+- **retomável** — rodou hoje o teto do dia, amanhã os próximos saem sozinhos
   (quem recebeu já saiu da fila);
 - **o sorteio diário não repete** — ele só pega quem está `pendente`;
 - **o passo 4 do fluxo enxerga** quem foi contactado (`email` conta).
@@ -39,20 +39,22 @@ Regra de quem **NÃO** recebe (rede de segurança, além do filtro): empresa
 ainda **sem decisão** na validação (fora do segmento/CNPJ inativo que o dono
 não olhou) e **CNPJ inativo** — primeiro ele decide, depois ele recebe.
 
-## Ritmo: 10 por dia (decisão do dono, não é limite técnico)
+## Ritmo: rampa de aceleração (decisão do dono, 13/11/2026)
 
 | | |
 |---|---|
-| **Ritmo do projeto** | **10 e-mails por dia**, seg–sex, 8h–18h |
+| **Ritmo do projeto** | **20 e-mails/dia de 13/11 a 17/11 · 40/dia a partir de 18/11** |
 | Cota técnica do Brevo (plano gratuito) | 300/dia — nunca sugerida aqui |
-| Lista atual (242 contatos) | ≈ 25 dias nesse ritmo, de propósito |
+| Fila atual (593 e-mails por sair) | ≈ 15 dias úteis a 40/dia |
 
-Poucos por dia = resposta acompanhada, horário comercial respeitado (CLT),
-entregabilidade observada. O limite fica na constante `RITMO_DIA` do
-`disparar.js`: `--limite` acima de 10 é recusado. O contador do dia sai do
+Por que em degraus: subir de 10 direto para 40 num dia é o padrão que filtro
+anti-spam pune; volume consistente subindo em degraus protege a entregabilidade.
+Em cada degrau, conferir no painel do Brevo: bounce (< 3%) e reclamações
+(< 0,1%). O limite fica na constante `RITMO_DIA` do `disparar.js`:
+`--limite` acima do ritmo do dia é recusado. O contador do dia sai do
 **maior** entre três fontes — tabela `envios` no banco (vale no CI, onde não
 existe arquivo local), `%LOCALAPPDATA%\aid\ritmo.json` (reserva local) e a
-estatística do Brevo (só com chave de API) — e o tool sempre para em 10;
+estatística do Brevo (só com chave de API) — e o tool sempre para no teto;
 repetir o comando no mesmo dia só manda o que falta.
 
 ## Modo `--rotina` e agendamento automático
@@ -146,7 +148,7 @@ Gatilho IMAP (INBOX, não-lidos, marca como lido)
 node ferramentas\disparo\disparar.js                    # dry-run: só o plano, NÃO envia
 node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você (valida a chave)
 node ferramentas\disparo\disparar.js --limite 3 --enviar # teste pequeno com a lista real
-node ferramentas\disparo\disparar.js --enviar            # os 10 do dia
+node ferramentas\disparo\disparar.js --enviar            # o teto do dia
 node ferramentas\disparo\disparar.js --copy email_2 --status email --enviar   # follow-up D+4
 ```
 
@@ -185,7 +187,7 @@ backup antigo** `%LOCALAPPDATA%\aid\chaves.env` (legado, ignorado enquanto o
 | Flag | O que faz |
 |---|---|
 | `--teste` | 1 e-mail só pra você (assunto `[teste] …`) — valida chave/domínio sem tocar na lista |
-| `--limite N` | quantos envia (padrão e máximo: 10) |
+| `--limite N` | quantos envia (padrão e máximo: o teto do dia) |
 | `--copy CHAVE` | qual copy manda (padrão `email_1`; aprovadas: `email_1`, `email_2`, `email_3`) |
 | `--status LISTA` | de quem recebe (padrão `pendente`; pro D+4: `--status email`) |
 | `--replyto EMAIL` | para onde cai a resposta (padrão: `aidtecnologiaresolutiva@gmail.com`) |
