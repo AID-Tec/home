@@ -7,9 +7,11 @@
 #
 # Este workflow roda 1x por dia útil, às 20:30 de Brasília (depois do último
 # gatilho das 18h e da tolerância dele), e manda UM aviso no WhatsApp/Telegram
-# com o veredito do dia: gatilhos que dispararam, quantos e-mails saíram e o
-# tamanho da fila. Ferramenta: ferramentas/disparo/vigia.js (só leitura —
-# NUNCA envia e-mail de prospecto).
+# com o veredito do dia: gatilhos que dispararam, quantos e-mails saíram, o
+# tamanho da fila e se há negociação parada (demo/ligou/zap sem movimento há
+# 5 dias úteis — só contagem; quem retoma é o dono; nada é apagado).
+# Ferramenta: ferramentas/disparo/vigia.js (só leitura — NUNCA envia e-mail
+# de prospecto).
 #
 # Horário em BRT (UTC-3, sem horário de verão):
 #   20:30 BRT = 23:30 UTC  -> seg–sex (mesmos dias dos gatilhos da rotina)

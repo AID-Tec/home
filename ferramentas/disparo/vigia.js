@@ -13,7 +13,11 @@
      1. os runs do workflow "Pacto · rotina de envio" criados HOJE;
      2. se os 3 gatilhos (9h, 15h, 18h de Brasília) dispararam;
      3. quantos e-mails saíram hoje (tabela envios do painel);
-     4. o tamanho da fila (dry-run do próprio disparar.js).
+     4. o tamanho da fila (dry-run do próprio disparar.js);
+     5. negociação parada (decisão do dono, 13/11/2026): leads com status
+        demo/ligou/zap sem movimento há 5 dias úteis — só CONTAGEM na
+        mensagem; quem retoma a conversa é o dono (o sistema NÃO manda
+        e-mail em negociação em curso). Nada é apagado nunca.
 
    Depois manda UM aviso no WhatsApp/Telegram (notifier local, com reserva no
    Render) com o veredito. Sem dado de prospecto na mensagem — só contagem
@@ -32,6 +36,8 @@ const BASE = path.join(__dirname, '..', '..');
 const ARQ_ENV = path.join(BASE, '.env');
 const NOME_WORKFLOW = 'Pacto · rotina de envio';
 const RITMO_DIA = 20;  // degrau 1 da rampa (40 a partir de 18/11 — ver disparar.js)
+const NEG_DIAS_UTEIS = 5;               // negociação parada: demo/ligou/zap sem
+                                        // movimento há 5 dias úteis (dono, 13/11/2026)
 const TZ = 'America/Sao_Paulo';
 const GATILHOS_UTC = [12, 18, 21];      // 09:00, 15:00 e 18:00 de Brasília
 const TOL_ATRASO_MIN = 210;             // o GitHub já atrasou 3h; 17:51 p/ 18:00
@@ -106,20 +112,63 @@ function gatilhosFaltando(runs) {
 }
 
 /* -------------------------- painel e fila ------------------------------- */
-async function enviadosHoje(cfg, env, isoDia) {
+/* login do painel (mesma autenticação para todas as leituras) */
+async function loginPainel(cfg, env) {
   const r = await fetch(cfg.url + '/auth/v1/token?grant_type=password', {
     method: 'POST',
     headers: { apikey: cfg.anon, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: env.PACTO_EMAIL, password: env.PACTO_SENHA })
   });
   if (!r.ok) throw new Error('login do painel falhou (' + r.status + ')');
-  const tok = (await r.json()).access_token;
+  return (await r.json()).access_token;
+}
+
+async function enviadosHoje(cfg, tok, isoDia) {
   const ini = isoDia + 'T03:00:00.000Z';            // 00:00 de Brasília
   const q = await fetch(cfg.url + '/rest/v1/envios?select=id&enviado_em=gte.' +
     encodeURIComponent(ini) + '&limit=10000',
     { headers: { apikey: cfg.anon, Authorization: 'Bearer ' + tok } });
   if (!q.ok) throw new Error('nao li envios (' + q.status + ')');
   return (await q.json()).length;
+}
+
+/* dias úteis (seg–sex) entre a data ISO e hoje; 0 se for o mesmo dia.
+   Conta de manhã (12:00Z) para não escorregar no fuso. */
+function diasUteisAte(isoDe, isoHoje) {
+  const d = new Date(isoDe + 'T12:00:00Z');
+  const h = new Date(isoHoje + 'T12:00:00Z');
+  let n = 0;
+  for (let t = new Date(d); t < h; t.setUTCDate(t.getUTCDate() + 1)) {
+    const w = t.getUTCDay();
+    if (w >= 1 && w <= 5) n++;
+  }
+  return n;
+}
+
+/* negociação parada (decisão do dono, 13/11/2026): demo/ligou/zap sem
+   movimento (atualizado_em, que o painel grava a cada mudança de status)
+   há NEG_DIAS_UTEIS dias úteis. O sistema NÃO manda e-mail em negociação
+   em curso — quem retoma é o dono; o vigia só avisa. A mensagem leva só
+   CONTAGEM por status (log do Actions é público): o "quem" se vê no
+   painel, filtrando pelo status. */
+async function negociacoesParadas(cfg, tok, isoHoje) {
+  const r = await fetch(cfg.url + '/rest/v1/prospectos?select=status,atualizado_em' +
+    '&status=in.(demo,ligou,zap)&limit=5000',
+    { headers: { apikey: cfg.anon, Authorization: 'Bearer ' + tok } });
+  if (!r.ok) throw new Error('nao li prospectos (' + r.status + ')');
+  const rows = await r.json();
+  const cont = { demo: 0, ligou: 0, zap: 0 };
+  let paradas = 0;
+  for (const x of rows) {
+    const dt = x.atualizado_em ? new Date(x.atualizado_em) : null;
+    if (!dt || isNaN(dt)) continue;
+    const dia = brt(dt).iso;
+    if (diasUteisAte(dia, isoHoje) >= NEG_DIAS_UTEIS) {
+      paradas++;
+      cont[x.status] = (cont[x.status] || 0) + 1;
+    }
+  }
+  return { paradas: paradas, cont: cont };
 }
 
 /* fila: reaproveita o dry-run testado do disparar.js (nada sai no --rotina) */
@@ -186,9 +235,11 @@ async function avisar(env, titulo, mensagem) {
   const rodando = runs.filter(r => r.status === 'queued' || r.status === 'in_progress').length;
   const faltando = gatilhosFaltando(agendados);
 
-  /* 2) quanto saiu hoje + fila */
+  /* 2) quanto saiu hoje + fila + negociação parada */
   const cfg = cfgApp();
-  const enviados = await enviadosHoje(cfg, env, hoje.iso);
+  const tokPainel = await loginPainel(cfg, env);
+  const enviados = await enviadosHoje(cfg, tokPainel, hoje.iso);
+  const neg = await negociacoesParadas(cfg, tokPainel, hoje.iso);
   const fila = lerFila();
 
   /* 3) veredito
@@ -223,6 +274,15 @@ async function avisar(env, titulo, mensagem) {
         fila.vencidos + ' vencidos.');
     }
     if (rodando) motivos.push(rodando + ' execução ainda rodando.');
+  }
+
+  /* 4) negociação parada é venda, não rotina: avisa sempre; se a rotina
+     está ok, sobe para "atenção" para o ✅ não disfarçar o recado. */
+  if (neg.paradas) {
+    if (nivel === 'ok') nivel = 'alerta';
+    motivos.push(neg.paradas + ' negociação(ões) parada(s) há ' + NEG_DIAS_UTEIS +
+      '+ dias úteis (demo ' + neg.cont.demo + ' · ligou ' + neg.cont.ligou +
+      ' · zap ' + neg.cont.zap + ') — não é a rotina: retomar a conversa no painel.');
   }
 
   const icone = nivel === 'erro' ? '🔴' : nivel === 'alerta' ? '⚠️' :
