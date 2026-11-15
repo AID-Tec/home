@@ -11,8 +11,9 @@
   (do banco, em tempo real) e a cadência que vale. Datas são computadas
   no aparelho — nada aqui fica velho à mão.
 
-  Regra que ela carrega: 2 posts/semana (terça e sexta, 17h30), realmente
-  postados pelo app enquanto durar a restrição Meta; status vem de
+  Regra que ela carrega: 2 posts/semana (terça e sexta, 17h30), saem
+  SOZINHOS pelo motor (API) — a restrição Meta acabou (restabelecida
+  09/11, dono confirmou em 15/11); status vem de
   conteudo_status (sem linha = aguardando) e a fila da semana é o mapa
   AGENDA_IG (atualizar o mapa quando a semana de conteúdo muda).
   ==========================================================================
@@ -138,7 +139,6 @@
     <ul>
       <li><b>Terça e sexta, 17h30</b> — hora de pico da noite, antes do jantar (dono de restaurante olha o celular aí).</li>
       <li><b>Repor na mesma semana:</b> post que falha não acumula — sai no próximo vazio.</li>
-      <li><b>Restrição Meta:</b> enquanto o banner "Restringimos sua empresa de fazer publicidade" existir, <b>zero API e zero impulsionamento</b> — publicação 100% manual pelo celular, no pacote de <i>_revisao/post-XX</i>.</li>
       <li><b>Nunca publicar arte que o dono não aprovou.</b></li>
       <li>A conversa detalhada (aprendizados, testes de boost) mora no <b>CALENDARIO.md</b> do repositório — aqui é o painel, lá é a fonte.</li>
     </ul>
@@ -190,7 +190,7 @@ function desenharSemana(){
     if (AGENDA_IG[w]){
       const id = AGENDA_IG[w];
       tit = '17h30 · Post ' + id.split('-')[0] + ' — ' + esc(ITENS[id] ? ITENS[id].titulo : id) + etiqueta(statusDe(id));
-      det = 'pacote de postagem: <i>conteudo/_revisao/post-' + id.split('-')[0] + '/</i> (manual pelo app enquanto durar a restrição)';
+      det = 'pacote de postagem: <i>conteudo/aprovados/' + id + '/</i> — sai sozinho pelo motor às 17h30';
     } else if (w === 0 || w === 6){
       tit = 'Fim de semana — pausa';
       det = 'e-mails da rotina voltam segunda às 9h';
