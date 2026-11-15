@@ -210,6 +210,23 @@
   </div>
 </div>
 
+<!-- F -->
+<div class="bloco">
+  <div class="btopo">
+    <div class="letra">F</div>
+    <div><div class="bt">Funil de contato</div><div class="bf">quem recebeu e-mail e onde está hoje</div></div>
+  </div>
+  <div class="grid">
+    <div class="kpi"><div class="num" id="f-ct">-</div><div class="lbl">Contactados</div></div>
+    <div class="kpi"><div class="num" id="f-e2">-</div><div class="lbl">No 2º e-mail</div></div>
+    <div class="kpi"><div class="num" id="f-e3">-</div><div class="lbl">No 3º e-mail</div></div>
+    <div class="kpi"><div class="num" id="f-hum">-</div><div class="lbl">Conversa humana</div></div>
+    <div class="kpi"><div class="num" id="f-fech">-</div><div class="lbl">Fechou</div></div>
+    <div class="kpi"><div class="num" id="f-nao">-</div><div class="lbl">Recusa</div></div>
+  </div>
+  <div class="nota" id="fNota">lendo o banco...</div>
+</div>
+
 <div class="alerta">
   <b>Sem envio direto.</b> Essa tela só monta e guarda a lista. Quem dispara é
   <code>ferramentas/disparo</code> (pelo Brevo, 10 por dia): ele lê <b>exatamente esta
@@ -246,6 +263,7 @@ let LISTA = [];     // prontos pra envio (sem 'fora', sem contador, dedup)
 let TODOS = [];     // todas as linhas com e-mail, pra tela de contestação
 let BASE = [];      // base bruta (toda a tabela)
 let ENVIO_EMAILS = new Set(); // e-mails que JÁ receberam envio (tabela envios)
+let FUNIL_SETS = {s1: new Set(), s2: new Set(), s3: new Set()}; // e-mails por etapa (copy email_1/2/3)
 let cfiltro = 'todos';
 let ctermo = '';
 
@@ -384,6 +402,37 @@ function recalcula(){
   render({total: BASE.length, com_email, contador, sem_email, fora, elegiveis: elegiveis.length,
           distintos, duplicados, dominios, preview: LISTA.slice(0,25),
           enviados, faltam, dias});
+  recalculaFunil();
+}
+
+/* --- funil de contato (bloco F) -----------------------------------------
+   A mesma regra do plano/medir_funil.py, calculada aqui no navegador:
+   contactados = e-mails distintos com ao menos um envio (email_1, email_2
+   ou email_3); a fila de hoje usa o status ATUAL do prospecto (o e-mail é
+   a chave). Roda junto com recalcula(): contestação devolve lead para
+   'pendente' e o card atualiza na hora. Só CONTA — nunca mostra empresa. */
+function recalculaFunil(){
+  const contactados = new Set([...FUNIL_SETS.s1, ...FUNIL_SETS.s2, ...FUNIL_SETS.s3]);
+  const st = new Map();
+  TODOS.forEach(x => st.set(x.email, x.status || 'pendente'));
+  let humanos = 0, fechou = 0, nao = 0;
+  contactados.forEach(em => {
+    const k = st.get(em) || '?';
+    if (k === 'ligou' || k === 'zap' || k === 'demo') humanos++;
+    else if (k === 'fechou') fechou++;
+    else if (k === 'nao') nao++;
+  });
+  const ct = contactados.size;
+  document.getElementById('f-ct').textContent = ct;
+  document.getElementById('f-e2').textContent = FUNIL_SETS.s2.size;
+  document.getElementById('f-e3').textContent = FUNIL_SETS.s3.size;
+  document.getElementById('f-hum').textContent = humanos;
+  document.getElementById('f-fech').textContent = fechou;
+  document.getElementById('f-nao').textContent = nao;
+  const pct = v => ct ? Math.round(v * 100 / ct) : 0;
+  document.getElementById('fNota').textContent = ct
+    ? 'dos ' + ct + ' contactados: ' + pct(humanos) + '% em conversa humana · ' + fechou + ' fechou · ' + nao + ' recusa'
+    : 'ninguém contactado ainda — a fila de e-mails cria esse funil sozinha';
 }
 
 /* --- desenha números, prévia e arma o botão "Gerar lista" ---------------
@@ -457,10 +506,18 @@ async function carregar(){
     if (r2.error) throw r2.error;
     BASE = r2.data || [];
     // histórico real de envio (para Enviados/Faltam/Dias úteis)
-    const r3 = await sb.from('envios').select('email');
+    const r3 = await sb.from('envios').select('email,copy');
     if (r3.error) throw r3.error;
-    ENVIO_EMAILS = new Set((r3.data || []).map(x => (x.email||'').trim().toLowerCase())
-      .filter(x => x.indexOf('@') > 0));
+    const envRows = (r3.data || []).map(x => ({email: (x.email||'').trim().toLowerCase(), copy: x.copy || ''}))
+      .filter(x => x.email.indexOf('@') > 0);
+    ENVIO_EMAILS = new Set(envRows.map(x => x.email));
+    // funil: quem chegou a cada etapa (copy email_1/2/3) — mesma regra do
+    // plano/medir_funil.py; envios sem essas copies não contam como etapa.
+    FUNIL_SETS = {
+      s1: new Set(envRows.filter(x => x.copy === 'email_1').map(x => x.email)),
+      s2: new Set(envRows.filter(x => x.copy === 'email_2').map(x => x.email)),
+      s3: new Set(envRows.filter(x => x.copy === 'email_3').map(x => x.email))
+    };
     // com e-mail, já normalizado, pra tela de contestação
     TODOS = rows
       .map(x => ({email: (x.email||'').trim().toLowerCase(), dbemail: x.email, nome: x.nome, bairro: x.bairro,
