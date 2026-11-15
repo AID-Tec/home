@@ -114,7 +114,7 @@
       nasceu AppSheet + Google Sheets e evoluiu para sistema próprio (banco Supabase +
       painel em <span class="k">aidtr.com.br/pacto/</span>).</li>
     <li><b>Público de origem:</b> restaurantes e afins de Franca/SP (Simples Nacional).
-      Hoje a fila tem 242 contatos distintos e o ritmo é 10 e-mails/dia útil.</li>
+      Fila em 15/11: 477 prospectos · 150 envios · 90 contactados; ritmo na rampa de aquecimento: 20/dia útil (13–17/11) e 40/dia a partir de 18/11.</li>
     <li><b>O ciclo de 14 dias (20/10 → 02/11) acabou; o motivo continua.</b> O que é
       "pacto" hoje: cadência terça/sexta no IG + rotina automática de e-mail +
       divulgação com prova real. A frase acima <b>não muda sem decisão explícita do dono</b>.</li>
@@ -236,12 +236,12 @@
 <div class="regua">7 · Ritmo e horário (CLT)</div>
 <div class="cartao">
   <ul>
-    <li><b>10 e-mails por dia</b> — ritmo decidido pelo dono. Não é limite técnico, é cadência de prospecção.</li>
+    <li><b>Ritmo em rampa (dono, 13/11):</b> 20 e-mails/dia útil de 13–17/11 e 40/dia a partir de 18/11. Não é limite técnico, é cadência de prospecção com aquecimento.</li>
     <li><b>Segunda a sexta, das 8h às 18h.</b> Fora disso a ferramenta recusa (tolerância de 5 min às 18h00 pro gatilho da noite; flag só pra emergência, não é rotina).</li>
     <li>A cota técnica do plano gratuito do Brevo (300/dia) é <b>teto, nunca meta</b> — não se usa como referência.</li>
-    <li><b>Contador diário vem do banco</b> (tabela <span class="k">envios</span>, maior entre banco/contador local/Brevo): rodar de novo no mesmo dia só manda o que falta; 10 é o máximo, a ferramenta recusa mais.</li>
-    <li><b>Placar "Hoje" do painel = e-mails de hoje de <span class="k">envios</span></b> (n/10). O antigo "contatados 0/2" (fluxo manual) acabou — em 08/11/2026 o botão "Sortear 2" saiu e <span class="k">selecao_dia</span> ficou fora do fluxo.</li>
-    <li><b>Aba Campanha dá projeção:</b> enviados (e-mails distintos em <span class="k">envios</span>), faltam e dias úteis pra concluir a base (faltam ÷ 10, arredondado pra cima).</li>
+    <li><b>Contador diário vem do banco</b> (tabela <span class="k">envios</span>, maior entre banco/contador local/Brevo): rodar de novo no mesmo dia só manda o que falta; o ritmo do dia é o máximo (20 até 17/11; 40 a partir de 18/11), a ferramenta recusa mais.</li>
+    <li><b>Placar "Hoje" do painel = e-mails de hoje de <span class="k">envios</span></b> (n/20; n/40 a partir de 18/11). O antigo "contatados 0/2" (fluxo manual) acabou — em 08/11/2026 o botão "Sortear 2" saiu e <span class="k">selecao_dia</span> ficou fora do fluxo.</li>
+    <li><b>Aba Campanha dá projeção:</b> enviados (e-mails distintos em <span class="k">envios</span>), faltam e dias úteis pra concluir a base (faltam ÷ ritmo do dia — 20 até 17/11, 40 a partir de 18/11 — arredondado pra cima).</li>
     <li><b>Card "Agenda do dia" no painel:</b> e-mails que a rotina mandou hoje + se há arte aprovada pra postar hoje no IG (terça e sexta, 17h30).</li>
     <li><b>Agendamento automático (GitHub Actions, 3× por dia útil):</b>
       <br>· <b>09:00</b> — 1º contato + tudo atrasado · <b>15:00</b> — D+4 · <b>18:00</b> — D+9 + pendências
@@ -304,7 +304,7 @@
     <li><b>Implantação: R$ 997,00</b> — pagamento único.</li>
     <li><b>Mensalidade: R$ 57,99/mês.</b></li>
     <li><span class="nao">Nunca</span> R$ 150 — esse valor não existe em lugar nenhum do projeto.</li>
-    <li>Preço só aparece onde a página do produto mostra a oferta; o roteiro de venda ainda não fecha preço (decisão do dono).</li>
+    <li>Preço só aparece onde a página do produto mostra a oferta; o roteiro de venda não cita preço (decisão do dono). Quando o lead pergunta na conversa, a resposta pronta do painel dá o valor fechado (15/11).</li>
   </ul>
 </div>
 
@@ -371,7 +371,7 @@ node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você
 <div class="regua">16 · Direção e paralelismo (decisões do dono — 08/11/2026)</div>
 <div class="cartao">
   <ul>
-    <li><b>Regra do paralelismo:</b> <span class="nao">não se estaciona</span> ideia até o projeto atual "acabar" — a implantação não é dia: quem espera perde dias. O padrão é <b>pensar e elaborar em paralelo</b>, sem tocar a base/o envio do projeto que está rodando. A revisão de estado das ideias fica quinzenal (próxima 15/11/2026).</li>
+    <li><b>Regra do paralelismo:</b> <span class="nao">não se estaciona</span> ideia até o projeto atual "acabar" — a implantação não é dia: quem espera perde dias. O padrão é <b>pensar e elaborar em paralelo</b>, sem tocar a base/o envio do projeto que está rodando. A revisão de estado das ideias fica quinzenal (próxima 29/11/2026 — a de 15/11 foi feita).</li>
     <li><b>Multi-região:</b> <b>em andamento desde 08/11</b> — coluna <span class="k">regiao</span> aplicada em <span class="k">prospectos</span> (477), <span class="k">envios</span> (100) e <span class="k">campanhas</span> (1), default <span class="k">'franca-sp'</span> (retroativo; o dia a dia não muda). Regiões novas (Nordeste, Norte) entram com o valor próprio. Depois: <b>comparar regiões</b> por resultado (envios × falou × fechou) e escalar onde rende mais.</li>
     <li><b>Projeto gêmeo:</b> <b>em andamento desde 08/11</b> — kit de réplica em <span class="k">Gestão Gorjeta/plano/projeto-gemeo-kit.md</span> (banco → disparo → rotina → painel → conteúdo). Outro produto roda em paralelo com estrutura idêntica, banco e domínio <b>separados</b>; a régua é o padrão desta página.</li>
     <li><b>Todo ajuste no projeto atual entra no kit</b> (seção "Registro de alterações" do texto acima) — o kit <b>acompanha</b> o projeto, não é fotografado uma vez. Registro no mesmo dia do ajuste: o quê, onde ficou, como o produto novo nasce diferente.</li>

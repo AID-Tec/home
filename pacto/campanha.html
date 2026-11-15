@@ -164,7 +164,7 @@
   <div class="nota">
     <b>Regra fixa:</b> tem e-mail · não é <b>contador</b> (<i>email_marcado != 'contador'</i>) ·
     não está <b>fora do escopo</b> · 1 por e-mail (minúsculo, sem espaços).
-    <b>Enviados/Faltam/Dias úteis</b> contam do histórico <i>envios</i> no ritmo de 10/dia útil.
+    <b>Enviados/Faltam/Dias úteis</b> contam do histórico <i>envios</i> no ritmo do dia (20/dia útil até 17/11; 40 a partir de 18/11).
   </div>
 </div>
 
@@ -229,7 +229,7 @@
 
 <div class="alerta">
   <b>Sem envio direto.</b> Essa tela só monta e guarda a lista. Quem dispara é
-  <code>ferramentas/disparo</code> (pelo Brevo, 10 por dia): ele lê <b>exatamente esta
+  <code>ferramentas/disparo</code> (pelo Brevo, 20 por dia até 17/11; 40 a partir de 18/11): ele lê <b>exatamente esta
   regra</b>, manda a copy aprovada com o rodapé LGPD e marca quem já recebeu. A fila dele
   é esta lista, menos a <b>rede de segurança</b> (quem ainda não tem decisão e CNPJ
   inativo não recebe — primeiro você decide, depois ele sai daqui).
@@ -390,7 +390,7 @@ function recalcula(){
      quem nunca recebeu; dias úteis = faltam ÷ 10 (ritmo do dono). */
   const enviados = ENVIO_EMAILS.size;
   const faltam = LISTA.filter(x => !ENVIO_EMAILS.has(x.email)).length;
-  const dias = faltam > 0 ? Math.ceil(faltam / 10) : 0;
+  const dias = faltam > 0 ? Math.ceil(faltam / 20) : 0;
 
   const domMap = new Map();
   LISTA.forEach(x => {

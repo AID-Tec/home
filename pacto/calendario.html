@@ -196,7 +196,7 @@ function desenharSemana(){
       det = 'e-mails da rotina voltam segunda às 9h';
     } else {
       tit = 'E-mails da rotina';
-      det = 'gatilhos 9h · 15h · 18h (ritmo 10/dia útil)';
+      det = 'gatilhos 9h · 15h · 18h (ritmo 20/dia útil até 17/11; 40 a partir de 18/11)';
     }
     html += '<div class="' + classe + '">' +
             '<div class="dnum"><b>' + d.getDate() + '</b><span>' + DIAS[w] + (i === 0 ? ' · hoje' : '') + '</span></div>' +
@@ -213,7 +213,7 @@ function painelHoje(rows){
   const segunda = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((w + 6) % 7));
   const deHoje = rows.filter(r => r.enviado_em && new Date(r.enviado_em).toDateString() === hojeStr);
   const daSemana = rows.filter(r => r.enviado_em && new Date(r.enviado_em) >= segunda);
-  document.getElementById('k-mail').textContent = Array.from(new Set(deHoje.map(r => r.cnpj))).length + '/10';
+  document.getElementById('k-mail').textContent = Array.from(new Set(deHoje.map(r => r.cnpj))).length + '/20';
   document.getElementById('k-sem').textContent = daSemana.length + (daSemana.length === 1 ? ' envio' : ' envios');
 
   const idPost = AGENDA_IG[w];

@@ -323,7 +323,7 @@
 <header>
   <div class="h1">Pacto Gorjeta</div>
   <div class="stats">
-    <div class="stat meta"><b id="sHoje">0/10</b><span>E-mail hoje</span></div>
+    <div class="stat meta"><b id="sHoje">0/20</b><span>E-mail hoje</span></div>
     <div class="stat"><b id="sFalou">0</b><span>Falou</span></div>
     <div class="stat"><b id="sEmail">0</b><span>E-mail</span></div>
     <div class="stat"><b id="sZap">0</b><span>Zap</span></div>
@@ -472,8 +472,8 @@ Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostr
     </div>
     <div class="obj">
       <div class="perg">"Quanto custa?"</div>
-      <div class="resp">"Ainda não fechei o preço, porque varia conforme quantos colaboradores você tem. Me diz quantos você tem na equipe e eu te passo certinho."</div>
-      <div class="nota">Use essa enquanto o preço não estiver fechado. É honesta e te dá tempo.</div>
+      <div class="resp">"Implantação de R$ 997 (pagamento único) e mensalidade de R$ 57,99/mês."</div>
+      <div class="nota">Preço FECHADO (definicoes §11). A resposta antiga ("ainda não fechei o preço") saiu em 15/11 — o valor não depende do tamanho da equipe. Se achar caro, use a objeção "Tá caro" acima.</div>
     </div>
 
     <h3>Meta do dia</h3>
@@ -812,7 +812,7 @@ function contagens(){
     if (['email','zap','ligou','demo','fechou','nao'].indexOf(s) >= 0) c.falou++;
   });
   /* placar "E-mail hoje": e-mails distintos que a ROTINA mandou hoje */
-  document.getElementById('sHoje').textContent    = hojeIds.length + '/10';
+  document.getElementById('sHoje').textContent    = hojeIds.length + '/20';
   document.getElementById('sFalou').textContent   = c.falou;
   document.getElementById('sEmail').textContent   = c.email;
   document.getElementById('sZap').textContent     = c.zap;
@@ -853,10 +853,10 @@ function desenharFluxo(){
   /* gatilhos dos passos 2, 3 e 4 (o 1 foi calculado acima):
      2 = todas as copies aprovadas (mesma conta do resumo da aba Copy);
      3 = pelo menos 1 lista salva em 'campanhas' (foi gerada de verdade);
-     4 = ritmo do dia em dia útil (10 e-mails) — ou as janelas já fecharam. */
+     4 = ritmo do dia em dia útil (20 e-mails até 17/11; 40 a partir de 18/11) — ou as janelas já fecharam. */
   const p2ok = FLUXO.copias > 0 && FLUXO.copiasApr === FLUXO.copias;
   const p3ok = FLUXO.campanhas > 0;
-  const p4ok = !diaUtil || hj >= 10 || janelasFim;
+  const p4ok = !diaUtil || hj >= 20 || janelasFim;
 
   let det1;
   if (p1 === 0) det1 = 'nenhum impedimento — base revisada';
