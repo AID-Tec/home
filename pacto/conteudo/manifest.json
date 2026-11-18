@@ -1,19 +1,64 @@
 {
-  "gerado_em": "2026-11-11T23:41:40",
+  "gerado_em": "2026-11-18T06:31:03",
   "itens": [
     {
-      "id": "05-demonstracao-relatorio",
-      "titulo": "Demonstracao relatorio",
-      "status": "aprovado",
-      "hook": "O relatório em 30 segundos.",
-      "legenda": "O relatório em 30 segundos.\n\nSem copiar pra planilha. Sem conferir na mão.\n\nFecha o dia e o sistema separa por turno e por colaborador — pronto pro contador.\n\nMenos retrabalho. Mais comprovado.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "id": "06-quem-trabalhou-hoje",
+      "titulo": "Quem trabalhou de verdade hoje?",
+      "status": "aguardando",
+      "hook": "Quem trabalhou de verdade hoje?",
+      "legenda": "Quem trabalhou de verdade hoje?\n\nNo papel, cada um tem uma versão: quem faltou, quem entrou tarde, quem ficou até o fim. Sem registro, a memória decide — e a discussão vem junto.\n\nNo sistema, o dia fecha com o que cada turno teve. Quem faltou sem motivo fica com zero, com o motivo escrito.\n\nFecha o dia sem discussão: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
       "arte": [
-        "aprovados/05-demonstracao-relatorio/arte/slide_01.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_02.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_03.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_04.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_05.png",
-        "aprovados/05-demonstracao-relatorio/arte/slide_06.png"
+        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_01.png",
+        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_02.png",
+        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_03.png",
+        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_04.png",
+        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_05.png",
+        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_06.png"
+      ],
+      "tem_arte": true
+    },
+    {
+      "id": "07-do-caderno-para-o-celular",
+      "titulo": "Do caderno para o celular",
+      "status": "aguardando",
+      "hook": "Do caderno para o celular.",
+      "legenda": "Do caderno para o celular.\n\nComeçou no papel, passou pela planilha e virou sistema — porque com muita gente, muitos dias e muitos turnos, somar na mão vira retrabalho (e o erro entra junto).\n\nHoje o dia inteiro fica guardado em um lugar só. Sem copiar, sem conferir.\n\nVeja como funciona: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #bastidores #franca #francasp",
+      "arte": [
+        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_01.png",
+        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_02.png",
+        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_03.png",
+        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_04.png",
+        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_05.png"
+      ],
+      "tem_arte": true
+    },
+    {
+      "id": "08-falta-com-registro",
+      "titulo": "Faltou? O registro diz",
+      "status": "aguardando",
+      "hook": "Faltou sem justificativa? O registro diz.",
+      "legenda": "Faltou sem justificativa? O registro diz.\n\nNo papel, a falta vira palavra contra palavra. No sistema, a pessoa recebe zero na gorjeta do dia — com o motivo escrito e guardado.\n\nA história fica pronta pro contador, pro fiscal e pra equipe.\n\nSem discussão na falta: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "aguardando-aprovacao/08-falta-com-registro/arte/slide_01.png",
+        "aguardando-aprovacao/08-falta-com-registro/arte/slide_02.png",
+        "aguardando-aprovacao/08-falta-com-registro/arte/slide_03.png",
+        "aguardando-aprovacao/08-falta-com-registro/arte/slide_04.png",
+        "aguardando-aprovacao/08-falta-com-registro/arte/slide_05.png"
+      ],
+      "tem_arte": true
+    },
+    {
+      "id": "09-gorjeta-retida-ferias",
+      "titulo": "A gorjeta de férias também existe",
+      "status": "aguardando",
+      "hook": "A gorjeta de férias também existe.",
+      "legenda": "A gorjeta de férias também existe.\n\nParte do que a equipe recebe hoje é o que ela recebe quando tira férias. Se tudo fica misturado no pagamento do mês, esse dinheiro some na conta.\n\nO sistema separa todo dia: o que vai direto no mês e o que fica retido — por colaborador.\n\nFérias sem susto: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_01.png",
+        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_02.png",
+        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_03.png",
+        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_04.png",
+        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_05.png"
       ],
       "tem_arte": true
     },
@@ -76,11 +121,27 @@
         "postados/04-transparencia-gera-confianca/arte/slide_05.png"
       ],
       "tem_arte": true
+    },
+    {
+      "id": "05-demonstracao-relatorio",
+      "titulo": "Demonstracao relatorio",
+      "status": "postado",
+      "hook": "O relatório em 30 segundos.",
+      "legenda": "O relatório em 30 segundos.\n\nSem copiar pra planilha. Sem conferir na mão.\n\nFecha o dia e o sistema separa por turno e por colaborador — pronto pro contador.\n\nMenos retrabalho. Mais comprovado.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "postados/05-demonstracao-relatorio/arte/slide_01.png",
+        "postados/05-demonstracao-relatorio/arte/slide_02.png",
+        "postados/05-demonstracao-relatorio/arte/slide_03.png",
+        "postados/05-demonstracao-relatorio/arte/slide_04.png",
+        "postados/05-demonstracao-relatorio/arte/slide_05.png",
+        "postados/05-demonstracao-relatorio/arte/slide_06.png"
+      ],
+      "tem_arte": true
     }
   ],
   "contagem": {
-    "aguardando": 0,
-    "aprovado": 1,
-    "postado": 4
+    "aguardando": 4,
+    "aprovado": 0,
+    "postado": 5
   }
 }
