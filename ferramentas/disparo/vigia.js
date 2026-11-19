@@ -123,10 +123,13 @@ async function loginPainel(cfg, env) {
   return (await r.json()).access_token;
 }
 
+const PROJETO = 'gorjeta-franca';  /* tag do projeto (CRM, dono 19/11) — projeto
+                                      novo = troque aqui (mesma tag do banco) */
+
 async function enviadosHoje(cfg, tok, isoDia) {
   const ini = isoDia + 'T03:00:00.000Z';            // 00:00 de Brasília
-  const q = await fetch(cfg.url + '/rest/v1/envios?select=id&enviado_em=gte.' +
-    encodeURIComponent(ini) + '&limit=10000',
+  const q = await fetch(cfg.url + '/rest/v1/envios?select=id&projeto=eq.' + PROJETO +
+    '&enviado_em=gte.' + encodeURIComponent(ini) + '&limit=10000',
     { headers: { apikey: cfg.anon, Authorization: 'Bearer ' + tok } });
   if (!q.ok) throw new Error('nao li envios (' + q.status + ')');
   return (await q.json()).length;
@@ -153,7 +156,7 @@ function diasUteisAte(isoDe, isoHoje) {
    painel, filtrando pelo status. */
 async function negociacoesParadas(cfg, tok, isoHoje) {
   const r = await fetch(cfg.url + '/rest/v1/prospectos?select=status,atualizado_em' +
-    '&status=in.(demo,ligou,zap)&limit=5000',
+    '&projeto=eq.' + PROJETO + '&status=in.(demo,ligou,zap)&limit=5000',
     { headers: { apikey: cfg.anon, Authorization: 'Bearer ' + tok } });
   if (!r.ok) throw new Error('nao li prospectos (' + r.status + ')');
   const rows = await r.json();

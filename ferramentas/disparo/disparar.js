@@ -46,6 +46,8 @@ const { mandaEmail } = require('./smtp');
    resposta acompanhada. Quiser mudar o ritmo, mude AQUI (o tool passa a
    exigir esse máximo). */
 const RITMO_DIA = 40;   // degrau 2 da rampa (aplicado 19/11 — lembrete de 18/11)
+const PROJETO = 'gorjeta-franca';  /* tag do projeto (CRM, dono 19/11) — projeto
+                                      novo = troque aqui (mesma tag do banco) */
 const COTA_TECNICA = 300;   // teto técnico do Brevo (plano gratuito) — nunca sugerido
 const PAUSA_MS = 400;      // respiro entre envios (e não estoura a cota)
 
@@ -293,18 +295,26 @@ async function enviaBrevo(chave, pacote) {
   return { ok: r.ok, status: r.status, j: j, txt: txt };
 }
 
-/* já enviados hoje no Brevo? (melhor esforço — se a conta não devolver, segue) */
+/* já enviados hoje no Brevo? (melhor esforço — se a conta não devolver, segue)
+   Rota corrigida em 19/11: /v3/smtp/statistics não existe mais (404 "invalid
+   route") — a certa é /v3/smtp/statistics/reports (agregado por dia). Exige
+   chave de API v3 (BREVO_API_KEY, xkeysib-) e IP autorizado no Brevo.
+   OBS: o Brevo conta cada REQUEST — envio com BCC (cópia oculta) gera 2
+   requests por e-mail, por isso divide por 2. Melhor esforço mesmo: o
+   contador verdadeiro é o banco (ritmoBanco), que entra no Math.max. */
 async function enviadosHoje(chave) {
   try {
     const hoje = new Date();
     const d = hoje.getFullYear() + '-' +
       String(hoje.getMonth() + 1).padStart(2, '0') + '-' +
       String(hoje.getDate()).padStart(2, '0');
-    const r = await fetch('https://api.brevo.com/v3/smtp/statistics?startDate=' + d +
+    const r = await fetch('https://api.brevo.com/v3/smtp/statistics/reports?startDate=' + d +
       '&endDate=' + d, { headers: { 'api-key': chave, Accept: 'application/json' } });
     if (!r.ok) return null;
     const j = await r.json();
-    return (j && typeof j.requests === 'number') ? j.requests : null;
+    const rel = (j.reports || []).find(function (x) { return x.date === d; });
+    if (!rel || typeof rel.requests !== 'number') return null;
+    return Math.round(rel.requests / 2);
   } catch (e) { return null; }
 }
 
@@ -368,7 +378,8 @@ function addDias(iso, dias) {
    e quando". Sem tabela, a rotina degrada pra lista simples (e avisa). */
 async function leEnvios(cfg, tok) {
   try {
-    return await rest(cfg, tok, 'envios?select=cnpj,copy,enviado_em&order=enviado_em.asc&limit=10000', 'GET');
+    return await rest(cfg, tok, 'envios?select=cnpj,copy,enviado_em&projeto=eq.' + PROJETO +
+      '&order=enviado_em.asc&limit=10000', 'GET');
   } catch (e) {
     console.log('  ALERTA: não li o histórico (envios) — ' + String(e.message).slice(0, 120));
     return null;
@@ -380,7 +391,7 @@ async function leEnvios(cfg, tok) {
 async function gravaEnvio(cfg, tok, p, copy) {
   await rest(cfg, tok, 'envios', 'POST', [{
     cnpj: p.cnpj, email: p.email, copy: copy, hora: brl(new Date()).hora,
-    enviado_em: new Date().toISOString()
+    projeto: PROJETO, enviado_em: new Date().toISOString()
   }], { Prefer: 'return=minimal' });
 }
 
@@ -389,8 +400,8 @@ async function gravaEnvio(cfg, tok, p, copy) {
 async function ritmoBanco(cfg, tok) {
   try {
     const ini = new Date(); ini.setHours(0, 0, 0, 0);
-    const r = await rest(cfg, tok, 'envios?select=id&enviado_em=gte.' +
-      encodeURIComponent(ini.toISOString()) + '&limit=10000', 'GET');
+    const r = await rest(cfg, tok, 'envios?select=id&projeto=eq.' + PROJETO +
+      '&enviado_em=gte.' + encodeURIComponent(ini.toISOString()) + '&limit=10000', 'GET');
     return (r || []).length;
   } catch (e) { return 0; }
 }
@@ -535,7 +546,7 @@ Chave do Brevo: uma vez só, rode .\\guarda_chave.ps1 (guarda fora do Git).
   console.log('painel conectado ✓');
 
   /* --- dados --- */
-  const rows = await rest(cfg, tok, 'prospectos?select=id,cnpj,nome,razao,email,email_marcado,status,situacao,cnae_real,revisado_em,hora_envio&order=cnpj.asc&limit=5000', 'GET');
+  const rows = await rest(cfg, tok, 'prospectos?select=id,cnpj,nome,razao,email,email_marcado,status,situacao,cnae_real,revisado_em,hora_envio&projeto=eq.' + PROJETO + '&order=cnpj.asc&limit=5000', 'GET');
   const copias = await rest(cfg, tok, 'copias?select=chave,titulo,assunto,corpo,status,quando&order=ordem.asc', 'GET');
   console.log('base: ' + rows.length + ' linhas · copias: ' + copias.length + ' no banco');
 

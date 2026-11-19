@@ -481,9 +481,39 @@ Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostr
   </div>
 </div>
 
+<!-- ============ CRM — PROJETO (TAG) E ESTAGIOS ============ -->
+<div class="caixa" id="boxCrm">
+  <div class="topo" onclick="this.parentNode.classList.toggle('aberta')">
+    <span>CRM — projeto (tag) e estágios</span><span class="seta">&#9654;</span>
+  </div>
+  <div class="corpo">
+    <div class="nota" style="margin-top:11px">
+      <b>Projeto (tag):</b> separa os leads por projeto no próprio painel —
+      o seletor lá em cima filtra a lista, os contadores e o funil.
+      Duplicou o projeto pra outra cidade/produto? Entra como tag nova e
+      cada um fica no seu canto (mesma fonte, sem lead duplicado).
+    </div>
+    <div class="nota">
+      <b>Estágios do funil:</b> você cria, renomeia e apaga aqui.
+      Para mudar o estágio de um lead: abra o cartão dele → linha
+      <b>Estágio</b>.
+    </div>
+    <div id="crmEtapas" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px"></div>
+    <div style="display:flex;gap:7px;margin-top:11px">
+      <input id="crmNovaEtapa" placeholder="Nome do novo estágio… (ex.: orçamento)"
+             style="flex:1;padding:9px 12px;border:1px solid #d8dcea;border-radius:9px;font:600 13px Montserrat,system-ui,sans-serif">
+      <button id="crmCriar" class="ac" type="button" style="cursor:pointer">Criar estágio</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ BUSCA ============ -->
 <div class="ferramentas">
   <input class="busca" id="busca" type="search" placeholder="Buscar por nome, bairro ou telefone…" autocomplete="off">
+  <select id="selProjeto" title="Projeto (tag) — separa os leads por projeto"
+          style="padding:9px 12px;border:1px solid #d8dcea;border-radius:999px;font:700 12px Montserrat,system-ui,sans-serif;color:#5b6478;background:#fff;cursor:pointer">
+    <option value="">Todos os projetos</option>
+  </select>
   <div class="filtros" id="filtros">
     <button class="chip ativo" data-f="todos">Todos</button>
     <button class="chip" data-f="pendentes">Pendentes</button>
@@ -525,6 +555,7 @@ async function carregarDados(){
       id: r.cnpj, cnpj: r.cnpj, nome: r.nome, telefone: r.telefone, email: r.email,
       email_marcado: r.email_marcado, bairro: r.bairro, cnae: r.cnae,
       segmento: r.segmento, endereco: r.endereco,
+      projeto: r.projeto || 'gorjeta-franca', etapa: r.etapa || '',
       /* verdade real: vem da Receita (enriquecimento) e do Google Maps */
       razao: r.razao, cnae_real: r.cnae_real, atividade: r.atividade,
       situacao: r.situacao, categoria_maps: r.categoria_maps, revisado_em: r.revisado_em,
@@ -533,9 +564,28 @@ async function carregarDados(){
     };
   });
   ESTADO = {};
+  PROJETO_DE = {};
   (r1.data || []).forEach(function(r){
-    ESTADO[r.cnpj] = {s: r.status, o: r.obs || '', z: r.zap || '', d: r.atualizado_em};
+    ESTADO[r.cnpj] = {s: r.status, o: r.obs || '', z: r.zap || '', d: r.atualizado_em,
+                      e: r.etapa || ''};
+    PROJETO_DE[r.cnpj] = r.projeto || 'gorjeta-franca';
   });
+
+  /* CRM: estágios do funil (tabela etapas) + seletor de tag no topo */
+  try {
+    const re = await sb.from('etapas').select('nome,ordem,projeto').order('ordem');
+    if (re.error) throw re.error;
+    ETAPAS = re.data || [];
+  } catch (e) { ETAPAS = []; }
+  const projs = Array.from(new Set(LISTA.map(function(x){ return x.projeto; }).filter(Boolean)));
+  if (projetoAtual && projs.indexOf(projetoAtual) < 0) projetoAtual = '';
+  const selProj = document.getElementById('selProjeto');
+  if (selProj){
+    selProj.innerHTML = '<option value="">Todos os projetos</option>' + projs.map(function(p){
+      return '<option value="' + esc(p) + '">' + esc(p) + '</option>';
+    }).join('');
+    selProj.value = projetoAtual;
+  }
 
   /* placar/agenda de hoje = histórico real da rotina (tabela envios).
      O RLS deixa ler por anon/authenticated; trazemos tudo (a base é
@@ -619,6 +669,14 @@ let hojeIds = [];     /* cnpjs que a ROTINA enviou hoje (tabela envios) */
 let hojeEnvios = [];  /* linhas de envios de hoje (cnpj, hora, enviado_em) */
 let CONTEUDO = {};    /* status das artes de IG (conteudo_status) */
 
+/* ---------- CRM: projeto (tag) + estágios ---------- */
+let ETAPAS = [];        /* estágios cadastrados (tabela etapas) */
+let PROJETO_DE = {};    /* cnpj -> projeto (tag) */
+let projetoAtual = '';  /* '' = todos os projetos (guarda no navegador) */
+try { projetoAtual = localStorage.getItem('gg_projeto') || ''; } catch (e) { projetoAtual = ''; }
+function tagAtual(){ return projetoAtual || 'gorjeta-franca'; }
+function noProjeto(item){ return !projetoAtual || item.projeto === projetoAtual; }
+
 function hojeStr(){
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -651,10 +709,12 @@ function linkZap(t, nome){
 
 /* ---------- agenda do dia (rotina + arte IG) ---------- */
 /* Artes postadas terça e sexta às 17h30. O mapa abaixo é a fila oficial —
-   atualizar aqui quando a semana de conteúdo muda. */
+   atualizar aqui quando a semana de conteúdo muda.
+   Fila atual (CALENDARIO.md): sex 20/11 → 07 (se aprovado; senão o motor
+   sai o 09, já aprovado) · ter 24/11 → 08 · sex 27/11 → 09 */
 const AGENDA_IG = {
-  2: '04-transparencia-gera-confianca',
-  5: '05-demonstracao-relatorio'
+  2: '08-falta-com-registro',
+  5: '07-do-caderno-para-o-celular'
 };
 function renderAgenda(){
   const diaSem = new Date().getDay();
@@ -670,9 +730,9 @@ function renderAgenda(){
     dE = 'a rotina volta segunda às 9h';
   } else if (janelasFim){
     vE = qtd + ' enviados';
-    dE = qtd >= 10 ? 'ritmo do dia batido (10)' : 'janelas 9h/15h/18h concluídas';
+    dE = qtd >= 40 ? 'ritmo do dia batido (40)' : 'janelas 9h/15h/18h concluídas';
   } else {
-    vE = qtd + ' de 10';
+    vE = qtd + ' de 40';
     dE = 'gatilhos de hoje: 9h · 15h · 18h';
   }
   document.getElementById('agEmails').textContent = vE;
@@ -782,6 +842,7 @@ function enviar(){
         if (x.s !== undefined) patch.status = x.s;
         if (x.o !== undefined) patch.obs = x.o;
         if (x.z !== undefined) patch.zap = x.z;
+        if (x.e !== undefined) patch.etapa = x.e || null;   /* CRM: estágio */
         const r = await sb.from('prospectos').update(patch).eq('cnpj', x.id).select('cnpj');
         if (r.error) throw r.error;
         if (!r.data || !r.data.length) throw new Error('nada gravado (cnpj ' + x.id + ')');
@@ -807,6 +868,7 @@ function setSync(txt, erro){
 function contagens(){
   const c = {email:0, zap:0, ligou:0, demo:0, fechou:0, falou:0};
   Object.keys(ESTADO).forEach(function(k){
+    if (projetoAtual && PROJETO_DE[k] !== projetoAtual) return;   /* CRM: só o projeto visível */
     const s = ESTADO[k] && ESTADO[k].s;
     if (s && c[s] !== undefined) c[s]++;
     if (['email','zap','ligou','demo','fechou','nao'].indexOf(s) >= 0) c.falou++;
@@ -831,6 +893,7 @@ function desenharFluxo(){
      fora da lista não conta — comércio vizinho nunca travou. */
   let p1 = 0, p1Fora = 0, p1Ina = 0;
   LISTA.forEach(function(it){
+    if (!noProjeto(it)) return;          /* CRM: só o projeto visível */
     if (st(it.id) !== 'pendente') return;
     if (it.revisado_em) return;
     const sit = String(it.situacao || '').toUpperCase();
@@ -853,10 +916,10 @@ function desenharFluxo(){
   /* gatilhos dos passos 2, 3 e 4 (o 1 foi calculado acima):
      2 = todas as copies aprovadas (mesma conta do resumo da aba Copy);
      3 = pelo menos 1 lista salva em 'campanhas' (foi gerada de verdade);
-     4 = ritmo do dia em dia útil (20 e-mails até 17/11; 40 a partir de 18/11) — ou as janelas já fecharam. */
+     4 = ritmo do dia em dia útil (40/dia desde o degrau 2, 18/11) — ou as janelas já fecharam. */
   const p2ok = FLUXO.copias > 0 && FLUXO.copiasApr === FLUXO.copias;
   const p3ok = FLUXO.campanhas > 0;
-  const p4ok = !diaUtil || hj >= 20 || janelasFim;
+  const p4ok = !diaUtil || hj >= 40 || janelasFim;
 
   let det1;
   if (p1 === 0) det1 = 'nenhum impedimento — base revisada';
@@ -873,10 +936,10 @@ function desenharFluxo(){
   const det3 = FLUXO.campanhas < 0 ? 'não consegui conferir agora'
              : FLUXO.campanhas === 0 ? 'nenhuma lista gerada ainda'
              : FLUXO.campanhas + ' lista(s) salva(s) no Pacto';
-  const det4 = hj >= 10 ? hj + ' de 10 — ritmo do dia batido'
+  const det4 = hj >= 40 ? hj + ' de 40 — ritmo do dia batido'
              : !diaUtil ? 'fim de semana — rotina volta segunda às 9h'
              : janelasFim ? 'janelas do dia concluídas — ' + hj + ' enviados'
-             : (hj ? hj + ' de 10 enviados (gatilhos 9h/15h/18h)'
+             : (hj ? hj + ' de 40 enviados (gatilhos 9h/15h/18h)'
                    : 'rotina dispara hoje 9h/15h/18h');
 
   const passos = [
@@ -981,6 +1044,8 @@ function desenhar(){
     const it = LISTA[i];
     /* 'fora' nao passa pelo painel — eliminado nao ve, nao sorteia, nao conta */
     if (st(it.id) === 'fora') continue;
+    /* filtro de projeto (tag): outros projetos ficam de fora da visão */
+    if (!noProjeto(it)) continue;
     if (!passaFiltro(it) || !passaBusca(it)) continue;
     visiveis++;
 
@@ -992,7 +1057,8 @@ function desenhar(){
     html +=     '<div class="ponto ' + s + '"></div>';
     html +=     '<div class="info">';
     html +=       '<div class="nome">' + esc(it.nome || '(sem nome)') + marca + '</div>';
-    html +=       '<div class="sub">' + esc(it.bairro || '—') + ' · <span class="tel">' + esc(it.telefone || 'sem telefone') + '</span></div>';
+    html +=       '<div class="sub">' + esc(it.bairro || '—') + ' · <span class="tel">' + esc(it.telefone || 'sem telefone') + '</span>' +
+                  (etapaOf(id) ? ' · <b style="color:#5b6478">' + esc(etapaOf(id)) + '</b>' : '') + '</div>';
     html +=     '</div>';
     if (s !== 'pendente') html += '<span class="etiq ' + s + '">' + esc(et) + '</span>';
     html +=     '<span class="seta2">&#9654;</span>';
@@ -1009,6 +1075,20 @@ function desenhar(){
     html +=     '<div class="linha"><b>CNPJ:</b> ' + esc(it.cnpj || '—') + '</div>';
     html +=     '<div class="linha"><b>Endere&ccedil;o:</b> ' + esc(it.endereco || '—') + '</div>';
     if (diaOf(id)) html += '<div class="linha"><b>&Uacute;ltima a&ccedil;&atilde;o:</b> ' + esc(diaOf(id).slice(0,16).replace('T',' ')) + '</div>';
+
+    /* CRM: estágio comercial do lead (decisão do dono 19/11) — o dono
+       muda clicando aqui; opções = estágios do projeto dele */
+    const etAtual = etapaOf(id);
+    const optsEt = ['<option value=""' + (etAtual ? '' : ' selected') + '>&#8212; sem est&#225;gio &#8212;</option>']
+      .concat(ETAPAS.filter(function(t){ return t.projeto === it.projeto; }).map(function(t){
+        return '<option value="' + esc(t.nome) + '"' + (etAtual === t.nome ? ' selected' : '') + '>' +
+               esc(t.nome) + '</option>';
+      })).join('');
+    html += '<div class="linha" style="margin-top:9px"><b>Est&#225;gio:</b> ' +
+            '<select data-id="' + esc(id) + '" onchange="mudarEtapa(this)" ' +
+            'style="margin-left:6px;padding:5px 8px;border:1px solid #d8dcea;border-radius:7px;' +
+            'font:700 12px Montserrat,system-ui,sans-serif;color:#5b6478;background:#fff;cursor:pointer">' +
+            optsEt + '</select></div>';
 
     /* sinalizadores de qualidade da linha: seguram a mao antes de gastar
        tempo numa empresa que nao e' alvo ou que a Receita diz baixada. */
@@ -1097,10 +1177,13 @@ function desenhar(){
     const alvo = cont.querySelector('.cartao[data-id="' + abertoId + '"]');
     if (alvo) alvo.classList.add('aberto');
   }
+  const totalProj = LISTA.filter(noProjeto).length;
   document.getElementById('contador').textContent =
-    visiveis + ' de ' + LISTA.length + ' restaurantes' +
+    visiveis + ' de ' + totalProj + ' restaurantes' +
+    (projetoAtual ? ' · projeto ' + projetoAtual : '') +
     (filtro !== 'todos' ? ' · filtro: ' + filtro : '');
   contagens();
+  renderEtapas();   /* editor de estágios: uso por estágio, sempre atual */
 }
 
 function vazioMsg(){
@@ -1128,6 +1211,20 @@ function abrir(cab){
 
 function salvarObs(inp){ salvar(inp.dataset.id, undefined, inp.value); }
 function salvarZap(inp){ salvar(inp.dataset.id, undefined, undefined, inp.value); }
+
+/* ---------- CRM: estágio do lead (coluna etapa, tabela etapas) ---------- */
+function etapaOf(id){ const x = ESTADO[id]; return (x && x.e) ? x.e : ''; }
+function mudarEtapa(sel){ salvarEtapa(sel.dataset.id, sel.value); }
+function salvarEtapa(id, nome){
+  /* mesmo caminho do status: estado local primeiro (clique responde na
+     hora), banco na drenagem da fila offline */
+  if (!ESTADO[id]) ESTADO[id] = {};
+  ESTADO[id].e = nome;
+  ESTADO[id].d = new Date().toISOString();
+  fila.push({id:id, s:ESTADO[id].s, o:ESTADO[id].o, z:ESTADO[id].z, e:nome});
+  enviar();
+  desenhar();
+}
 
 /* ---------- eventos (delegados) ---------- */
 document.getElementById('lista').addEventListener('click', function(e){
@@ -1159,6 +1256,72 @@ function sincronizarChips(){
     c.classList.toggle('ativo', c.dataset.f === filtro);
   });
 }
+
+/* ---------- CRM: editor de estágios (tabela etapas) ----------
+   O dono cria/renomeia/apaga quando quiser (decisão 19/11). Apagar
+   só se nenhum lead estiver usando; renomear leva os leads junto. */
+async function recarregarEtapas(){
+  const re = await sb.from('etapas').select('nome,ordem,projeto').order('ordem');
+  if (!re.error) ETAPAS = re.data || [];
+}
+function renderEtapas(){
+  const box = document.getElementById('crmEtapas');
+  if (!box) return;
+  const vis = ETAPAS.filter(function(t){ return !projetoAtual || t.projeto === projetoAtual; });
+  box.innerHTML = vis.map(function(t){
+    const uso = Object.keys(ESTADO).filter(function(k){ return etapaOf(k) === t.nome; }).length;
+    const cod = encodeURIComponent(t.nome);
+    return '<span class="chip" style="cursor:default">' + esc(t.nome) +
+      ' <small style="color:#8a90a8;font-weight:700">' + uso + '</small>' +
+      ' <a href="#" onclick="renomearEtapa(decodeURIComponent(\'' + cod + '\'));return false" ' +
+      'title="Renomear" style="text-decoration:none">&#9998;</a>' +
+      ' <a href="#" onclick="apagarEtapa(decodeURIComponent(\'' + cod + '\'));return false" ' +
+      'title="Apagar" style="text-decoration:none">&#10005;</a></span>';
+  }).join('') || '<span class="linha">nenhum estágio neste projeto ainda</span>';
+}
+async function criarEtapa(){
+  const inp = document.getElementById('crmNovaEtapa');
+  const nome = (inp.value || '').trim();
+  if (!nome) return;
+  const r = await sb.from('etapas').insert({ projeto: tagAtual(), nome: nome, ordem: ETAPAS.length + 1 });
+  if (r.error) { alert('Não criou o estágio: ' + r.error.message); return; }
+  inp.value = '';
+  await recarregarEtapas();
+  renderEtapas(); desenhar();
+}
+async function renomearEtapa(nomeAtual){
+  const novo = prompt('Novo nome do estágio:', nomeAtual);
+  if (!novo) return;
+  const nome = novo.trim();
+  if (!nome || nome === nomeAtual) return;
+  const r1 = await sb.from('etapas').update({ nome: nome }).eq('projeto', tagAtual()).eq('nome', nomeAtual);
+  if (r1.error) { alert('Não renomeou: ' + r1.error.message); return; }
+  const r2 = await sb.from('prospectos').update({ etapa: nome }).eq('etapa', nomeAtual);
+  if (r2.error) { alert('Estágio renomeado, mas os leads não migraram: ' + r2.error.message); return; }
+  Object.keys(ESTADO).forEach(function(k){ if (ESTADO[k].e === nomeAtual) ESTADO[k].e = nome; });
+  await recarregarEtapas();
+  renderEtapas(); desenhar();
+}
+async function apagarEtapa(nome){
+  const n = Object.keys(ESTADO).filter(function(k){ return etapaOf(k) === nome; }).length;
+  if (n > 0) { alert('Não apaga: tem ' + n + ' lead nesse estágio. Mude os leads de estágio antes.'); return; }
+  if (!confirm('Apagar o estágio "' + nome + '"?')) return;
+  const r = await sb.from('etapas').delete().eq('projeto', tagAtual()).eq('nome', nome);
+  if (r.error) { alert('Não apagou: ' + r.error.message); return; }
+  await recarregarEtapas();
+  renderEtapas();
+}
+
+/* seletor de projeto (tag) no topo: muda lista, contadores e funil */
+document.getElementById('selProjeto').addEventListener('change', function(e){
+  projetoAtual = e.target.value;
+  try { localStorage.setItem('gg_projeto', projetoAtual); } catch (err) {}
+  desenhar();
+});
+document.getElementById('crmCriar').addEventListener('click', criarEtapa);
+document.getElementById('crmNovaEtapa').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') { e.preventDefault(); criarEtapa(); }
+});
 
 document.getElementById('btnVerHoje').onclick = function(){
   filtro = 'hoje'; sincronizarChips(); desenhar();
