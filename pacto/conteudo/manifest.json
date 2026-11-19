@@ -1,22 +1,6 @@
 {
-  "gerado_em": "2026-11-18T06:31:03",
+  "gerado_em": "2026-11-19T05:28:07",
   "itens": [
-    {
-      "id": "06-quem-trabalhou-hoje",
-      "titulo": "Quem trabalhou de verdade hoje?",
-      "status": "aguardando",
-      "hook": "Quem trabalhou de verdade hoje?",
-      "legenda": "Quem trabalhou de verdade hoje?\n\nNo papel, cada um tem uma versão: quem faltou, quem entrou tarde, quem ficou até o fim. Sem registro, a memória decide — e a discussão vem junto.\n\nNo sistema, o dia fecha com o que cada turno teve. Quem faltou sem motivo fica com zero, com o motivo escrito.\n\nFecha o dia sem discussão: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
-      "arte": [
-        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_01.png",
-        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_02.png",
-        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_03.png",
-        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_04.png",
-        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_05.png",
-        "aguardando-aprovacao/06-quem-trabalhou-hoje/arte/slide_06.png"
-      ],
-      "tem_arte": true
-    },
     {
       "id": "07-do-caderno-para-o-celular",
       "titulo": "Do caderno para o celular",
@@ -48,17 +32,33 @@
       "tem_arte": true
     },
     {
+      "id": "06-quem-trabalhou-hoje",
+      "titulo": "Quem trabalhou de verdade hoje?",
+      "status": "aprovado",
+      "hook": "Quem trabalhou de verdade hoje?",
+      "legenda": "Quem trabalhou de verdade hoje?\n\nNo papel, cada um tem uma versão: quem faltou, quem entrou tarde, quem ficou até o fim. Sem registro, a memória decide — e a discussão vem junto.\n\nNo sistema, o dia fecha com o que cada turno teve. Quem faltou sem motivo fica com zero, com o motivo escrito.\n\nFecha o dia sem discussão: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "aprovados/06-quem-trabalhou-hoje/arte/slide_01.png",
+        "aprovados/06-quem-trabalhou-hoje/arte/slide_02.png",
+        "aprovados/06-quem-trabalhou-hoje/arte/slide_03.png",
+        "aprovados/06-quem-trabalhou-hoje/arte/slide_04.png",
+        "aprovados/06-quem-trabalhou-hoje/arte/slide_05.png",
+        "aprovados/06-quem-trabalhou-hoje/arte/slide_06.png"
+      ],
+      "tem_arte": true
+    },
+    {
       "id": "09-gorjeta-retida-ferias",
       "titulo": "A gorjeta de férias também existe",
-      "status": "aguardando",
+      "status": "aprovado",
       "hook": "A gorjeta de férias também existe.",
       "legenda": "A gorjeta de férias também existe.\n\nParte do que a equipe recebe hoje é o que ela recebe quando tira férias. Se tudo fica misturado no pagamento do mês, esse dinheiro some na conta.\n\nO sistema separa todo dia: o que vai direto no mês e o que fica retido — por colaborador.\n\nFérias sem susto: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
       "arte": [
-        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_01.png",
-        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_02.png",
-        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_03.png",
-        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_04.png",
-        "aguardando-aprovacao/09-gorjeta-retida-ferias/arte/slide_05.png"
+        "aprovados/09-gorjeta-retida-ferias/arte/slide_01.png",
+        "aprovados/09-gorjeta-retida-ferias/arte/slide_02.png",
+        "aprovados/09-gorjeta-retida-ferias/arte/slide_03.png",
+        "aprovados/09-gorjeta-retida-ferias/arte/slide_04.png",
+        "aprovados/09-gorjeta-retida-ferias/arte/slide_05.png"
       ],
       "tem_arte": true
     },
@@ -140,8 +140,8 @@
     }
   ],
   "contagem": {
-    "aguardando": 4,
-    "aprovado": 0,
+    "aguardando": 2,
+    "aprovado": 2,
     "postado": 5
   }
 }
