@@ -28,7 +28,7 @@
    cota diária do plano gratuito respeitada (300), pausa entre envios,
    retomável (quem já recebeu saiu da fila), LGPD (rodapé sempre anexado).
 
-   Uso (ritmo do projeto: 10 por dia — não é cota do Brevo, é cadência):
+   Uso (ritmo do projeto: 40 por dia — não é cota do Brevo, é cadência):
      node disparar.js                          # só mostra o plano (dry-run)
      node disparar.js --enviar                 # manda os 10 do dia
      node disparar.js --limite 3 --enviar      # teste pequeno antes do bloco
@@ -45,7 +45,7 @@ const { mandaEmail } = require('./smtp');
    Brevo (plano gratuito) é 300/dia — é cadência: horário comercial,
    resposta acompanhada. Quiser mudar o ritmo, mude AQUI (o tool passa a
    exigir esse máximo). */
-const RITMO_DIA = 20;
+const RITMO_DIA = 40;   // degrau 2 da rampa (aplicado 19/11 — lembrete de 18/11)
 const COTA_TECNICA = 300;   // teto técnico do Brevo (plano gratuito) — nunca sugerido
 const PAUSA_MS = 400;      // respiro entre envios (e não estoura a cota)
 

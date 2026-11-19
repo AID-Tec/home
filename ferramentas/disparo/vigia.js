@@ -35,7 +35,7 @@ const path = require('path');
 const BASE = path.join(__dirname, '..', '..');
 const ARQ_ENV = path.join(BASE, '.env');
 const NOME_WORKFLOW = 'Pacto · rotina de envio';
-const RITMO_DIA = 20;  // degrau 1 da rampa (40 a partir de 18/11 — ver disparar.js)
+const RITMO_DIA = 40;  // degrau 2 da rampa (aplicado 19/11 — ver disparar.js)
 const NEG_DIAS_UTEIS = 5;               // negociação parada: demo/ligou/zap sem
                                         // movimento há 5 dias úteis (dono, 13/11/2026)
 const TZ = 'America/Sao_Paulo';

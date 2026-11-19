@@ -208,7 +208,7 @@ backup antigo** `%LOCALAPPDATA%\aid\chaves.env` (legado, ignorado enquanto o
   faltar, avisa e recusa o dia.
 - **Horário comercial**: fora de seg–sex 8h–18h ele recusa (CLT), a menos
   `--fora-horario`.
-- **Sem spam**: 10/dia por vez, pausa entre envios, quem recebeu sai da fila
+- **Sem spam**: ritmo do dia por vez (`RITMO_DIA`), pausa entre envios, quem recebeu sai da fila
   na hora, seguimento D+4/D+9 só com copy aprovada e separada.
 - **Resposta cai em você**: remetente `dyeison@aidtr.com.br` (domínio
   autenticado no Brevo) e MX do `aidtr.com.br` encaminha pro seu e-mail.
@@ -220,7 +220,7 @@ backup antigo** `%LOCALAPPDATA%\aid\chaves.env` (legado, ignorado enquanto o
 - [x] `node disparar.js --teste` — 1 e-mail cai na sua caixa (chave + domínio ok)
 - [x] `node disparar.js --limite 3 --enviar` — 3 e-mails reais, ver se chegam
 - [x] Conferir no painel: os 3 viraram `email`, saíram do sorteio
-- [x] Todo dia, 1 por dia: `node disparar.js --enviar` (10/dia, seg–sex 8–18h)
+- [x] Todo dia, 1 por dia: `node disparar.js --enviar` (ritmo do dia, seg–sex 8–18h)
 - [x] Conferir que as cópias ocultas chegam na sua caixa (BCC)
 - [x] Em D+4: `--copy email_2 --status email --enviar` (o 2º da sequência)
 - [ ] **Agendado no Actions** (9h/15h/18h seg–sex) — conferir o resultado em
