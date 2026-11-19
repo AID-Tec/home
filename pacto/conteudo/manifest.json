@@ -1,5 +1,5 @@
 {
-  "gerado_em": "2026-11-19T05:28:07",
+  "gerado_em": "2026-11-19T12:41:08",
   "itens": [
     {
       "id": "07-do-caderno-para-o-celular",
@@ -28,22 +28,6 @@
         "aguardando-aprovacao/08-falta-com-registro/arte/slide_03.png",
         "aguardando-aprovacao/08-falta-com-registro/arte/slide_04.png",
         "aguardando-aprovacao/08-falta-com-registro/arte/slide_05.png"
-      ],
-      "tem_arte": true
-    },
-    {
-      "id": "06-quem-trabalhou-hoje",
-      "titulo": "Quem trabalhou de verdade hoje?",
-      "status": "aprovado",
-      "hook": "Quem trabalhou de verdade hoje?",
-      "legenda": "Quem trabalhou de verdade hoje?\n\nNo papel, cada um tem uma versão: quem faltou, quem entrou tarde, quem ficou até o fim. Sem registro, a memória decide — e a discussão vem junto.\n\nNo sistema, o dia fecha com o que cada turno teve. Quem faltou sem motivo fica com zero, com o motivo escrito.\n\nFecha o dia sem discussão: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
-      "arte": [
-        "aprovados/06-quem-trabalhou-hoje/arte/slide_01.png",
-        "aprovados/06-quem-trabalhou-hoje/arte/slide_02.png",
-        "aprovados/06-quem-trabalhou-hoje/arte/slide_03.png",
-        "aprovados/06-quem-trabalhou-hoje/arte/slide_04.png",
-        "aprovados/06-quem-trabalhou-hoje/arte/slide_05.png",
-        "aprovados/06-quem-trabalhou-hoje/arte/slide_06.png"
       ],
       "tem_arte": true
     },
@@ -137,11 +121,27 @@
         "postados/05-demonstracao-relatorio/arte/slide_06.png"
       ],
       "tem_arte": true
+    },
+    {
+      "id": "06-quem-trabalhou-hoje",
+      "titulo": "Quem trabalhou de verdade hoje?",
+      "status": "postado",
+      "hook": "Quem trabalhou de verdade hoje?",
+      "legenda": "Quem trabalhou de verdade hoje?\n\nNo papel, cada um tem uma versão: quem faltou, quem entrou tarde, quem ficou até o fim. Sem registro, a memória decide — e a discussão vem junto.\n\nNo sistema, o dia fecha com o que cada turno teve. Quem faltou sem motivo fica com zero, com o motivo escrito.\n\nFecha o dia sem discussão: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "arte": [
+        "postados/06-quem-trabalhou-hoje/arte/slide_01.png",
+        "postados/06-quem-trabalhou-hoje/arte/slide_02.png",
+        "postados/06-quem-trabalhou-hoje/arte/slide_03.png",
+        "postados/06-quem-trabalhou-hoje/arte/slide_04.png",
+        "postados/06-quem-trabalhou-hoje/arte/slide_05.png",
+        "postados/06-quem-trabalhou-hoje/arte/slide_06.png"
+      ],
+      "tem_arte": true
     }
   ],
   "contagem": {
     "aguardando": 2,
-    "aprovado": 2,
-    "postado": 5
+    "aprovado": 1,
+    "postado": 6
   }
 }
