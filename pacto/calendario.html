@@ -213,7 +213,7 @@ function painelHoje(rows){
   const segunda = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((w + 6) % 7));
   const deHoje = rows.filter(r => r.enviado_em && new Date(r.enviado_em).toDateString() === hojeStr);
   const daSemana = rows.filter(r => r.enviado_em && new Date(r.enviado_em) >= segunda);
-  document.getElementById('k-mail').textContent = Array.from(new Set(deHoje.map(r => r.cnpj))).length + '/20';
+  document.getElementById('k-mail').textContent = Array.from(new Set(deHoje.map(r => r.cnpj))).length + '/40';
   document.getElementById('k-sem').textContent = daSemana.length + (daSemana.length === 1 ? ' envio' : ' envios');
 
   const idPost = AGENDA_IG[w];
