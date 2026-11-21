@@ -45,6 +45,17 @@ nav a{color:#cfe4f7;text-decoration:none;background:rgba(255,255,255,.12);
 .arts img{flex:0 0 auto;width:78vw;max-width:340px;aspect-ratio:1/1;object-fit:cover;
   border-radius:10px;border:1px solid var(--borda);scroll-snap-align:center;
   background:var(--indigo-50)}
+/* reel: vídeo no lugar das artes + roteiro (dono 21/11) */
+.media-video{padding:0 16px 4px}
+.media-video video{display:block;width:100%;max-width:340px;border-radius:12px;
+  background:#000}
+.roteiro{padding:0 16px 14px;font-size:13.5px;line-height:1.6}
+.roteiro h3{margin:12px 0 4px;font-size:12px;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--azul2)}
+.roteiro p{margin:5px 0}
+.roteiro ul{margin:5px 0;padding-left:18px}
+.roteiro li{margin:2px 0}
+.badge.reel{background:#fff1e2;color:#c2410c}
 .legenda{padding:0 16px 16px;font-size:13.5px;white-space:pre-line;line-height:1.6}
 .dica{padding:0 16px 14px;font-size:12px;color:var(--cinza)}
 
@@ -160,28 +171,55 @@ async function carregarTudo(){
     ITENS = base;
     const c = {aguardando:0,aprovado:0,reprovado:0,postado:0};
     ITENS.forEach(i=>{ if(c[i.status]!==undefined) c[i.status]++; });
+    const nReel = ITENS.filter(i=>i.tipo==='reel').length;
     document.getElementById('contagem').textContent =
-      c.aguardando+' pra revisar · '+c.aprovado+' aprovado(s) · '+c.reprovado+' reprovado(s) · '+c.postado+' postado(s)';
+      c.aguardando+' pra revisar · '+c.aprovado+' aprovado(s) · '+c.reprovado+' reprovado(s) · '+c.postado+' postado(s) · '+nReel+' reel(s)';
     render();
   }catch(e){
     el.innerHTML = '<div class="vazio">Não consegui carregar.<br><small>'+esc(e.message)+'</small></div>';
   }
 }
 
-function render(){
-  const el = document.getElementById('lista');
-  if (aba === 'reels'){ renderReels(el); return; }
-  const arr = ITENS.filter(i=>i.status===aba);
-  if(!arr.length){ el.innerHTML = '<div class="vazio">Nada nesta aba.</div>'; return; }
-  el.innerHTML = arr.map(item=>{
-    const imgs = (item.arte||[]).map(p=>
-      '<img loading="lazy" src="'+BASE+esc(p)+'?'+Date.now()+'" alt="'+esc(item.titulo)+'">').join('');
-    const decidido = (item.status==='aprovado'||item.status==='reprovado'||item.status==='postado');
-    /* decidido ganha um "voltar" — sem isso, um clique errado travava o
-       conteúdo pra sempre (não tinha como desfazer). Voltar manda pro
-       banco 'aguardando' e o script de sincronização devolve a pasta. */
-    const botoes = decidido ? `
+/* ---------- cartão único: post e reel na mesma estrutura (dono 21/11) ---------- */
+function brData(iso){ return iso ? String(iso).split('-').reverse().join('/') : ''; }
+
+/* histórico intercalado por data de publicação (data.txt): posts e reels no
+   mesmo lugar, na ordem em que saíram no feed. Sem data fica no fim. */
+function ordenaHist(arr){
+  return arr.slice().sort((a,b)=>{
+    const da = a.data || '', db = b.data || '';
+    if (da === db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da < db ? -1 : 1;
+  });
+}
+
+function cartao(item){
+  const ehReel = item.tipo === 'reel';
+  const imgs = (item.arte||[]).map(p=>
+    '<img loading="lazy" src="'+BASE+esc(p)+'?'+Date.now()+'" alt="'+esc(item.titulo)+'">').join('');
+  /* reel mostra o vídeo no lugar das artes; sem vídeo, aviso claro */
+  let midia;
+  if (ehReel && item.video){
+    midia = '<div class="media-video"><video controls preload="metadata" src="'+BASE+esc(item.video)+'"></video></div>' +
+            '<div class="dica">Vídeo do reel — 9:16, publicação manual no app.</div>';
+  } else if (ehReel){
+    midia = '<div class="vazio">Vídeo ainda não produzido — o roteiro está abaixo.</div>';
+  } else if (item.tem_arte){
+    midia = `<div class="arts">${imgs}</div><div class="dica">Arrastra pra ver os ${(item.arte||[]).length} slides →</div>`;
+  } else {
+    midia = '<div class="vazio">Sem arte gerada ainda.</div>';
+  }
+  const decidido = (item.status==='aprovado'||item.status==='reprovado'||item.status==='postado');
+  /* decidido ganha um "voltar" — sem isso, um clique errado travava o
+     conteúdo pra sempre (não tinha como desfazer). Voltar manda pro
+     banco 'aguardando' e o script de sincronização devolve a pasta.
+     Reel aprovado ganha "já publiquei": reel é publicação manual no app,
+     então o dono fecha o ciclo sem script (dono 21/11). */
+  const botoes = decidido ? `
       <div class="decisao">
+        ${(ehReel && item.status==='aprovado') ? `<button class="btnAprovar" onclick='decidir("${item.id}","postado")'>✓ Já publiquei</button>` : ''}
         <button class="btnVoltar" onclick='decidir("${item.id}","aguardando")'>↩ Voltar pra revisar</button>
       </div>` : `
       <div class="decisao">
@@ -192,25 +230,36 @@ function render(){
         <textarea id="ta-${item.id}" placeholder="O que ajustar? Ex: trocar o hook, mudar cor, outro ângulo…"></textarea>
         <button class="btnReprovar" style="width:100%;margin-top:8px;border-radius:9px;padding:12px" onclick='reprovarComent("${item.id}")'>Enviar reprovação</button>
       </div>`;
-    const coment = item.comentario ? '<div class="status-salvo">Comentário: '+esc(item.comentario)+'</div>' : '';
-    return `
+  const coment = item.comentario ? '<div class="status-salvo">Comentário: '+esc(item.comentario)+'</div>' : '';
+  const roteiro = item.roteiro ? '<div class="roteiro">'+mdSimples(item.roteiro)+'</div>' : '';
+  const data = item.data ? '<div class="dica">📅 publicado em '+brData(item.data)+'</div>' : '';
+  const tagReel = ehReel ? '<span class="badge reel">🎬 reel</span>' : '';
+  return `
     <article class="bloco">
       <div class="topo">
-        <span class="badge ${esc(item.status)}">${esc(item.status)}</span>
+        <span class="badge ${esc(item.status)}">${esc(item.status)}</span>${tagReel}
         <div class="titulo">${esc(item.titulo)}</div>
         ${item.hook?`<div class="hook">${esc(item.hook)}</div>`:''}
       </div>
-      ${item.tem_arte?`<div class="arts">${imgs}</div><div class="dica">Arrastra pra ver os ${(item.arte||[]).length} slides →</div>`:'<div class="vazio">Sem arte gerada ainda.</div>'}
+      ${midia}
+      ${roteiro}
+      ${data}
       ${item.legenda?`<div class="legenda">${esc(item.legenda)}</div>`:''}
       ${coment}
       ${botoes}
       <div class="status-salvo" id="st-${item.id}"></div>
     </article>`;
-  }).join('');
 }
 
-/* ---------- aba Reels (roteiro + vídeo; substitui o antigo menu "Ver o vídeo") ---------- */
-let ROTEIRO = null;
+function render(){
+  const el = document.getElementById('lista');
+  if (aba === 'reels'){ renderReels(el); return; }
+  const arr = ordenaHist(ITENS.filter(i=>i.status===aba));
+  if(!arr.length){ el.innerHTML = '<div class="vazio">Nada nesta aba.</div>'; return; }
+  el.innerHTML = arr.map(cartao).join('');
+}
+
+/* ---------- aba Reels: filtro dos reels do manifesto (reel é post) ---------- */
 function mdSimples(md){
   const L = String(md).split(/\r?\n/), out = [];
   let tipo = null;                                   /* 'p' | 'ul' | null */
@@ -231,27 +280,9 @@ function mdSimples(md){
   return out.join('');
 }
 async function renderReels(el){
-  el.innerHTML = '<div class="vazio">Carregando reels…</div>';
-  if (ROTEIRO === null){
-    try{
-      const r = await fetch(BASE + '_reels/roteiro.md?' + Date.now());
-      ROTEIRO = r.ok ? await r.text() : '(roteiro ainda não sincronizado — rode o sincronizador de conteúdo)';
-    }catch(e){ ROTEIRO = '(não consegui carregar: ' + e.message + ')'; }
-  }
-  el.innerHTML = `
-    <article class="bloco">
-      <div class="topo"><span class="badge postado">Reel 1</span>
-        <div class="titulo">Vídeo no ar</div>
-        <div class="hook">Mesmo arquivo do antigo menu "Ver o vídeo"</div></div>
-      <video controls preload="metadata" src="../video.mp4"
-             style="width:100%;max-width:360px;border-radius:12px;background:#000"></video>
-    </article>
-    <article class="bloco">
-      <div class="topo"><span class="badge aguardando">Reel 2</span>
-        <div class="titulo">Roteiro — voz do dono</div>
-        <div class="hook">produção pendente · 9:16 · 30–45 s</div></div>
-      <div class="legenda" style="white-space:normal">${mdSimples(ROTEIRO)}</div>
-    </article>`;
+  const arr = ordenaHist(ITENS.filter(i=>i.tipo==='reel'));
+  if(!arr.length){ el.innerHTML = '<div class="vazio">Nenhum reel no histórico ainda.</div>'; return; }
+  el.innerHTML = arr.map(cartao).join('');
 }
 
 /* ---------- decisão (grava no Supabase) ---------- */
@@ -287,8 +318,9 @@ function reprovarComent(id){
 function atualizarContagem(){
   const c = {aguardando:0,aprovado:0,reprovado:0,postado:0};
   ITENS.forEach(i=>{ if(c[i.status]!==undefined) c[i.status]++; });
+  const nReel = ITENS.filter(i=>i.tipo==='reel').length;
   document.getElementById('contagem').textContent =
-    c.aguardando+' pra revisar · '+c.aprovado+' aprovado(s) · '+c.reprovado+' reprovado(s) · '+c.postado+' postado(s)';
+    c.aguardando+' pra revisar · '+c.aprovado+' aprovado(s) · '+c.reprovado+' reprovado(s) · '+c.postado+' postado(s) · '+nReel+' reel(s)';
 }
 
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{

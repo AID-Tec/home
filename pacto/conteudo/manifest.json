@@ -1,12 +1,29 @@
 {
-  "gerado_em": "2026-11-21T12:15:36",
+  "gerado_em": "2026-11-21T18:42:12",
   "itens": [
+    {
+      "id": "reel-2-voz-do-dono",
+      "titulo": "Reel 2 — do papel para o sistema (voz do dono)",
+      "tipo": "reel",
+      "status": "aguardando",
+      "data": null,
+      "hook": "",
+      "legenda": "",
+      "roteiro": "# Reel 2 — voz do dono (2ª peça de vídeo)\n\nPreparado em 18/11/2026. Publicação: data a definir pelo dono.\nFormato: 9:16, 30–45 s, voz do dono (mesmo pipeline do reel 1 — XTTS v2).\n\n## Por que este roteiro\n\nO reel 1 (02/11) abriu a conta. Este fecha a semana com a MESMA dor dos\nposts 06–08 (rateio no papel, falta sem registro): quem viu o carrossel\nencontra a mesma mensagem em vídeo — consistência de público.\n\n## Gancho (0–3 s)\n\n\"A gorjeta de um dia inteiro, dividida no papel. Foi assim que eu vi.\"\n\n## Dor (3–12 s)\n\n\"Caderno, soma na mão, memória de quem trabalhou. Faltou alguém? Quem\ndecide é a conversa do dia seguinte — e nada fica escrito.\"\n\n## Virada (12–22 s)\n\n\"Essa empresa migrou do papel pra planilha, e da planilha pro sistema.\nNão por moda: por volume. Dezenas de colaboradores, dois turnos, todo dia.\"\n\n## O que faz (22–35 s)\n\n\"Hoje o dia fecha sozinho: quem trabalhou, quem faltou (com motivo\nescrito), o que vai direto no mês e o que fica retido pra férias e 13º.\nRelatório pronto pro contador.\"\n\n## CTA (35–42 s)\n\n\"Se a sua casa ainda divide no papel, é isso que a gente resolve.\naidtr.com.br/whats\"\n\n## Regras de produção\n\n- **Texto na tela:** os mesmos trechos, 1 linha por vez, Montserrat\n  (design system AID).\n- **Imagens:** telas do painel + arte dos posts 06–08 (consistência\n  visual com a semana).\n- **Edição:** cortes a cada 2–3 s; a voz manda, trilha baixa.\n- **Números:** NENHUM número específico sem confirmação do dono antes\n  de publicar (os ~60 funcionários/30 por turno são fala aproximada).\n- **CTA:** só `aidtr.com.br/whats` — nunca número de WhatsApp.\n- **Publicação:** manual no app (reels); data a definir pelo dono.",
+      "video": null,
+      "arte": [],
+      "tem_arte": false
+    },
     {
       "id": "07-do-caderno-para-o-celular",
       "titulo": "Do caderno para o celular",
+      "tipo": "post",
       "status": "aprovado",
+      "data": null,
       "hook": "Do caderno para o celular.",
       "legenda": "Do caderno para o celular.\n\nComeçou no papel, passou pela planilha e virou sistema — porque com muita gente, muitos dias e muitos turnos, somar na mão vira retrabalho (e o erro entra junto).\n\nHoje o dia inteiro fica guardado em um lugar só. Sem copiar, sem conferir.\n\nVeja como funciona: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #bastidores #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "aprovados/07-do-caderno-para-o-celular/arte/slide_01.png",
         "aprovados/07-do-caderno-para-o-celular/arte/slide_02.png",
@@ -19,9 +36,13 @@
     {
       "id": "08-falta-com-registro",
       "titulo": "Faltou? O registro diz",
+      "tipo": "post",
       "status": "aprovado",
+      "data": null,
       "hook": "Faltou sem justificativa? O registro diz.",
       "legenda": "Faltou sem justificativa? O registro diz.\n\nNo papel, a falta vira palavra contra palavra. No sistema, a pessoa recebe zero na gorjeta do dia — com o motivo escrito e guardado.\n\nA história fica pronta pro contador, pro fiscal e pra equipe.\n\nSem discussão na falta: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "aprovados/08-falta-com-registro/arte/slide_01.png",
         "aprovados/08-falta-com-registro/arte/slide_02.png",
@@ -34,9 +55,13 @@
     {
       "id": "01-transparencia-evita-briga",
       "titulo": "Transparência evita briga por gorjeta",
+      "tipo": "post",
       "status": "postado",
+      "data": "2026-10-30",
       "hook": "Briga por gorjeta quase sempre é falta de transparência.",
       "legenda": "Briga por gorjeta quase sempre é falta de transparência.\n\nQuando cada colaborador sabe exatamente quanto recebeu, não tem espaço pra desconfiança.\n\nTransparência evita discussão, gera confiança e melhora o clima da equipe.\n\nMenos \"eu acho\". Mais comprovado.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "postados/01-transparencia-evita-briga/arte/slide_01.png",
         "postados/01-transparencia-evita-briga/arte/slide_02.png",
@@ -49,9 +74,13 @@
     {
       "id": "02-papel-x-comprovado",
       "titulo": "Papel ou comprovado?",
+      "tipo": "post",
       "status": "postado",
+      "data": "2026-11-08",
       "hook": "Papel ou comprovado?",
       "legenda": "Papel ou comprovado?\n\nTodo mês a mesma correria pra somar a gorjeta no fim.\n\nE se alguém pedir pra comprovar quanto cada colaborador recebeu?\n\nCom o controle de gorjetas da AID, o relatório sai por colaborador, por turno e por dia. Pronto pra entregar.\n\nMenos correria. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "postados/02-papel-x-comprovado/arte/slide_01.png",
         "postados/02-papel-x-comprovado/arte/slide_02.png",
@@ -64,9 +93,13 @@
     {
       "id": "03-contador-pede-lista",
       "titulo": "Seu contador já te pediu a lista da gorjeta?",
+      "tipo": "post",
       "status": "postado",
+      "data": "2026-11-08",
       "hook": "Seu contador já te pediu a lista da gorjeta?",
       "legenda": "Seu contador já te pediu a lista da gorjeta?\n\nTodo mês a mesma correria pra separar e somar por colaborador?\n\nCom o controle de gorjetas da AID, o relatório sai por colaborador, por turno e por dia. Pronto pra entregar ao contador.\n\nMenos correria. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "postados/03-contador-pede-lista/arte/slide_01.png",
         "postados/03-contador-pede-lista/arte/slide_02.png",
@@ -79,9 +112,13 @@
     {
       "id": "04-transparencia-gera-confianca",
       "titulo": "Transparência gera confiança",
+      "tipo": "post",
       "status": "postado",
+      "data": "2026-11-11",
       "hook": "Transparência gera confiança.",
       "legenda": "Transparência gera confiança.\n\nQuem não sabe o que recebeu desconfia da conta. E desconfiança mina o clima da equipe.\n\nCom o controle de gorjetas da AID, cada colaborador vê o próprio valor — por turno, por dia.\n\nMenos desconfiança. Mais transparência.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "postados/04-transparencia-gera-confianca/arte/slide_01.png",
         "postados/04-transparencia-gera-confianca/arte/slide_02.png",
@@ -94,9 +131,13 @@
     {
       "id": "05-demonstracao-relatorio",
       "titulo": "Demonstracao relatorio",
+      "tipo": "post",
       "status": "postado",
+      "data": "2026-11-13",
       "hook": "O relatório em 30 segundos.",
       "legenda": "O relatório em 30 segundos.\n\nSem copiar pra planilha. Sem conferir na mão.\n\nFecha o dia e o sistema separa por turno e por colaborador — pronto pro contador.\n\nMenos retrabalho. Mais comprovado.\n\nPeça uma demonstração: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "postados/05-demonstracao-relatorio/arte/slide_01.png",
         "postados/05-demonstracao-relatorio/arte/slide_02.png",
@@ -110,9 +151,13 @@
     {
       "id": "06-quem-trabalhou-hoje",
       "titulo": "Quem trabalhou de verdade hoje?",
+      "tipo": "post",
       "status": "postado",
+      "data": "2026-11-19",
       "hook": "Quem trabalhou de verdade hoje?",
       "legenda": "Quem trabalhou de verdade hoje?\n\nNo papel, cada um tem uma versão: quem faltou, quem entrou tarde, quem ficou até o fim. Sem registro, a memória decide — e a discussão vem junto.\n\nNo sistema, o dia fecha com o que cada turno teve. Quem faltou sem motivo fica com zero, com o motivo escrito.\n\nFecha o dia sem discussão: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "postados/06-quem-trabalhou-hoje/arte/slide_01.png",
         "postados/06-quem-trabalhou-hoje/arte/slide_02.png",
@@ -126,9 +171,13 @@
     {
       "id": "09-gorjeta-retida-ferias",
       "titulo": "A gorjeta de férias também existe",
+      "tipo": "post",
       "status": "postado",
+      "data": "2026-11-20",
       "hook": "A gorjeta de férias também existe.",
       "legenda": "A gorjeta de férias também existe.\n\nParte do que a equipe recebe hoje é o que ela recebe quando tira férias. Se tudo fica misturado no pagamento do mês, esse dinheiro some na conta.\n\nO sistema separa todo dia: o que vai direto no mês e o que fica retido — por colaborador.\n\nFérias sem susto: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
+      "roteiro": null,
+      "video": null,
       "arte": [
         "postados/09-gorjeta-retida-ferias/arte/slide_01.png",
         "postados/09-gorjeta-retida-ferias/arte/slide_02.png",
@@ -137,11 +186,26 @@
         "postados/09-gorjeta-retida-ferias/arte/slide_05.png"
       ],
       "tem_arte": true
+    },
+    {
+      "id": "reel-1-voz-do-dono",
+      "titulo": "Reel 1 — a gorjeta e o imposto (voz do dono)",
+      "tipo": "reel",
+      "status": "postado",
+      "data": "2026-11-02",
+      "hook": "Sua gorjeta está inflando o faturamento do restaurante.",
+      "legenda": "Sua gorjeta está inflando o faturamento do restaurante.\n\nE o imposto vem junto: se a gorjeta não aparece separada, ela entra como receita da empresa.\n\nAí o fiscal pergunta quanto foi repartido e para quem — e sem registro guardado não existe resposta.\n\nO sistema de gestão de gorjeta da AID registra cada lançamento por colaborador, turno e dia, e entrega o relatório do mês pronto, direto no celular.\n\nQuer ver com os números do seu restaurante? Chama no WhatsApp: aidtr.com.br/whats\n\n#gestaodegorjeta #restaurante #bar #gorjeta #gestaoderestaurantes #francasp #interiorpaulista #aidtec",
+      "roteiro": "# Reel 1 — voz do dono (peça publicada em 02/11/2026)\n\nFonte da verdade: constante `ROTEIRO` em `video/reels_2026-10-27/reels.py`\n(o README da pasta manda o texto morar lá — este roteiro é a cópia para o\npainel acompanhar o reel junto de roteiro e legenda).\n\nFormato: 9:16 · 1080×1920 · 30 fps · 35,9 s · voz Edge TTS (narração).\n\n## Bloco 1 — gancho (0–7 s)\n\n\"Você paga imposto em cima da gorjeta do seu colaborador.\"\n\n## Bloco 2 — a dor (7–15 s)\n\n\"Isso acontece porque a gorjeta entra no faturamento da empresa e ninguém\nsepara quanto é de cada um.\"\n\n## Bloco 3 — a pergunta do fiscal (15–23 s)\n\n\"Aí o fiscal pergunta: quanto foi repartido, e pra quem? Sem registro\nguardado, não existe resposta.\"\n\n## Bloco 4 — o que faz (23–30 s)\n\n\"O sistema de gorjetas da AID registra cada lançamento por colaborador,\nturno e dia. E já sai pronto o relatório de quanto cada um recebeu.\"\n\n## Bloco 5 — CTA (30–36 s)\n\n\"Me chama no WhatsApp. Eu te mostro em dois minutos, com os números do\nseu restaurante.\"\n\n## Regras da peça\n\n- CTA único: WhatsApp (`aidtr.com.br/whats`) — nunca link na bio.\n- \"Colaborador\", nunca \"garçom\".\n- Áudio: publicar sem música (a narração é o conteúdo); música em alta\n  só com volume baixo.\n- Capa: primeiro quadro (\"Você paga imposto em cima da gorjeta...\").",
+      "video": "_revisao/reel-gorjeta-xtts-v2.mp4",
+      "arte": [],
+      "tem_arte": false
     }
   ],
   "contagem": {
-    "aguardando": 0,
+    "aguardando": 1,
     "aprovado": 2,
-    "postado": 7
+    "reprovado": 0,
+    "postado": 8,
+    "reel": 2
   }
 }
