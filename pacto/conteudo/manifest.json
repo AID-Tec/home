@@ -1,33 +1,33 @@
 {
-  "gerado_em": "2026-11-21T08:08:26",
+  "gerado_em": "2026-11-21T12:15:36",
   "itens": [
     {
       "id": "07-do-caderno-para-o-celular",
       "titulo": "Do caderno para o celular",
-      "status": "aguardando",
+      "status": "aprovado",
       "hook": "Do caderno para o celular.",
       "legenda": "Do caderno para o celular.\n\nComeçou no papel, passou pela planilha e virou sistema — porque com muita gente, muitos dias e muitos turnos, somar na mão vira retrabalho (e o erro entra junto).\n\nHoje o dia inteiro fica guardado em um lugar só. Sem copiar, sem conferir.\n\nVeja como funciona: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #bastidores #franca #francasp",
       "arte": [
-        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_01.png",
-        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_02.png",
-        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_03.png",
-        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_04.png",
-        "aguardando-aprovacao/07-do-caderno-para-o-celular/arte/slide_05.png"
+        "aprovados/07-do-caderno-para-o-celular/arte/slide_01.png",
+        "aprovados/07-do-caderno-para-o-celular/arte/slide_02.png",
+        "aprovados/07-do-caderno-para-o-celular/arte/slide_03.png",
+        "aprovados/07-do-caderno-para-o-celular/arte/slide_04.png",
+        "aprovados/07-do-caderno-para-o-celular/arte/slide_05.png"
       ],
       "tem_arte": true
     },
     {
       "id": "08-falta-com-registro",
       "titulo": "Faltou? O registro diz",
-      "status": "aguardando",
+      "status": "aprovado",
       "hook": "Faltou sem justificativa? O registro diz.",
       "legenda": "Faltou sem justificativa? O registro diz.\n\nNo papel, a falta vira palavra contra palavra. No sistema, a pessoa recebe zero na gorjeta do dia — com o motivo escrito e guardado.\n\nA história fica pronta pro contador, pro fiscal e pra equipe.\n\nSem discussão na falta: aidtr.com.br/whats\n\n#controledegorjetas #restaurante #lanchonete #bar #gorjeta #gestaoderestaurantes #transparencia #franca #francasp",
       "arte": [
-        "aguardando-aprovacao/08-falta-com-registro/arte/slide_01.png",
-        "aguardando-aprovacao/08-falta-com-registro/arte/slide_02.png",
-        "aguardando-aprovacao/08-falta-com-registro/arte/slide_03.png",
-        "aguardando-aprovacao/08-falta-com-registro/arte/slide_04.png",
-        "aguardando-aprovacao/08-falta-com-registro/arte/slide_05.png"
+        "aprovados/08-falta-com-registro/arte/slide_01.png",
+        "aprovados/08-falta-com-registro/arte/slide_02.png",
+        "aprovados/08-falta-com-registro/arte/slide_03.png",
+        "aprovados/08-falta-com-registro/arte/slide_04.png",
+        "aprovados/08-falta-com-registro/arte/slide_05.png"
       ],
       "tem_arte": true
     },
@@ -140,8 +140,8 @@
     }
   ],
   "contagem": {
-    "aguardando": 2,
-    "aprovado": 0,
+    "aguardando": 0,
+    "aprovado": 2,
     "postado": 7
   }
 }

@@ -103,6 +103,7 @@ nav a{color:#cfe4f7;text-decoration:none;background:rgba(255,255,255,.12);
     <button class="tab" data-tab="aprovado">Aprovados</button>
     <button class="tab" data-tab="reprovado">Reprovados</button>
     <button class="tab" data-tab="postado">Postados</button>
+    <button class="tab" data-tab="reels">🎬 Reels</button>
   </div>
   <div class="contagem" id="contagem"></div>
   <div id="lista"><div class="vazio">Carregando…</div></div>
@@ -169,6 +170,7 @@ async function carregarTudo(){
 
 function render(){
   const el = document.getElementById('lista');
+  if (aba === 'reels'){ renderReels(el); return; }
   const arr = ITENS.filter(i=>i.status===aba);
   if(!arr.length){ el.innerHTML = '<div class="vazio">Nada nesta aba.</div>'; return; }
   el.innerHTML = arr.map(item=>{
@@ -205,6 +207,51 @@ function render(){
       <div class="status-salvo" id="st-${item.id}"></div>
     </article>`;
   }).join('');
+}
+
+/* ---------- aba Reels (roteiro + vídeo; substitui o antigo menu "Ver o vídeo") ---------- */
+let ROTEIRO = null;
+function mdSimples(md){
+  const L = String(md).split(/\r?\n/), out = [];
+  let tipo = null;                                   /* 'p' | 'ul' | null */
+  const inl = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const fecha = () => { if (tipo === 'ul') out.push('</ul>'); tipo = null; };
+  for (const bruta of L){
+    const l = bruta.trim();
+    if (!l){ fecha(); continue; }
+    const h = l.match(/^#{1,3}\s+(.*)$/);
+    if (h){ fecha(); out.push('<h3>' + inl(h[1]) + '</h3>'); continue; }
+    const li = l.match(/^[-*]\s+(.*)$/);
+    if (li){ if (tipo !== 'ul'){ out.push('<ul>'); tipo = 'ul'; } out.push('<li>' + inl(li[1]) + '</li>'); continue; }
+    if (tipo === 'ul'){ out[out.length-1] = out[out.length-1].replace(/<\/li>$/, ' ' + inl(l) + '</li>'); continue; }
+    if (tipo === 'p'){ out[out.length-1] = out[out.length-1].replace(/<\/p>$/, ' ' + inl(l) + '</p>'); continue; }
+    out.push('<p>' + inl(l) + '</p>'); tipo = 'p';
+  }
+  fecha();
+  return out.join('');
+}
+async function renderReels(el){
+  el.innerHTML = '<div class="vazio">Carregando reels…</div>';
+  if (ROTEIRO === null){
+    try{
+      const r = await fetch(BASE + '_reels/roteiro.md?' + Date.now());
+      ROTEIRO = r.ok ? await r.text() : '(roteiro ainda não sincronizado — rode o sincronizador de conteúdo)';
+    }catch(e){ ROTEIRO = '(não consegui carregar: ' + e.message + ')'; }
+  }
+  el.innerHTML = `
+    <article class="bloco">
+      <div class="topo"><span class="badge postado">Reel 1</span>
+        <div class="titulo">Vídeo no ar</div>
+        <div class="hook">Mesmo arquivo do antigo menu "Ver o vídeo"</div></div>
+      <video controls preload="metadata" src="../video.mp4"
+             style="width:100%;max-width:360px;border-radius:12px;background:#000"></video>
+    </article>
+    <article class="bloco">
+      <div class="topo"><span class="badge aguardando">Reel 2</span>
+        <div class="titulo">Roteiro — voz do dono</div>
+        <div class="hook">produção pendente · 9:16 · 30–45 s</div></div>
+      <div class="legenda" style="white-space:normal">${mdSimples(ROTEIRO)}</div>
+    </article>`;
 }
 
 /* ---------- decisão (grava no Supabase) ---------- */
