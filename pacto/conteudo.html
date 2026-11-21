@@ -296,6 +296,14 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   t.classList.add('ativo'); aba = t.dataset.tab; render();
 }));
 
+/* link direto: conteudo.html#reels já abre na aba Reels — não depende de
+   cache do navegador nem de achar o botão na barra de abas. */
+if (location.hash === '#reels'){
+  aba = 'reels';
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('ativo', x.dataset.tab===aba));
+  render();
+}
+
 /* ---------- boot ---------- */
 async function boot(){
   const { data } = await sb.auth.getSession();
