@@ -178,6 +178,31 @@
   .seta2{color:#aab4c2; font-size:13px; flex-shrink:0; transition:transform .2s}
   .cartao.aberto .seta2{transform:rotate(90deg)}
 
+  /* ---------------- quadro (Kanban): colunas = estágios do projeto ----------
+     Mesmos dados da lista, só muda a forma: cada estágio do funil vira uma
+     coluna. No computador arrasta o cartão de coluna; no celular toca nele
+     que ele abre os detalhes (onde mora o seletor de estágio). */
+  .quadro{display:flex; gap:10px; overflow-x:auto; padding:2px 12px 18px; align-items:flex-start}
+  .qcol{flex:0 0 255px; background:#f2f5f9; border:1px solid var(--borda); border-radius:10px; padding:8px}
+  .qcol.over{outline:2px dashed var(--azul2); outline-offset:-2px}
+  .qcolh{
+    font:800 12px Montserrat,system-ui,sans-serif; text-transform:uppercase;
+    letter-spacing:.5px; color:#5b6478; padding:2px 3px 8px;
+    display:flex; justify-content:space-between; gap:6px;
+  }
+  .qcard{
+    background:var(--card); border:1px solid var(--borda); border-radius:9px;
+    padding:9px 10px; margin-bottom:7px; cursor:pointer;
+  }
+  .qcard:active{border-color:var(--azul2)}
+  .qnome{
+    font-weight:700; font-size:13.5px; line-height:1.3;
+    overflow-wrap:anywhere; display:flex; gap:7px; align-items:flex-start;
+  }
+  .qnome .ponto{margin-top:5px}
+  .qsub{font-size:11.5px; color:var(--cinza); margin-top:3px}
+  .qvazio{font-size:12px; color:#8a90a8; text-align:center; padding:10px 4px}
+
   /* ---------------- detalhe do cartão + ações de status ----------------
      O detalhe é o formulário de operação: 1 toque = mudança de status, e
      'ac.sel' deixa visível qual opção está ativa (o dono precisa conferir o
@@ -523,6 +548,7 @@ Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostr
     <button class="chip" data-f="fechou">Fechou</button>
   </div>
   <div class="contador" id="contador">—</div>
+  <button class="chip" id="btnQuadro" type="button" style="margin-top:7px">▦ Quadro (Kanban)</button>
 </div>
 
 <div class="lista" id="lista"></div>
@@ -709,11 +735,12 @@ function linkZap(t, nome){
 /* ---------- agenda do dia (rotina + arte IG) ---------- */
 /* Artes postadas terça e sexta às 17h30. O mapa abaixo é a fila oficial —
    atualizar aqui quando a semana de conteúdo muda.
-   Fila atual (CALENDARIO.md): sex 20/11 → 07 (se aprovado; senão o motor
-   sai o 09, já aprovado) · ter 24/11 → 08 · sex 27/11 → 09 */
+   Fila atual (CALENDARIO.md): motor sai o aprovado MAIS ANTIGO, 1 por janela
+   → ter 24/11 → 07 · sex 27/11 → 08 (07 e 08 aprovados em 21/11; 09 já
+   postado) */
 const AGENDA_IG = {
-  2: '08-falta-com-registro',
-  5: '07-do-caderno-para-o-celular'
+  2: '07-do-caderno-para-o-celular',
+  5: '08-falta-com-registro'
 };
 function renderAgenda(){
   const diaSem = new Date().getDay();
@@ -1036,6 +1063,7 @@ const CAT_ALVO = /restaur|self.?service|churrasc|steak|pizz|sushi|lanch|pastel|h
 /* ---------- desenho ---------- */
 function desenhar(){
   const cont = document.getElementById('lista');
+  if (quadro){ desenharQuadro(cont); return; }   /* Kanban: colunas por estágio */
   let visiveis = 0;
   let html = '';
 
@@ -1224,6 +1252,121 @@ function salvarEtapa(id, nome){
   enviar();
   desenhar();
 }
+
+/* ---------- quadro (Kanban): colunas = estágios da tag atual ----------
+   Mesmos dados e MESMOS filtros da lista — só muda o desenho. Coluna
+   "Sem estágio" sempre à esquerda; depois os estágios na ordem criada.
+   No computador arrasta o cartão entre colunas; no celular toca no
+   cartão e ele abre os detalhes na lista (onde está o seletor). */
+let quadro = false;
+try { quadro = localStorage.getItem('gg_quadro') === '1'; } catch(e){ quadro = false; }
+
+function atualizaBotaoQuadro(){
+  const b = document.getElementById('btnQuadro');
+  if (!b) return;
+  b.textContent = quadro ? '☰ Lista' : '▦ Quadro (Kanban)';
+  b.classList.toggle('ativo', quadro);
+}
+
+function colunasQuadro(){
+  const cols = [{nome:'', rot:'Sem estágio'}];
+  ETAPAS.filter(function(t){ return !projetoAtual || t.projeto === projetoAtual; })
+        .sort(function(a,b){ return (a.ordem||0) - (b.ordem||0); })
+        .forEach(function(t){ cols.push({nome:t.nome, rot:t.nome}); });
+  /* estágio órfão: lead com estágio que não existe mais na tabela —
+     vira coluna com "*" pra não sumir com o lead */
+  const tem = {}; cols.forEach(function(c){ tem[c.nome] = 1; });
+  LISTA.forEach(function(it){
+    if (st(it.id) === 'fora' || !noProjeto(it)) return;
+    const e = etapaOf(it.id);
+    if (e && !tem[e]){ tem[e] = 1; cols.push({nome:e, rot:e + ' *'}); }
+  });
+  return cols;
+}
+
+function desenharQuadro(cont){
+  const vis = LISTA.filter(function(it){
+    if (st(it.id) === 'fora') return false;      /* 'fora' não aparece em lugar nenhum */
+    if (!noProjeto(it)) return false;
+    return passaFiltro(it) && passaBusca(it);
+  });
+  let html = '<div class="quadro">';
+  colunasQuadro().forEach(function(c){
+    const cards = vis.filter(function(it){ return (etapaOf(it.id) || '') === c.nome; });
+    html += '<div class="qcol" data-etapa="' + esc(c.nome) + '">';
+    html +=   '<div class="qcolh"><span>' + esc(c.rot) + '</span><span>' + cards.length + '</span></div>';
+    if (!cards.length) html += '<div class="qvazio">&#8212;</div>';
+    cards.forEach(function(it){
+      const s = st(it.id);
+      const marca = hojeIds.indexOf(it.id) >= 0 ? ' &#9733;' : '';
+      html += '<div class="qcard" draggable="true" data-id="' + esc(it.id) + '">' +
+                '<div class="qnome"><span class="ponto ' + s + '"></span>' +
+                  '<span>' + esc(it.nome || '(sem nome)') + marca + '</span></div>' +
+                '<div class="qsub">' + esc(it.bairro || '&#8212;') +
+                  (s !== 'pendente' ? ' · ' + esc(ROTULO[s] || s) : '') + '</div>' +
+              '</div>';
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  cont.innerHTML = html;
+
+  document.getElementById('contador').textContent =
+    vis.length + ' de ' + LISTA.filter(noProjeto).length + ' restaurantes no quadro' +
+    (projetoAtual ? ' · projeto ' + projetoAtual : '') +
+    (filtro !== 'todos' ? ' · filtro: ' + filtro : '');
+  contagens();
+  renderEtapas();
+}
+
+/* arrastar (mouse): arrastou pra coluna = mudou o estágio */
+let arrastando = null;
+document.getElementById('lista').addEventListener('dragstart', function(e){
+  const c = e.target.closest('.qcard'); if (!c) return;
+  arrastando = c.dataset.id;
+  try { e.dataTransfer.setData('text/plain', arrastando); } catch(err){}
+  e.dataTransfer.effectAllowed = 'move';
+});
+document.getElementById('lista').addEventListener('dragover', function(e){
+  const col = e.target.closest('.qcol'); if (!col || !arrastando) return;
+  e.preventDefault();
+  col.classList.add('over');
+});
+document.getElementById('lista').addEventListener('dragleave', function(e){
+  const col = e.target.closest('.qcol');
+  if (col && !col.contains(e.relatedTarget)) col.classList.remove('over');
+});
+document.getElementById('lista').addEventListener('drop', function(e){
+  const col = e.target.closest('.qcol'); if (!col || !arrastando) return;
+  e.preventDefault();
+  col.classList.remove('over');
+  const id = arrastando; arrastando = null;
+  salvarEtapa(id, col.dataset.etapa || '');
+});
+document.getElementById('lista').addEventListener('dragend', function(){
+  arrastando = null;
+  document.querySelectorAll('.qcol.over').forEach(function(c){ c.classList.remove('over'); });
+});
+
+/* tocar no cartão do quadro → volta pra lista com os detalhes abertos */
+document.getElementById('lista').addEventListener('click', function(e){
+  const c = e.target.closest('.qcard'); if (!c) return;
+  abertoId = c.dataset.id;
+  quadro = false;
+  try { localStorage.setItem('gg_quadro', '0'); } catch(err){}
+  atualizaBotaoQuadro();
+  desenhar();
+  const alvo = document.querySelector('.cartao[data-id="' + abertoId + '"]');
+  if (alvo) alvo.scrollIntoView({block:'center'});
+});
+
+document.getElementById('btnQuadro').addEventListener('click', function(){
+  quadro = !quadro;
+  try { localStorage.setItem('gg_quadro', quadro ? '1' : '0'); } catch(e){}
+  atualizaBotaoQuadro();
+  desenhar();
+});
+atualizaBotaoQuadro();
 
 /* ---------- eventos (delegados) ---------- */
 document.getElementById('lista').addEventListener('click', function(e){
