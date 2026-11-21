@@ -387,10 +387,10 @@ function recalcula(){
 
   /* projeção da campanha: do histórico real (envios), não de promessa.
      enviados = e-mails distintos que já saíram; faltam = da LISTA atual,
-     quem nunca recebeu; dias úteis = faltam ÷ 10 (ritmo do dono). */
+     quem nunca recebeu; dias úteis = faltam ÷ ritmo do dia (40/dia desde o degrau 2, 18/11). */
   const enviados = ENVIO_EMAILS.size;
   const faltam = LISTA.filter(x => !ENVIO_EMAILS.has(x.email)).length;
-  const dias = faltam > 0 ? Math.ceil(faltam / 20) : 0;
+  const dias = faltam > 0 ? Math.ceil(faltam / 40) : 0;
 
   const domMap = new Map();
   LISTA.forEach(x => {

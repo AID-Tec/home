@@ -184,7 +184,7 @@
     <tr><td>1</td><td>Validar a base</td><td>nenhuma linha <b>sem decisão</b> = <span class="k">pendente</span> + sem <span class="k">revisado_em</span> + (fora do segmento <b>ou</b> CNPJ inativo)</td></tr>
     <tr><td>2</td><td>Aprovar as copies</td><td>100% das copies com <span class="k">status='aprovado'</span></td></tr>
     <tr><td>3</td><td>Gerar a lista</td><td>tabela <span class="k">campanhas</span> com pelo menos 1 linha</td></tr>
-    <tr><td>4</td><td>Operar hoje</td><td>ritmo do dia: e-mails de hoje na tabela <span class="k">envios</span> — fecha com <b>10</b> batidos ou quando a última janela do dia já passou (≥ 18h05); mesmo critério do placar "Hoje"</td></tr>
+    <tr><td>4</td><td>Operar hoje</td><td>ritmo do dia: e-mails de hoje na tabela <span class="k">envios</span> — fecha com o ritmo batido (<b>40</b> desde 18/11, mesmo critério do placar "Hoje" do index) ou quando a última janela do dia já passou (≥ 18h05)</td></tr>
   </table>
   <ul>
     <li>Verde = concluído, abre em modo <b>"ver"</b> (leitura).</li>
@@ -375,6 +375,18 @@ node ferramentas\disparo\disparar.js --teste            # 1 e-mail só pra você
     <li><b>Multi-região:</b> <b>em andamento desde 08/11</b> — coluna <span class="k">regiao</span> aplicada em <span class="k">prospectos</span> (477), <span class="k">envios</span> (100) e <span class="k">campanhas</span> (1), default <span class="k">'franca-sp'</span> (retroativo; o dia a dia não muda). Regiões novas (Nordeste, Norte) entram com o valor próprio. Depois: <b>comparar regiões</b> por resultado (envios × falou × fechou) e escalar onde rende mais.</li>
     <li><b>Projeto gêmeo:</b> <b>em andamento desde 08/11</b> — kit de réplica em <span class="k">Gestão Gorjeta/plano/projeto-gemeo-kit.md</span> (banco → disparo → rotina → painel → conteúdo). Outro produto roda em paralelo com estrutura idêntica, banco e domínio <b>separados</b>; a régua é o padrão desta página.</li>
     <li><b>Todo ajuste no projeto atual entra no kit</b> (seção "Registro de alterações" do texto acima) — o kit <b>acompanha</b> o projeto, não é fotografado uma vez. Registro no mesmo dia do ajuste: o quê, onde ficou, como o produto novo nasce diferente.</li>
+  </ul>
+</div>
+
+<!-- ============================ 17 · PAINEL ============================ -->
+<div class="regua">17 · Painel: tags, estágios e conteúdo (decisões — 19/11 e 21/11)</div>
+<div class="cartao">
+  <ul>
+    <li><b>Uma fonte só (dono, 19/11):</b> sem CRM externo — a gestão é no próprio painel. Cada projeto é uma <b>tag</b> (coluna <span class="k">projeto</span>) e <b>o escopo da tag é TUDO</b>: lead, envio, campanha e conteúdo filtram pela tag escolhida no topo.</li>
+    <li><b>Estágios do lead (dono, 19/11):</b> <b>follow-up · conversa · demonstração · proposta · fechou · descarte</b> (tabela <span class="k">etapas</span>, editável no painel — criar, renomear, apagar; renomear arrasta os leads junto; <b>estágio com lead dentro nunca é apagado</b>, só renomeado). Quem muda o estágio: o dono, clicando. Lead sem estágio aparece em "Sem estágio". Lead nunca é apagado — <span class="k">fora</span> só esconde.</li>
+    <li><b>Kanban (21/11):</b> o botão <b>Quadro</b> alterna lista ↔ colunas — colunas = os estágios da tag atual, cartões = leads. No computador arrasta o cartão pro estágio; no celular o toque abre o detalhe e o estágio troca lá. A preferência fica guardada no aparelho.</li>
+    <li><b>Conteúdo do IG (régua):</b> cadência <b>terça e sexta, 17h30</b> (lembretes 17h00/17h25; sem sábado — dono, 20/11); o motor sai com o <b>aprovado mais antigo</b>, 1 por janela; capa do carrossel <b>alterna branca/azul</b> por número do post (07 branca, 08 azul, 09 branca…); aprovação vira pasta <span class="k">aprovados/</span>, publicação vira <span class="k">postados/</span>; número de WhatsApp pessoal <b>nunca</b> aparece em peça nenhuma (regra §5).</li>
+    <li><b>Aba 🎬 Reels (21/11):</b> em Conteúdo p/ redes → aba Reels ficam o vídeo aprovado e o roteiro do Reel em produção (<span class="k">conteudo/_reels/roteiro.md</span> — o sincronizador sempre copia o mais recente).</li>
   </ul>
 </div>
 

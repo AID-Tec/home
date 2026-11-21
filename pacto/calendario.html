@@ -156,8 +156,8 @@
    do index — atualizar as DUAS quando a semana de conteúdo mudar).
    ========================================================================== */
 const AGENDA_IG = {
-  2: '04-transparencia-gera-confianca',
-  5: '05-demonstracao-relatorio'
+  2: '07-do-caderno-para-o-celular',
+  5: '08-falta-com-registro'
 };
 const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
@@ -166,6 +166,11 @@ let STATUS = {};     /* id -> status do banco (postado/aprovado/…) */
 
 function statusDe(id){
   return (STATUS[id] || (ITENS[id] && ITENS[id].status) || 'aguardando');
+}
+function pastaDe(s){
+  /* status (singular) → pasta em conteudo/ (plural) */
+  return {aguardando:'aguardando-aprovacao', aprovado:'aprovados',
+          postado:'postados'}[s] || s;
 }
 function etiqueta(s){
   const rot = {aguardando:'aguardando aprovação', aprovado:'aprovado',
@@ -190,13 +195,13 @@ function desenharSemana(){
     if (AGENDA_IG[w]){
       const id = AGENDA_IG[w];
       tit = '17h30 · Post ' + id.split('-')[0] + ' — ' + esc(ITENS[id] ? ITENS[id].titulo : id) + etiqueta(statusDe(id));
-      det = 'pacote de postagem: <i>conteudo/aprovados/' + id + '/</i> — sai sozinho pelo motor às 17h30';
+      det = 'pacote de postagem: <i>conteudo/' + pastaDe(statusDe(id)) + '/' + id + '/</i> — sai sozinho pelo motor às 17h30';
     } else if (w === 0 || w === 6){
       tit = 'Fim de semana — pausa';
       det = 'e-mails da rotina voltam segunda às 9h';
     } else {
       tit = 'E-mails da rotina';
-      det = 'gatilhos 9h · 15h · 18h (ritmo 20/dia útil até 17/11; 40 a partir de 18/11)';
+      det = 'gatilhos 9h · 15h · 18h (ritmo do dia: 40/dia desde 18/11; era 20/dia na rampa)';
     }
     html += '<div class="' + classe + '">' +
             '<div class="dnum"><b>' + d.getDate() + '</b><span>' + DIAS[w] + (i === 0 ? ' · hoje' : '') + '</span></div>' +
@@ -226,7 +231,7 @@ function painelHoje(rows){
   if (idPost){
     document.getElementById('k-post').textContent = '1';
     sub.innerHTML = 'post ' + idPost.split('-')[0] + ' às 17h30 · ' + etiqueta(statusDe(idPost)) +
-      ' · pacote <i>conteudo/_revisao/post-' + idPost.split('-')[0] + '</i>';
+      ' · pacote <i>conteudo/' + pastaDe(statusDe(idPost)) + '/' + idPost + '/</i>';
   } else {
     document.getElementById('k-post').textContent = '0';
     /* próximo dia com post, a partir de hoje */
