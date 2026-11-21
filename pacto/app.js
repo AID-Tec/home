@@ -7,8 +7,10 @@
      senão mostra o gate e FICA DEVENDO a sessão (Promise) até o login —
      assim toda página espera o login sem poluir o código de cada página;
    - quem já está logado nunca vê o gate de novo (getSession resolve);
-   - `window.__aidPendente` guarda o resolve da promise pendente;
-     `aid:login` (CustomEvent) avisa quem quiser reagir sem usar a promise. */
+   - `window.__aidPendentes` guarda os resolves das promises pendentes (uma
+     por tela que chamou entrar() antes do login — o painel de página única
+     tem a casca e a seção esperando ao mesmo tempo); `aid:login`
+     (CustomEvent) avisa quem quiser reagir sem usar a promise. */
 (function () {
   var SB_URL = 'https://uewqkwmzpmnpebdsldto.supabase.co';
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVld3Frd216cG1ucGViZHNsZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NjExMDgsImV4cCI6MjEwODMzNzEwOH0.wXPqKO5hkU2FqH3wDPRimoHWprI7NAWX5odknhX6bvY';
@@ -57,7 +59,11 @@
         if (g) g.style.display = 'none';
         botoes();
         document.dispatchEvent(new CustomEvent('aid:login'));
-        if (window.__aidPendente) { var f = window.__aidPendente; window.__aidPendente = null; f(r.data.session); }
+        if (window.__aidPendentes && window.__aidPendentes.length) {
+          var lista = window.__aidPendentes;
+          window.__aidPendentes = [];
+          lista.forEach(function (f) { f(r.data.session); });
+        }
       });
     });
   }
@@ -93,14 +99,17 @@
 
   /* Porta de entrada de todas as páginas:
      1) sessão já existe (login anterior no mesmo navegador) → resolve na hora;
-     2) não existe → guarda o resolve em __aidPendente e abre o gate.
-     Enquanto o usuário não logar, a promise fica pendente — as páginas
-     chamam AID.entrar().then(...) e só começam a trabalhar com sessão. */
+     2) não existe → entra na fila de espera e abre o gate.
+     Enquanto o usuário não logar, as promises ficam pendentes — as telas
+     chamam AID.entrar().then(...) e só começam a trabalhar com sessão.
+     A fila (e não um único resolve) é o que deixa a casca e a seção do
+     painel de página única esperarem o MESMO login. */
   async function entrar() {
     var s = await sb.auth.getSession();
     if (s.data && s.data.session) { botoes(); return s.data.session; }
     return new Promise(function (resolve) {
-      window.__aidPendente = resolve;
+      if (!window.__aidPendentes) window.__aidPendentes = [];
+      window.__aidPendentes.push(resolve);
       abrirGate();
     });
   }

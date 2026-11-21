@@ -71,13 +71,17 @@
   .btn{border:0; border-radius:7px; padding:9px 12px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit}
   .btn.amarelo{background:#ffd166; color:#4a3000; flex:1}
   .btn.transp{background:rgba(255,255,255,.15); color:#fff}
-  .navsec{display:flex; gap:7px; margin-top:8px; flex-wrap:wrap}
-  .navsec a{
-    flex:1; text-align:center; text-decoration:none; font-size:11.5px; font-weight:700;
-    padding:7px 6px; border-radius:6px; background:rgba(255,255,255,.13); color:#cfe4f7;
-    white-space:nowrap; min-width:96px;
+  /* menu do painel de pagina unica: rolagem horizontal no celular */
+  .menu{display:flex; gap:7px; margin-top:9px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+        scrollbar-width:none; padding-bottom:1px}
+  .menu::-webkit-scrollbar{display:none}
+  .menu a{
+    flex:0 0 auto; text-align:center; text-decoration:none; font-size:12px; font-weight:700;
+    padding:8px 12px; border-radius:999px; background:rgba(255,255,255,.13); color:#cfe4f7;
+    white-space:nowrap;
   }
-  .navsec a:active{background:rgba(255,255,255,.28)}
+  .menu a.ativo{background:#fff; color:var(--azul)}
+  .menu a:active{background:rgba(255,255,255,.3)}
 
   /* ---------------- caixas acordeão (passos, msgs, demo) ---------------- */
   .caixa{background:var(--card); border:1px solid var(--borda); border-radius:10px; margin:12px; overflow:hidden}
@@ -328,21 +332,6 @@
 </style>
 </head>
 <body>
-<div id="loginGate" style="position:fixed;inset:0;z-index:9999;background:#0f1430;display:flex;align-items:center;justify-content:center;padding:20px">
-  <div style="width:100%;max-width:370px;background:#fff;border-radius:18px;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)">
-    <div style="font:700 22px/1.2 Montserrat,system-ui,sans-serif;color:#182A69">Pacto Gorjeta</div>
-    <div style="font:400 13px/1.5 Montserrat,system-ui,sans-serif;color:#5b6478;margin:6px 0 20px">Acesso restrito. Entre com o e-mail e a senha.</div>
-    <form id="formLogin" autocomplete="on">
-      <input id="loginEmail" type="email" placeholder="E-mail" autocomplete="username" required
-        style="width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #d8dcea;border-radius:10px;font:400 15px Montserrat,system-ui,sans-serif;margin-bottom:10px">
-      <input id="loginSenha" type="password" placeholder="Senha" autocomplete="current-password" required
-        style="width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #d8dcea;border-radius:10px;font:400 15px Montserrat,system-ui,sans-serif;margin-bottom:14px">
-      <button id="btnEntrar" type="submit"
-        style="width:100%;padding:14px;border:0;border-radius:10px;background:#2E3699;color:#fff;font:700 15px Montserrat,system-ui,sans-serif;cursor:pointer">Entrar</button>
-      <div id="loginErro" style="font:400 13px/1.5 Montserrat,system-ui,sans-serif;color:#c0392b;margin-top:12px;min-height:18px"></div>
-    </form>
-  </div>
-</div>
 
 
 <header>
@@ -362,17 +351,20 @@
   <div class="barra">
     <button class="btn transp" id="btnVerHoje">Ver e-mail de hoje</button>
   </div>
-  <div class="navsec">
-    <a href="definicoes.html">📖 Definições</a>
-    <a href="contato.html">📞 Como contatar</a>
-    <a href="validacao.html">🎯 Validar base</a>
-    <a href="campanha.html">📧 Campanha</a>
-    <a href="copy.html">✍ Aprovar as copies</a>
-    <a href="ideias.html">💡 Ideias guardadas</a>
-    <a href="conteudo.html">🎨 Conteúdo p/ redes</a>
-    <a href="calendario.html">📅 Calendário</a>
-  </div>
+  <nav class="menu" id="menu">
+    <a href="#/painel">Painel</a>
+    <a href="#/calendario">📅 Calendário</a>
+    <a href="#/ideias">💡 Ideias</a>
+    <a href="#/copy">✍ Copies</a>
+    <a href="#/conteudo">🎨 Conteúdo</a>
+    <a href="#/campanha">📧 Campanha</a>
+    <a href="#/validacao">🎯 Validar base</a>
+    <a href="#/contato">📞 Como contatar</a>
+    <a href="#/definicoes">📖 Definições</a>
+  </nav>
 </header>
+
+<section id="sec-painel" data-secao="painel">
 
 <!-- ============ FLUXO GUIADO — POR ONDE COMECAR ============ -->
 <div class="caixa aberta" id="boxFluxo">
@@ -553,17 +545,20 @@ Dá uma olhada quando der. Se valer a pena, me manda um "vi" aí que eu te mostr
 
 <div class="lista" id="lista"></div>
 <div class="sync" id="sync">carregando…</div>
+</section>
+
+<!-- seções migradas para a página única entram aqui (roteador em painel.js) -->
+<div id="sec-frag"></div>
 
 <script src="vendor/supabase.js"></script>
+<script src="app.js"></script>
+<script src="painel.js"></script>
 <script>
-/* Cliente Supabase desta página — mesmo par (URL + chave anon) do
-   pacto/app.js. A anon é pública por design: quem protege os dados é o
-   RLS no banco. O index é a página-mãe e tem gate de login próprio
-   (mais abaixo), por isso ele cria o client aqui em vez de depender do
-   AID.entrar das outras páginas. */
-const SB_URL = 'https://uewqkwmzpmnpebdsldto.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVld3Frd216cG1ucGViZHNsZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NjExMDgsImV4cCI6MjEwODMzNzEwOH0.wXPqKO5hkU2FqH3wDPRimoHWprI7NAWX5odknhX6bvY';
-const sb = supabase.createClient(SB_URL, SB_KEY);
+/* Cliente Supabase: um só, o do app.js (login compartilhado da casca).
+   A anon é pública por design; quem protege os dados é o RLS no banco.
+   O index é a página-mãe (casca do painel) e usa o MESMO cliente das
+   seções migradas — assim existe um login só. */
+const sb = AID.sb;
 
 let ESTADO = {};
 let LISTA  = [];
@@ -1470,53 +1465,12 @@ document.getElementById('btnVerHoje').onclick = function(){
   window.scrollTo({top: document.querySelector('.ferramentas').offsetTop - 5, behavior:'smooth'});
 };
 
-/* ---------- login ---------- */
-function mostrarGate(v){
-  document.getElementById('loginGate').style.display = v ? 'flex' : 'none';
-}
-function mostraSair(v){
-  const c = document.getElementById('aidConta');
-  if (c) c.style.display = v ? 'flex' : 'none';
-}
-
-document.addEventListener('DOMContentLoaded', function(){
-  document.getElementById('btnSair').addEventListener('click', function(){
-    sb.auth.signOut().then(function(){ location.reload(); });
-  });
-  document.getElementById('btnSenha').addEventListener('click', async function(){
-    const p = prompt('Nova senha (minimo 6 caracteres):');
-    if (!p) return;
-    if (p.length < 6) { alert('Curta demais — minimo 6 caracteres.'); return; }
-    const r = await sb.auth.updateUser({password: p});
-    alert(r.error ? ('Nao trocou: ' + r.error.message) : 'Senha trocada.');
-  });
-});
-
-document.getElementById('formLogin').addEventListener('submit', async function(ev){
-  ev.preventDefault();
-  const btn = document.getElementById('btnEntrar');
-  const erro = document.getElementById('loginErro');
-  erro.textContent = '';
-  btn.disabled = true; btn.textContent = 'Entrando\u2026';
-  const r = await sb.auth.signInWithPassword({
-    email: document.getElementById('loginEmail').value.trim(),
-    password: document.getElementById('loginSenha').value
-  });
-  btn.disabled = false; btn.textContent = 'Entrar';
-  if (r.error){
-    erro.textContent = 'Nao entrou: ' + (r.error.message || 'verifique e-mail e senha');
-    return;
-  }
-  await boot();
-});
-
-/* ---------- inicial ---------- */
+/* ---------- login (compartilhado em app.js) ----------
+   A casca não tem gate próprio: app.js injeta o gate único, mostra os
+   botões de conta e resolve AID.entrar() quando o dono entra. Sem sessão a
+   tela fica atrás do gate; com sessão o painel carrega. */
 async function boot(){
   try {
-    const sess = await sb.auth.getSession();
-    if (!sess.data.session){ mostrarGate(true); mostraSair(false); return; }
-    mostrarGate(false); mostraSair(true);
-
     setSync('carregando\u2026', false);
     await carregarDados();
     desenhar();
@@ -1529,11 +1483,8 @@ async function boot(){
 /* rede de segurança da fila offline: se a conexão voltar sem o usuário
    clicar em nada, drena o que ficou pendente (8s é o retry do erro). */
 setInterval(function(){ if (fila.length) enviar(); }, 5000);
-boot();
+/* boot depois do login único (app.js): resolve na hora se já há sessão */
+AID.entrar().then(function(sess){ if (sess) boot(); });
 </script>
-<div id="aidConta" style="display:none;position:fixed;right:14px;bottom:14px;z-index:9998;gap:8px">
-  <button id="btnSenha" style="padding:10px 16px;border:1px solid #d8dcea;border-radius:999px;background:#fff;color:#5b6478;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer">Trocar senha</button>
-  <button id="btnSair" style="padding:10px 16px;border:1px solid #d8dcea;border-radius:999px;background:#fff;color:#5b6478;font:600 13px Montserrat,system-ui,sans-serif;cursor:pointer">Sair</button>
-</div>
 </body>
 </html>

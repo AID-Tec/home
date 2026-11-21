@@ -1,0 +1,194 @@
+<!-- Seção "Ideias estacionadas" da página única (onda 1 da unificação).
+     Carregada por painel.js dentro de #sec-frag: o CSS usa o prefixo
+     #sec-frag (não vaza para o painel) e o script busca os elementos com
+     $ = querySelector, porque o painel tem ids com o mesmo nome.
+     Regra de negócio: guardar custa 20 segundos; toda ideia nasce com
+     "rever em" = hoje + 14 dias e só sai da pauta quando o dono revisa. -->
+<style>
+  #sec-frag .sec-cab{padding:16px 16px 2px}
+  #sec-frag .sec-h1{font:800 19px/1.25 'Montserrat',sans-serif; color:var(--azul)}
+  #sec-frag .sec-sub{font-size:12.5px; color:var(--cinza); margin-top:3px}
+  #sec-frag .caixa{background:var(--card); border:1px solid var(--borda); border-radius:10px; margin:12px; padding:13px}
+  #sec-frag .regua{font-size:11px; text-transform:uppercase; letter-spacing:1.1px; font-weight:800;
+         color:var(--azul2); border-bottom:2px solid #e8eef5; padding-bottom:5px; margin:6px 0 11px}
+  #sec-frag .campo{margin-bottom:9px}
+  #sec-frag .campo label{display:block; font-size:12px; font-weight:800; color:var(--cinza);
+               text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px}
+  #sec-frag .campo input,#sec-frag .campo textarea{
+    width:100%; padding:11px 12px; font-size:15px; border:1px solid var(--borda);
+    border-radius:8px; background:#fff; font-family:inherit; color:var(--texto);
+  }
+  #sec-frag .campo textarea{min-height:70px; resize:vertical}
+  #sec-frag .campo input:focus,#sec-frag .campo textarea:focus{outline:2px solid var(--azul2); border-color:transparent}
+  #sec-frag .btn{width:100%; border:0; background:var(--azul2); color:#fff; padding:13px;
+       border-radius:9px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit}
+  #sec-frag .btn:active{background:var(--azul)}
+  #sec-frag .aviso{background:#fff6f0; border-left:4px solid var(--laranja); padding:11px 13px;
+         border-radius:0 8px 8px 0; font-size:14px; margin-top:12px}
+  #sec-frag .aviso b{color:var(--laranja)}
+  #sec-frag .item{background:var(--card); border:1px solid var(--borda); border-radius:10px;
+        margin:0 12px 9px; padding:13px}
+  #sec-frag .item.venceu{border-color:var(--amarelo); background:#fffdf5}
+  #sec-frag .item.revisada{opacity:.55}
+  #sec-frag .itop{display:flex; justify-content:space-between; gap:9px; align-items:flex-start}
+  #sec-frag .itt{font-weight:800; font-size:15.5px; line-height:1.35; flex:1}
+  #sec-frag .item.revisada .itt{text-decoration:line-through}
+  #sec-frag .etiq{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px;
+        padding:3px 7px; border-radius:5px; white-space:nowrap; flex-shrink:0}
+  #sec-frag .etiq.est{background:#fdf3dd; color:var(--amarelo)}
+  #sec-frag .etiq.venc{background:#fbe6e5; color:var(--vermelho)}
+  #sec-frag .etiq.rev{background:#e0f5ea; color:var(--verde)}
+  #sec-frag .iobs{font-size:14px; color:var(--cinza); margin-top:6px; white-space:pre-line}
+  #sec-frag .idata{font-size:12.5px; color:var(--cinza); margin-top:8px}
+  #sec-frag .idata b{color:var(--texto)}
+  #sec-frag .irev{display:block; width:100%; margin-top:10px; border:1px solid var(--borda);
+        background:#f7f9fb; padding:11px; border-radius:8px; font-size:13.5px;
+        font-weight:800; cursor:pointer; font-family:inherit; color:var(--azul2)}
+  #sec-frag .irev:active{background:#e8eef5}
+  #sec-frag .vazio{text-align:center; padding:34px 20px; color:var(--cinza); font-size:14.5px}
+  @media(min-width:760px){ #sec-frag .caixa,#sec-frag .item{max-width:820px; margin-left:auto; margin-right:auto} }
+</style>
+
+<div class="sec-cab">
+  <div class="sec-h1">Ideias estacionadas</div>
+  <div class="sec-sub" id="resumo">carregando…</div>
+</div>
+
+<div class="caixa">
+  <div class="regua">Guardar uma ideia agora</div>
+  <div class="campo">
+    <label>Qual é a ideia</label>
+    <input id="titulo" type="text" maxlength="200"
+           placeholder="Ex.: canal de IA com resumos de livros">
+  </div>
+  <div class="campo">
+    <label>O que você já sabe / o que falta descobrir</label>
+    <textarea id="obs" maxlength="900"
+      placeholder="Deixa registrar mesmo incompleto. Quanto mais você jogar aqui, menos precisa lembrar depois."></textarea>
+  </div>
+  <div class="campo">
+    <label>Rever quando</label>
+    <input id="data" type="date">
+  </div>
+  <button class="btn" id="btnAdd">Guardar ideia</button>
+
+  <div class="aviso">
+    <b>Data padrão: 14 dias a partir de hoje</b> — o dia seguinte ao fim do ciclo.
+    Guardar uma ideia custa 20 segundos; <b>construir</b> uma ideia custa semanas
+    de tempo que agora só existe pra operar os e-mails do dia.
+  </div>
+</div>
+
+<div class="regua" style="margin:18px 12px 8px">O que está guardado</div>
+<div id="lista"><div class="vazio">nada guardado ainda</div></div>
+<div class="sync" id="syncIdeias">carregando…</div>
+
+<script>
+(function () {
+  /* Escopo da seção: o painel tem #lista e #sync próprios — buscar sempre
+     dentro de #sec-frag evita pintar na lista errada. */
+  var $ = function (id) { return document.querySelector('#sec-frag #' + id); };
+  var sb = AID.sb;
+  var ITENS = [];
+
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  var brl = function (s) {
+    if (!s) return 'sem data';
+    var d = new Date(s + 'T12:00:00');
+    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+  };
+  var hoje = function () { return new Date().toISOString().slice(0, 10); };
+  var esc = function (s) {
+    return String(s || '').replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  };
+
+  function ok() {
+    var s = $('syncIdeias');
+    s.className = 'sync'; s.textContent = 'salvo ✓';
+    clearTimeout(window._tIdeias);
+    window._tIdeias = setTimeout(function () { s.textContent = 'tudo salvo'; }, 2500);
+  }
+  function erro() {
+    var s = $('syncIdeias');
+    s.className = 'sync erro'; s.textContent = 'não salvei — tentando de novo…';
+  }
+
+  function pintar() {
+    var lista = $('lista');
+    var ativas = ITENS.filter(function (i) { return i.s !== 'revisada'; });
+    var vencidas = ativas.filter(function (i) { return i.revisar_em && i.revisar_em <= hoje(); });
+    $('resumo').textContent = ativas.length + ' guardada(s) · ' + vencidas.length + ' na hora de revisar';
+
+    if (!ITENS.length) { lista.innerHTML = '<div class="vazio">nada guardado ainda</div>'; return; }
+
+    var ord = ITENS.slice().sort(function (a, b) {
+      if ((a.s === 'revisada') !== (b.s === 'revisada')) return a.s === 'revisada' ? 1 : -1;
+      var av = a.revisar_em || '9999-12-31', bv = b.revisar_em || '9999-12-31';
+      return av < bv ? -1 : av > bv ? 1 : 0;
+    });
+
+    lista.innerHTML = ord.map(function (i) {
+      var venc = i.s !== 'revisada' && i.revisar_em && i.revisar_em <= hoje();
+      var cls = 'item' + (i.s === 'revisada' ? ' revisada' : venc ? ' venceu' : '');
+      var etq = i.s === 'revisada' ? '<span class="etiq rev">revisada</span>'
+              : venc ? '<span class="etiq venc">hora de revisar</span>'
+              : '<span class="etiq est">estacionada</span>';
+      return '<div class="' + cls + '">' +
+        '<div class="itop"><div class="itt">' + esc(i.titulo) + '</div>' + etq + '</div>' +
+        (i.obs ? '<div class="iobs">' + esc(i.obs) + '</div>' : '') +
+        '<div class="idata">guardada em <b>' + brl((i.criada || '').slice(0, 10)) + '</b>' +
+          (i.revisar_em ? ' · revisar em <b>' + brl(i.revisar_em) + '</b>' : '') + '</div>' +
+        (i.s !== 'revisada'
+          ? '<button class="irev" data-id="' + i.id + '">Já revisei — tirar de pauta</button>' : '') +
+        '</div>';
+    }).join('');
+
+    lista.querySelectorAll('.irev').forEach(function (b) {
+      b.addEventListener('click', function () { enviar({ op: 'revisar', id: b.dataset.id }); });
+    });
+  }
+
+  function enviar(body) {
+    var q = (body.op === 'revisar')
+      ? sb.from('ideias').update({ s: 'revisada', atualizado_em: new Date().toISOString() }).eq('id', body.id)
+      : sb.from('ideias').insert({ titulo: body.titulo, obs: body.obs || null, revisar_em: body.revisar_em || null });
+    return q.then(function (r) { if (r.error) throw r.error; ok(); return carregar(); })
+            .catch(function () { erro(); });
+  }
+
+  function carregar() {
+    return sb.from('ideias').select('*').order('criada', { ascending: false }).then(function (r) {
+      if (r.error) throw r.error;
+      ITENS = r.data || [];
+      pintar();
+      $('syncIdeias').textContent = 'tudo salvo';
+    }).catch(function () { erro(); });
+  }
+
+  $('btnAdd').addEventListener('click', function () {
+    var t = $('titulo');
+    if (!t.value.trim()) { t.focus(); return; }
+    enviar({
+      titulo: t.value.trim(),
+      obs: $('obs').value.trim(),
+      revisar_em: $('data').value || null
+    }).then(function () { t.value = ''; $('obs').value = ''; });
+  });
+  $('titulo').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') $('btnAdd').click();
+  });
+
+  /* data padrão: fim do ciclo de 14 dias contado de hoje */
+  (function () {
+    var d = new Date();
+    d.setDate(d.getDate() + 14);
+    $('data').value = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  })();
+
+  /* só depois do login existe cliente — a casca e esta seção esperam o
+     MESMO gate (app.js resolve as duas promises) */
+  AID.entrar().then(function (sess) { if (sess) carregar(); });
+})();
+</script>
